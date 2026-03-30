@@ -255,7 +255,7 @@ export default function ClientInvoices() {
       <div className="mt-6">
         <div className="alert alert-danger" role="alert">
           <strong>Error:</strong> {error}
-          <button className="btn  btn-outline-danger ms-2" onClick={fetchInvoices}>
+          <button className="btn btn-outline-danger ms-2" onClick={fetchInvoices}>
             Retry
           </button>
         </div>
@@ -513,7 +513,7 @@ export default function ClientInvoices() {
               </select>
               {(searchQuery || startDate || endDate || statusFilter) && (
                 <button
-                  className="btn  btn-outline-secondary"
+                  className="btn btn-outline-secondary"
                   onClick={() => {
                     setSearchQuery("");
                     setStartDate("");
@@ -584,7 +584,7 @@ export default function ClientInvoices() {
                           <td onClick={(e) => e.stopPropagation()}>
                             <div className="d-flex gap-2">
                               <button
-                                className="btn  btn-outline-primary"
+                                className="btn btn-outline-primary"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleInvoiceClick(invoice.id);
@@ -615,7 +615,7 @@ export default function ClientInvoices() {
                     </div>
                     <div className="d-flex gap-2">
                       <button
-                        className="btn  btn-outline-secondary"
+                        className="btn btn-outline-secondary"
                         onClick={() => handlePageChange(pagination.page - 1)}
                         disabled={!pagination.has_previous}
                       >
@@ -625,7 +625,7 @@ export default function ClientInvoices() {
                         Page {pagination.page} of {pagination.total_pages}
                       </span>
                       <button
-                        className="btn  btn-outline-secondary"
+                        className="btn btn-outline-secondary"
                         onClick={() => handlePageChange(pagination.page + 1)}
                         disabled={!pagination.has_next}
                       >
@@ -643,7 +643,7 @@ export default function ClientInvoices() {
                 <p className="text-muted mb-2">No invoices found</p>
                 {(searchQuery || startDate || endDate || statusFilter) && (
                   <button
-                    className="btn  btn-outline-primary mt-2"
+                    className="btn btn-outline-primary mt-2"
                     onClick={() => {
                       setSearchQuery("");
                       setStartDate("");

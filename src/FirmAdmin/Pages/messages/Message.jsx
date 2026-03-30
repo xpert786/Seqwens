@@ -1668,7 +1668,7 @@ const Messages = () => {
                 <button
                   onClick={handleComposeMessage}
                   disabled={sending || !message.trim() || (!selectedUserId && !selectedStaffId)}
-                  className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center gap-2 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed compose-modal-send-btn"
+                  className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg transition-colors flex items-center gap-2 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed compose-modal-send-btn"
                 >
                   <ComposeSendIcon />
                   {sending ? 'Sending...' : 'Send'}
@@ -1703,7 +1703,7 @@ const Messages = () => {
                 <button
                   onClick={confirmDeleteThread}
                   disabled={deleting}
-                  className="px-4 py-2 bg-[#EF4444] text-white rounded-lg hover:bg-[#DC2626] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-4 py-2 bg-[#EF4444] text-white rounded-lg transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {deleting ? (
                     <>

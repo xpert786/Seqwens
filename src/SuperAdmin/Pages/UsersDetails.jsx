@@ -526,7 +526,7 @@ const UsersDetails = () => {
                             )}
                             {isSuperAdmin && (
                                 <button
-                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B4A66] transition-colors"
+                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B4A66] transition-colors"
                                     onClick={() => setShowPasswordModal(true)}
                                     disabled={actionLoading}
                                     style={{ borderRadius: '8px' }}
@@ -536,7 +536,7 @@ const UsersDetails = () => {
                             )}
                             {isSuperAdmin && actions.can_reset_2fa && (
                                 <button
-                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B4A66] transition-colors"
+                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B4A66] transition-colors"
                                     onClick={() => setShowReset2FAModal(true)}
                                     disabled={actionLoading}
                                     style={{ borderRadius: '8px' }}
@@ -546,7 +546,7 @@ const UsersDetails = () => {
                             )}
                             {isSuperAdmin && !isLookupMode && profile.role && ['super_admin', 'support_admin', 'billing_admin'].includes(profile.role) && (
                                 <button
-                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] border border-transparent rounded-lg hover:bg-[#E55A1F] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F56D2D] disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F56D2D] disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled={actionLoading}
                                     onClick={handleChangeAdminTypeClick}
                                     title="Change admin type"
@@ -557,7 +557,7 @@ const UsersDetails = () => {
                             )}
                             {isSuperAdmin && !isOwnProfile && !isDefaultSuperAdmin && (
                                 <button
-                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled={actionLoading}
                                     onClick={() => setShowDeleteModal(true)}
                                     title="Permanently delete user"
@@ -644,7 +644,7 @@ const UsersDetails = () => {
                                 </div>
                                 <div className="flex justify-end gap-3">
                                     <button
-                                        className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md hover:bg-[#F8FAFC] transition-colors"
+                                        className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md transition-colors"
                                         onClick={handleCancelSuspend}
                                         disabled={actionLoading}
                                         style={{ borderRadius: '7px' }}
@@ -652,7 +652,7 @@ const UsersDetails = () => {
                                         Cancel
                                     </button>
                                     <button
-                                        className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors disabled:opacity-60"
+                                        className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md transition-colors disabled:opacity-60"
                                         onClick={handleConfirmSuspend}
                                         disabled={actionLoading}
                                         style={{ borderRadius: '7px' }}
@@ -682,20 +682,29 @@ const UsersDetails = () => {
                                 </div>
 
                                 <div className="flex p-1 bg-gray-100 rounded-lg">
+
                                     <button
-                                        className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${passwordMode === 'generate' ? 'bg-white shadow text-[#3B4A66]' : 'text-gray-500 hover:text-gray-700'}`}
+                                        className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${passwordMode === 'generate'
+                                                ? 'bg-white shadow text-[#3B4A66]'
+                                                : 'text-gray-500'
+                                            }`}
                                         onClick={() => setPasswordMode('generate')}
                                         style={{ borderRadius: "12px" }}
                                     >
                                         Generate & Email
                                     </button>
+
                                     <button
-                                        className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${passwordMode === 'manual' ? 'bg-white shadow text-[#3B4A66]' : 'text-gray-500 hover:text-gray-700'}`}
+                                        className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${passwordMode === 'manual'
+                                                ? 'bg-white shadow text-[#3B4A66]'
+                                                : 'text-gray-500'
+                                            }`}
                                         onClick={() => setPasswordMode('manual')}
                                         style={{ borderRadius: "12px" }}
                                     >
                                         Set Manually
                                     </button>
+
                                 </div>
 
                                 {passwordMode === 'generate' ? (
@@ -724,7 +733,7 @@ const UsersDetails = () => {
 
                                 <div className="flex justify-end gap-3 mt-4">
                                     <button
-                                        className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md hover:bg-[#F8FAFC] transition-colors"
+                                        className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md transition-colors"
                                         onClick={closePasswordModal}
                                         disabled={actionLoading}
                                         style={{ borderRadius: '7px' }}
@@ -732,7 +741,7 @@ const UsersDetails = () => {
                                         Cancel
                                     </button>
                                     <button
-                                        className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors disabled:opacity-60"
+                                        className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md transition-colors disabled:opacity-60"
                                         onClick={handlePasswordAction}
                                         disabled={actionLoading || (passwordMode === 'manual' && !manualPassword)}
                                         style={{ borderRadius: '7px' }}
@@ -780,7 +789,7 @@ const UsersDetails = () => {
                                 </div>
                                 <div className="flex justify-end gap-3">
                                     <button
-                                        className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md hover:bg-[#F8FAFC] transition-colors"
+                                        className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md transition-colors"
                                         onClick={handleCancelAdminTypeChange}
                                         disabled={actionLoading}
                                         style={{ borderRadius: '7px' }}
@@ -788,7 +797,7 @@ const UsersDetails = () => {
                                         Cancel
                                     </button>
                                     <button
-                                        className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors disabled:opacity-60"
+                                        className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md transition-colors disabled:opacity-60"
                                         onClick={handleConfirmAdminTypeChange}
                                         disabled={actionLoading || !selectedAdminType}
                                         style={{ borderRadius: '7px' }}
@@ -829,7 +838,7 @@ const UsersDetails = () => {
 
                                 <div className="flex justify-end gap-3 mt-6">
                                     <button
-                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg transition-colors"
                                         onClick={() => setShowDeleteModal(false)}
                                         disabled={actionLoading}
                                         style={{ borderRadius: '7px' }}
@@ -837,7 +846,7 @@ const UsersDetails = () => {
                                         Cancel
                                     </button>
                                     <button
-                                        className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                                        className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg transition-colors disabled:opacity-50"
                                         onClick={handleConfirmDelete}
                                         disabled={actionLoading}
                                         style={{ borderRadius: '7px' }}
@@ -878,7 +887,7 @@ const UsersDetails = () => {
 
                                 <div className="flex justify-end gap-3 mt-6">
                                     <button
-                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg transition-colors"
                                         onClick={() => setShowReset2FAModal(false)}
                                         disabled={actionLoading}
                                         style={{ borderRadius: '7px' }}
@@ -886,7 +895,7 @@ const UsersDetails = () => {
                                         Cancel
                                     </button>
                                     <button
-                                        className="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
+                                        className="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-lg transition-colors disabled:opacity-50"
                                         onClick={handleReset2FA}
                                         disabled={actionLoading}
                                         style={{ borderRadius: '7px' }}

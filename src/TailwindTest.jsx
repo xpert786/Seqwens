@@ -48,21 +48,21 @@ export default function TailwindTest() {
 
           <div className="flex flex-wrap gap-4 justify-center">
             <button
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-110 shadow-lg"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform shadow-lg"
               onClick={() => setButtonCount(buttonCount + 1)}
             >
               Click Me! ({buttonCount})
             </button>
 
             <button
-              className="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-110 shadow-lg"
+              className="bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform shadow-lg"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
             >
               {isHovered ? '🎉 Hovered!' : 'Hover Me!'}
             </button>
 
-            <button className="bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-110 shadow-lg">
+            <button className="bg-gradient-to-r from-orange-400 to-red-500 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform shadow-lg">
               Animated Button
             </button>
           </div>

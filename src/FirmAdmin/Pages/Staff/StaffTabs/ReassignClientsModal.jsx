@@ -127,7 +127,7 @@ export default function ReassignClientsModal({ isOpen, onClose, onSuccess, curre
                         <h5 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">Reassign Clients</h5>
                         <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">Transfer clients to another team member or back to the firm queue</p>
                     </div>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
+                    <button onClick={onClose} className="text-gray-400 transition-colors p-1">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
                             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -244,14 +244,14 @@ export default function ReassignClientsModal({ isOpen, onClose, onSuccess, curre
                 <div className="flex items-center justify-end gap-3 p-6 border-t border-[#E8F0FF] bg-gray-50 rounded-b-xl flex-shrink-0">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 font-[BasisGrotesquePro]"
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 font-[BasisGrotesquePro]"
                         disabled={loading}
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSubmit}
-                        className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-[#E55A1D] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro] flex items-center gap-2"
+                        className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F56D2D] font-[BasisGrotesquePro] flex items-center gap-2"
                         disabled={loading}
                     >
                         {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}

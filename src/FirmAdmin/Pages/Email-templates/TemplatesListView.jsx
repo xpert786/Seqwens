@@ -17,9 +17,9 @@ import PreviewModal from './modals/PreviewModal';
 
 const IconButton = ({ children, ariaLabel, onClick }) => (
     <button
+        className=" text-[#4254A0] transition"
         aria-label={ariaLabel}
         onClick={onClick}
-        className=" text-[#4254A0] transition hover:bg-white hover:text-[#1F2A55]"
     >
         {children}
     </button>
@@ -27,7 +27,7 @@ const IconButton = ({ children, ariaLabel, onClick }) => (
 
 const InfoStack = ({ label, value }) => (
     <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-[#7B8AB2]">
+       <p className="text-xs font-semibold uppercase tracking-wide text-[#7B8AB2]">
             {label}
         </p>
         <p className="mt-2 text-sm text-[#3D4C70]">{value}</p>
@@ -131,7 +131,7 @@ const TemplatesListView = ({
                 <p className="text-red-600 mb-4">{error}</p>
                 <button
                     onClick={onRefresh}
-                    className="px-6 py-2 bg-[#3AD6F2] text-white !rounded-[10px] hover:bg-[#2BC4E0] shadow-md transition-all font-semibold"
+                    className="px-6 py-2 bg-[#3AD6F2] text-white !rounded-[10px] shadow-md transition-all font-semibold"
                 >
                     Retry
                 </button>

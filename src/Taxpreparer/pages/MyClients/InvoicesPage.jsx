@@ -381,7 +381,7 @@ export default function InvoicesPage() {
             ) : error ? (
               <div className="alert alert-danger mt-4" role="alert">
                 <strong>Error:</strong> {error}
-                <button className="btn  btn-outline-danger ms-2" onClick={fetchPaidInvoices}>
+                <button className="btn btn-outline-danger ms-2" onClick={fetchPaidInvoices}>
                   Retry
                 </button>
               </div>
@@ -443,7 +443,7 @@ export default function InvoicesPage() {
                 </p>
                 {searchQuery && (
                   <button
-                    className="btn  btn-outline-primary mt-2"
+                    className="btn btn-outline-primary mt-2"
                     onClick={() => setSearchQuery("")}
                   >
                     Clear Search

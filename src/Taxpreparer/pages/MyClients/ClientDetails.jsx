@@ -1124,10 +1124,10 @@ export default function ClientDetails() {
       <div className="p-4 font-['BasisGrotesquePro']">
         <div className="alert alert-danger" role="alert">
           <strong>Error:</strong> {error}
-          <button className="btn  btn-outline-danger ms-2" onClick={fetchClientDetails}>
+          <button className="btn btn-outline-danger ms-2" onClick={fetchClientDetails}>
             Retry
           </button>
-          <button className="btn  btn-outline-secondary ms-2" onClick={() => navigate('/taxdashboard/clients')}>
+          <button className="btn btn-outline-secondary ms-2" onClick={() => navigate('/taxdashboard/clients')}>
             Back to Clients
           </button>
         </div>
@@ -1181,7 +1181,7 @@ export default function ClientDetails() {
       <div className="mb-4">
         <button
           onClick={handleBack}
-          className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-[#E8F0FF] rounded-lg transition-colors"
           style={{
             fontFamily: 'BasisGrotesquePro',
             borderRadius: '8px',
@@ -2152,7 +2152,7 @@ export default function ClientDetails() {
               </div>
               <button
                 type="button"
-                className="py-1 px-2.5 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
+                className="py-1 px-2.5 rounded-full text-gray-400 transition-colors"
                 onClick={() => {
                   setShowAddTaskModal(false);
                   setFormData({
@@ -2295,7 +2295,7 @@ export default function ClientDetails() {
                           type="button"
                           onClick={handleCreateFolder}
                           disabled={creatingFolderLoading || !newFolderName.trim()}
-                          className="px-3 py-1 bg-blue-600 text-white rounded-lg text-[11px] font-bold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          className="px-3 py-1 bg-blue-600 text-white rounded-lg text-[11px] font-bold disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
                           {creatingFolderLoading ? '...' : 'Add'}
                         </button>
@@ -2447,8 +2447,7 @@ export default function ClientDetails() {
                 type="button"
                 onClick={createTask}
                 disabled={loadingTask}
-                className={`px-8 py-2 text-sm font-bold text-white rounded-xl transition-all shadow-md active:scale-95 ${loadingTask ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#F56D2D] hover:bg-[#ff7a2f] shadow-[#F56D2D]/20 hover:shadow-[#F56D2D]/30'}`}
-                style={{ fontFamily: 'BasisGrotesquePro' }}
+                className={`px-8 py-2 text-sm font-bold text-white rounded-xl transition-all shadow-md active:scale-95 ${loadingTask ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#F56D2D]  shadow-[#F56D2D]/20 style={{ fontFamily: 'BasisGrotesquePro' }}
               >
                 {loadingTask ? 'Creating...' : 'Create Task'}
               </button>
@@ -2469,5 +2468,5 @@ export default function ClientDetails() {
         }}
       />
     </div>
-  );
+ );
 }

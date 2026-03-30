@@ -74,7 +74,7 @@ const StorageUsageWarning = ({ usage = { total_gb: 0, limit_gb: 100, percentage_
               {onManageFiles && (
                 <button
                   onClick={onManageFiles}
-                  className="px-4 py-2 bg-white border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition text-sm font-[BasisGrotesquePro]"
+                  className="px-4 py-2 bg-white border border-red-300 text-red-700 rounded-lg transition text-sm font-[BasisGrotesquePro]"
                 >
                   Delete Files
                 </button>
@@ -82,7 +82,7 @@ const StorageUsageWarning = ({ usage = { total_gb: 0, limit_gb: 100, percentage_
               {onUpgrade && (
                 <button
                   onClick={onUpgrade}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-[BasisGrotesquePro]"
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg transition text-sm font-[BasisGrotesquePro]"
 
                 >
                   Upgrade Plan

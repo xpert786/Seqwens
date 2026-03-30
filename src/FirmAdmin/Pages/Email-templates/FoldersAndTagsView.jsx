@@ -56,14 +56,13 @@ export default function FoldersAndTagsView() {
               <h3 className="text-lg font-semibold text-[#1F2A55]">Documents</h3>
               <p className="text-sm text-[#7B8AB2]">Client documents and supporting materials</p>
             </div>
-            <button className="inline-flex h-9 items-center gap-2 !rounded-lg bg-[#F56D2D] px-4 text-sm font-semibold text-white transition hover:bg-[#FF7142]">
-              <FolderPlusIcon />
+            <button className="inline-flex h-9 items-center gap-2 !rounded-lg bg-[#F56D2D] px-4 text-sm font-semibold text-white transition <FolderPlusIcon />
 
               Create New Folder
             </button>
           </div>
 
-          <div className="grid gap-4 p-6 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
+         <div className="grid gap-4 p-6 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
             {folders.map((folder, index) => {
               const isSelected = selectedFolder === folder.id;
 
@@ -85,8 +84,7 @@ export default function FoldersAndTagsView() {
                       <p className="text-xs text-[#7B8AB2]">{folder.templates} templates</p>
                     </div>
                   </div>
-                  <button className=" p-1 text-[#94A3B8] transition hover:text-[#1F2A55]">
-                    <BoxedDotsIcon />
+                  <button className=" p-1 text-[#94A3B8] transition <BoxedDotsIcon />
                   </button>
                 </div>
               );
@@ -95,7 +93,7 @@ export default function FoldersAndTagsView() {
         </div>
 
         {/* Tags */}
-        <div className="rounded-2xl bg-[#FFFFFF] p-6 ">
+       <div className="rounded-2xl bg-[#FFFFFF] p-6 ">
           <div className="space-y-1">
             <h3 className="text-lg font-semibold text-[#1F2A55]">Tags</h3>
             <p className="text-sm text-[#7B8AB2]">Manage template tags for better organization</p>
@@ -111,8 +109,7 @@ export default function FoldersAndTagsView() {
                 {tag}
                 <button
                   type="button"
-                  className="flex text-[#2D3A5C] transition hover:border-[#F6AD55] hover:bg-[#FFF4E6]"
-                  aria-label={`Remove ${tag}`}
+                  className="flex text-[#2D3A5C] transition  aria-label={`Remove ${tag}`}
                 >
                   <TinyTrashIcon />
 
@@ -121,7 +118,7 @@ export default function FoldersAndTagsView() {
             ))}
           </div>
 
-          <div className="mt-6 flex flex-row flex-wrap items-center gap-3">
+         <div className="mt-6 flex flex-row flex-wrap items-center gap-3">
             <input
               type="text"
               placeholder="Add new tag..."

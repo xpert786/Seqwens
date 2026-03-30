@@ -7,7 +7,7 @@ const PreviewModal = ({ template, onClose }) => {
             <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-bold text-[#1F2A55]">Template Preview</h3>
-                    <button onClick={onClose} className="text-[#7B8AB2] hover:text-[#1F2A55] hover:bg-gray-100 p-2 rounded-full transition-all">
+                    <button onClick={onClose} className="text-[#7B8AB2] p-2 rounded-full transition-all">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                             <path d="M18 6L6 18M6 6l12 12" />
                         </svg>
@@ -29,7 +29,7 @@ const PreviewModal = ({ template, onClose }) => {
                 <div className="mt-8 flex justify-end">
                     <button
                         onClick={onClose}
-                        className="px-8 py-2.5 bg-[#1F2A55] text-white !rounded-[10px] font-bold text-sm hover:opacity-90 transition-all active:scale-95"
+                        className="px-8 py-2.5 bg-[#1F2A55] text-white !rounded-[10px] font-bold text-sm transition-all active:scale-95"
                     >
                         Close Preview
                     </button>

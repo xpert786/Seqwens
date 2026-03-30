@@ -516,7 +516,7 @@ export default function ServicesTab() {
               <button
                 onClick={handleAddService}
                 disabled={saving}
-                className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] !rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] !rounded-lg transition font-[BasisGrotesquePro] disabled:opacity-50"
               >
                 {saving ? 'Adding...' : 'Add Service'}
               </button>
@@ -688,7 +688,7 @@ export default function ServicesTab() {
               </button>
               <button
                 onClick={handleAddDiscount}
-                className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] !rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro]"
+                className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] !rounded-lg transition font-[BasisGrotesquePro]"
               >
                 Add Discount
               </button>
@@ -834,11 +834,10 @@ export default function ServicesTab() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full sm:w-auto px-8 py-3 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-all duration-200 font-bold font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
-        >
+          className="w-full sm:w-auto px-8 py-3 bg-[#F56D2D] text-white !rounded-lg  transition-all duration-200 font-bold font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md" >
           {saving ? (
             <>
-              <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+             <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               <span>Saving...</span>
             </>
           ) : (
@@ -862,7 +861,7 @@ export default function ServicesTab() {
               </h3>
               <button
                 onClick={handleCancelEdit}
-                className="text-[#7B8AB2] hover:text-[#1F2A55] transition-colors"
+                className="text-[#7B8AB2] transition-colors"
               >
                 <FiX size={20} />
               </button>
@@ -933,14 +932,14 @@ export default function ServicesTab() {
             <div className="p-4 sm:p-6 bg-gray-50 flex flex-col xs:flex-row gap-3 justify-end border-t border-gray-100">
               <button
                 onClick={handleCancelEdit}
-                className="w-full xs:w-auto px-6 py-2.5 text-sm font-bold text-[#1F2A55] bg-white border border-[#E8F0FF] !rounded-xl hover:bg-gray-50 transition font-[BasisGrotesquePro] shadow-sm order-2 xs:order-1"
+                className="w-full xs:w-auto px-6 py-2.5 text-sm font-bold text-[#1F2A55] bg-white border border-[#E8F0FF] !rounded-xl transition font-[BasisGrotesquePro] shadow-sm order-2 xs:order-1"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveEdit}
                 disabled={saving}
-                className="w-full xs:w-auto px-8 py-2.5 text-sm font-bold text-white bg-[#F56D2D] !rounded-xl hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm order-1 xs:order-2"
+                className="w-full xs:w-auto px-8 py-2.5 text-sm font-bold text-white bg-[#F56D2D] !rounded-xl transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm order-1 xs:order-2"
               >
                 {saving ? (
                   <>

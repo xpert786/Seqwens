@@ -782,7 +782,7 @@ const AllPlans = ({ currentPlanName, currentBillingCycle }) => {
                                 <button
                                     onClick={handleUpgradeConfirm}
                                     disabled={processing}
-                                    className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E66F2F] transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
 
                                     style={{ borderRadius: "10px" }}>
                                     {processing ? 'Processing...' : 'Confirm Upgrade'}

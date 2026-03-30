@@ -113,8 +113,7 @@ const AutomationRules = () => {
                         {/* Actions Icons */}
                         <div className="flex items-center gap-3">
                             {/* Eye Icon */}
-                            <button className="text-gray-700 hover:text-gray-900">
-                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <button className="text-gray-700 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#F3F7FF" />
                                     <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#E8F0FF" stroke-width="0.5" />
                                     <path d="M3.16602 9.0013C3.16602 9.0013 4.91602 4.91797 8.99935 4.91797C13.0827 4.91797 14.8327 9.0013 14.8327 9.0013C14.8327 9.0013 13.0827 13.0846 8.99935 13.0846C4.91602 13.0846 3.16602 9.0013 3.16602 9.0013Z" stroke="#131323" stroke-linecap="round" stroke-linejoin="round" />
@@ -124,8 +123,7 @@ const AutomationRules = () => {
                             </button>
 
                             {/* Download Icon */}
-                            <button className="text-gray-700 hover:text-gray-900">
-                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <button className="text-gray-700 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#F3F7FF" />
                                     <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#E8F0FF" stroke-width="0.5" />
                                     <path d="M14.25 10.75V13.0833C14.25 13.3928 14.1271 13.6895 13.9083 13.9083C13.6895 14.1271 13.3928 14.25 13.0833 14.25H4.91667C4.60725 14.25 4.3105 14.1271 4.09171 13.9083C3.87292 13.6895 3.75 13.3928 3.75 13.0833V10.75M6.08333 7.83333L9 10.75M9 10.75L11.9167 7.83333M9 10.75V3.75" stroke="#131323" stroke-linecap="round" stroke-linejoin="round" />

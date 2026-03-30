@@ -172,7 +172,7 @@ const SortableBlock = ({
                     </div>
                     <div className={`absolute right-2 top-2 flex gap-1.5 transition-all duration-200 z-[100] md:right-1 md:top-2 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                         <button
-                            className={`!w-8 !h-8 flex items-center justify-center !bg-white !border !border-[#e8f0ff] !rounded-[6px] !cursor-pointer transition-all duration-200 !text-[#6e7dae] hover:!bg-[#f3f6fd] hover:!border-[#3ad6f2] hover:!text-[#1f2a55] hover:!scale-105 hover:!shadow-md ${isFirst ? 'opacity-30 !cursor-not-allowed !bg-[#f8f9fa]' : ''}`}
+                            className={`!w-8 !h-8 flex items-center justify-center !bg-white !border !border-[#e8f0ff] !rounded-[6px] !cursor-pointer transition-all duration-200 !text-[#6e7dae]  ${isFirst ? 'opacity-30 !cursor-not-allowed !bg-[#f8f9fa]' : ''}`}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 if (!isFirst) onMoveUp(index);
@@ -185,7 +185,7 @@ const SortableBlock = ({
                             </svg>
                         </button>
                         <button
-                            className={`!w-8 !h-8 flex items-center justify-center !bg-white !border !border-[#e8f0ff] !rounded-[6px] !cursor-pointer transition-all duration-200 !text-[#6e7dae] hover:!bg-[#f3f6fd] hover:!border-[#3ad6f2] hover:!text-[#1f2a55] hover:!scale-105 hover:!shadow-md ${isLast ? 'opacity-30 !cursor-not-allowed !bg-[#f8f9fa]' : ''}`}
+                            className={`!w-8 !h-8 flex items-center justify-center !bg-white !border !border-[#e8f0ff] !rounded-[6px] !cursor-pointer transition-all duration-200 !text-[#6e7dae]  ${isLast ? 'opacity-30 !cursor-not-allowed !bg-[#f8f9fa]' : ''}`}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 if (!isLast) onMoveDown(index);
@@ -198,12 +198,12 @@ const SortableBlock = ({
                             </svg>
                         </button>
                         <button
-                            className="!w-8 !h-8 flex items-center justify-center !bg-white !border !border-[#e8f0ff] !rounded-[6px] !cursor-pointer transition-all duration-200 !text-[#6e7dae] hover:!bg-[#f3f6fd] hover:!border-[#3ad6f2] hover:!text-[#1f2a55] hover:!scale-105 hover:!shadow-md"
+                            className="!w-8 !h-8 flex items-center justify-center !bg-white !border !border-[#e8f0ff] !rounded-[6px] !cursor-pointer transition-all duration-200 !text-[#6e7dae]"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onDuplicate(block.id);
                             }}
-                            title="Duplicate block"
+                           title="Duplicate block"
                         >
                             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                                 <path d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2z" />
@@ -211,12 +211,12 @@ const SortableBlock = ({
                             </svg>
                         </button>
                         <button
-                            className="!w-8 !h-8 flex items-center justify-center !bg-white !border !border-[#e8f0ff] !rounded-[6px] !cursor-pointer transition-all duration-200 !text-[#6e7dae] hover:!bg-[#ffeeee] hover:!border-[#f56d2d] hover:!text-[#f56d2d] hover:!scale-105 hover:!shadow-md"
+                            className="!w-8 !h-8 flex items-center justify-center !bg-white !border !border-[#e8f0ff] !rounded-[6px] !cursor-pointer transition-all duration-200 !text-[#6e7dae]"
                             onMouseDown={(e) => {
                                 e.stopPropagation();
                                 onDelete(block.id);
                             }}
-                            title="Delete block"
+                           title="Delete block"
                         >
                             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                                 <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />

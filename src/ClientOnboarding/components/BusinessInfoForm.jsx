@@ -253,7 +253,7 @@ const BusinessInfoForm = ({ clientId, onClose, onSave }) => {
           <h3 className="text-xl font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
             Business Information Form
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
+          <button onClick={onClose} className="text-gray-400 transition">
             <FiX size={24} />
           </button>
         </div>
@@ -336,7 +336,7 @@ const BusinessInfoForm = ({ clientId, onClose, onSave }) => {
                 <h3 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Business Income & Expenses</h3>
                 <button
                   onClick={addBusinessIncome}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro]"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#F56D2D] text-white rounded-lg transition font-[BasisGrotesquePro]"
                 >
                   <FiPlus size={16} /> Add Income Record
                 </button>
@@ -395,7 +395,7 @@ const BusinessInfoForm = ({ clientId, onClose, onSave }) => {
                 <h3 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">Rental Properties</h3>
                 <button
                   onClick={addRentalProperty}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro]"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#F56D2D] text-white rounded-lg transition font-[BasisGrotesquePro]"
                 >
                   <FiPlus size={16} /> Add Property
                 </button>
@@ -443,7 +443,7 @@ const BusinessInfoForm = ({ clientId, onClose, onSave }) => {
                 <h4 className="text-lg font-semibold text-[#3B4A66] font-[BasisGrotesquePro]">
                   {editingBusinessIndex !== null ? 'Edit Business' : 'Add New Business'}
                 </h4>
-                <button onClick={closeBusinessModal} className="text-gray-400 hover:text-gray-600 transition"><FiX size={20} /></button>
+                <button onClick={closeBusinessModal} className="text-gray-400 transition"><FiX size={20} /></button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -467,8 +467,8 @@ const BusinessInfoForm = ({ clientId, onClose, onSave }) => {
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-6">
-                <button onClick={closeBusinessModal} className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Cancel</button>
-                <button onClick={saveBusinessInfo} className="flex items-center gap-2 px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition">
+                <button onClick={closeBusinessModal} className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg transition">Cancel</button>
+                <button onClick={saveBusinessInfo} className="flex items-center gap-2 px-6 py-2 bg-[#F56D2D] text-white rounded-lg transition">
                   <FiSave size={16} /> {editingBusinessIndex !== null ? 'Update Business' : 'Add Business'}
                 </button>
               </div>
@@ -478,11 +478,11 @@ const BusinessInfoForm = ({ clientId, onClose, onSave }) => {
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-6 border-t border-[#E8F0FF]">
-          <button onClick={onClose} className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition" disabled={saving}>Cancel</button>
+          <button onClick={onClose} className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg transition" disabled={saving}>Cancel</button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-6 py-2 bg-[#F56D2D] text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? (
               <><div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> Saving...</>

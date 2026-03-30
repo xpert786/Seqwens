@@ -129,7 +129,7 @@ export default function OnboardingTab({ onboardingSteps, trainingModules }) {
               {/* 4️⃣ Column: Action Button */}
               <div className="flex justify-end">
                 {step.action ? (
-                  <button className="px-3 py-1 text-xs text-[#3B4A66] hover:bg-blue-50 rounded font-[BasisGrotesquePro] border border-blue-100">
+                  <button className="px-3 py-1 text-xs text-[#3B4A66] rounded font-[BasisGrotesquePro] border border-blue-100">
                     {step.action}
                   </button>
                 ) : (

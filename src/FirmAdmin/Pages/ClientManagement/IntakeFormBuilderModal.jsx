@@ -58,7 +58,7 @@ export default function IntakeFormBuilderModal({ isOpen, onClose }) {
           <h3 className="text-xl font-semibold text-gray-800">Intake Forms Builder</h3>
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-6 h-6 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-gray-600 text-xl leading-none transition-colors -sm"
+            className="absolute top-4 right-4 w-6 h-6 flex items-center justify-center rounded-full bg-blue-50 text-gray-600 text-xl leading-none transition-colors -sm"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M18 6L6 18M6 6L18 18" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -72,8 +72,7 @@ export default function IntakeFormBuilderModal({ isOpen, onClose }) {
           <button
             className={`px-4 py-1.8 !rounded-md text-sm font-medium transition-all ${activeTab === "individual"
               ? "bg-[#3AD6F2] text-white"
-              : "text-gray-700 hover:bg-gray-100"
-              }`}
+             : "text-gray-700"}`}
             onClick={() => setActiveTab("individual")}
           >
             Individual
@@ -81,8 +80,7 @@ export default function IntakeFormBuilderModal({ isOpen, onClose }) {
           <button
             className={`px-4 py-1.5 !rounded-md text-sm font-medium transition-all ${activeTab === "business"
               ? "bg-[#3AD6F2] text-white"
-              : "text-gray-700 hover:bg-gray-100"
-              }`}
+             : "text-gray-700"}`}
             onClick={() => setActiveTab("business")}
           >
             Business
@@ -108,7 +106,7 @@ export default function IntakeFormBuilderModal({ isOpen, onClose }) {
             <h3 className="font-medium text-gray-700 text-base">Fields</h3>
             <button
               onClick={handleAddField}
-              className="text-sm px-3 py-1.5 !border border-[#E8F0FF] rounded-md text-gray-600 hover:bg-gray-100 transition"
+              className="text-sm px-3 py-1.5 !border border-[#E8F0FF] rounded-md text-gray-600 transition"
             >
               + Add Field
             </button>
@@ -202,7 +200,7 @@ export default function IntakeFormBuilderModal({ isOpen, onClose }) {
 
         {/* Footer */}
         <div className="flex justify-end mt-8">
-          <button className="px-5 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition flex items-center gap-2" style={{ borderRadius: "10px" }}>
+          <button className="px-5 py-2 bg-orange-500 text-white rounded-md transition flex items-center gap-2" style={{ borderRadius: "10px" }}>
             Save Template
             <span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M0.75 6H11.25M11.25 6L6 0.75M11.25 6L6 11.25" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />

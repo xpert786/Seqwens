@@ -625,13 +625,13 @@ export default function FirmManagement() {
                     </div>
                     <div className="flex flex-wrap items-center gap-2 firmmgmt-actions">
                         <button onClick={handleExportReport}
-                            className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                            className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors"
                             style={{ borderRadius: '8px' }}>
                             <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" /></svg>
                             Export Report
                         </button>
                         <button onClick={handleAddFirm}
-                            className="flex items-center gap-2 rounded-lg bg-[#F56D2D] px-3 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+                            className="flex items-center gap-2 rounded-lg bg-[#F56D2D] px-3 py-2 text-sm font-semibold text-white transition-colors"
                             style={{ borderRadius: '8px' }}>
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -681,7 +681,7 @@ export default function FirmManagement() {
                                 <h3 className="text-sm font-medium text-red-800">Error loading firms</h3>
                                 <p className="mt-2 text-sm text-red-700">{error}</p>
                                 <button onClick={fetchFirms}
-                                    className="mt-4 bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200"
+                                    className="mt-4 bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800"
                                     style={{ borderRadius: '7px' }}>
                                     Try Again
                                 </button>
@@ -700,7 +700,7 @@ export default function FirmManagement() {
                             </div>
                             {totalFirmCards > FIRM_CARDS_PER_PAGE && (
                                 <button onClick={handleViewAllFirmCards}
-                                    className="text-black dark:text-white text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors firmmgmt-view-toggle border border-[#E8F0FF] dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                                    className="text-black dark:text-white text-sm font-medium cursor-pointer px-3 py-2 transition-colors firmmgmt-view-toggle border border-[#E8F0FF] dark:border-gray-600 rounded-lg"
                                     style={{ borderRadius: '7px' }}>
                                     {showAllFirmCards ? 'Show Less' : 'View All'}
                                 </button>
@@ -858,7 +858,7 @@ export default function FirmManagement() {
                                         Detailed insight into firm performance, contact information, and system health
                                     </p>
                                 </div>
-                                <button onClick={closeFirmDetailsModal} className="text-gray-400 hover:text-gray-600 transition-colors"><CloseIcon /></button>
+                                <button onClick={closeFirmDetailsModal} className="text-gray-400 transition-colors"><CloseIcon /></button>
                             </div>
 
                             <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
@@ -974,7 +974,7 @@ export default function FirmManagement() {
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Add New Firm</h3>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Create a new firm account on the platform</p>
                                 </div>
-                                <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"><CloseIcon /></button>
+                                <button onClick={handleCloseModal} className="text-gray-400 transition-colors flex-shrink-0"><CloseIcon /></button>
                             </div>
 
                             <div className="p-6 space-y-4">
@@ -1012,10 +1012,10 @@ export default function FirmManagement() {
 
                             <div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
                                 <button onClick={handleCloseModal}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors"
                                     style={{ borderRadius: '7px' }}>Cancel</button>
                                 <button onClick={handleCreateFirm} disabled={creatingFirm}
-                                    className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     style={{ borderRadius: '7px' }}>
                                     {creatingFirm ? 'Creating...' : 'Create Firm'}
                                 </button>
@@ -1080,11 +1080,11 @@ export default function FirmManagement() {
                             <div className="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-700">
                                 <button onClick={() => { setShowSuspendModal(false); setSuspendReason(''); setFirmToSuspend(null); setSuspendError(null); setSuspendSuccess(false); }}
                                     style={{ borderRadius: '7px' }}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors"
                                     disabled={suspendingFirm}>Cancel</button>
                                 <button onClick={suspendFirm} disabled={suspendingFirm || !suspendReason.trim()}
                                     style={{ borderRadius: '7px' }}
-                                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                     {suspendingFirm ? 'Suspending...' : 'Suspend Firm'}
                                 </button>
                             </div>
@@ -1146,10 +1146,10 @@ export default function FirmManagement() {
 
                             <div className="flex justify-end space-x-3 p-4 border-t border-gray-200 dark:border-gray-700">
                                 <button onClick={() => { setShowUnsuspendModal(false); setUnsuspendReason(''); setFirmToUnsuspend(null); setUnsuspendError(null); setUnsuspendSuccess(false); }}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors"
                                     disabled={unsuspendingFirm} style={{ borderRadius: '7px' }}>Cancel</button>
                                 <button onClick={unsuspendFirm} disabled={unsuspendingFirm}
-                                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     style={{ borderRadius: '7px' }}>
                                     {unsuspendingFirm
                                         ? (firmToUnsuspend.status?.toLowerCase() === 'inactive' ? 'Reactivating...' : 'Unsuspending...')
@@ -1210,10 +1210,10 @@ export default function FirmManagement() {
 
                             <div className="flex justify-end space-x-3 p-4 border-t border-gray-200 dark:border-gray-700">
                                 <button onClick={() => { setShowDeleteModal(false); setFirmToDelete(null); setDeleteError(null); }}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors"
                                     disabled={deletingFirm} style={{ borderRadius: '7px' }}>Cancel</button>
                                 <button onClick={deleteFirm} disabled={deletingFirm}
-                                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     style={{ borderRadius: '7px' }}>
                                     {deletingFirm ? 'Deleting...' : 'Delete Firm'}
                                 </button>
@@ -1231,7 +1231,7 @@ export default function FirmManagement() {
                                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Assign Clients</h3>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Assign a client to {assignClientsFirm.name || assignClientsFirm.firm_name || 'this firm'}</p>
                                 </div>
-                                <button onClick={closeAssignClientsModal} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"><CloseIcon /></button>
+                                <button onClick={closeAssignClientsModal} className="text-gray-400 dark:transition-colors"><CloseIcon /></button>
                             </div>
 
                             <div className="p-4 space-y-3">
@@ -1271,11 +1271,11 @@ export default function FirmManagement() {
 
                             <div className="flex justify-end gap-3 p-4 border-t border-gray-200 dark:border-gray-700">
                                 <button onClick={closeAssignClientsModal}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors"
                                     style={{ borderRadius: '7px' }} disabled={assigningClient}>Cancel</button>
                                 <button onClick={handleAssignClient}
                                     disabled={assigningClient || loadingAssignClients || !selectedClientId || assignClientOptions.length === 0}
-                                    className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     style={{ borderRadius: '7px' }}>
                                     {assigningClient ? 'Assigning...' : 'Assign Client'}
                                 </button>

@@ -253,7 +253,7 @@ const StartWorkflowModal = ({
           </div>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 transition-colors"
             disabled={starting}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -438,14 +438,14 @@ const StartWorkflowModal = ({
         <div className="flex justify-end gap-3 px-5 py-4 border-t border-[#E8F0FF] flex-shrink-0">
           <button
             onClick={handleClose}
-            className="px-4 py-2 text-xs font-medium text-gray-700 bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+            className="px-4 py-2 text-xs font-medium text-gray-700 bg-white !border border-[#E8F0FF] !rounded-lg transition-colors font-[BasisGrotesquePro]"
             disabled={starting}
           >
             Cancel
           </button>
           <button
             onClick={handleStartWorkflow}
-            className="px-4 py-2 text-xs font-medium text-white bg-[#F56D2D] !rounded-lg hover:bg-[#E55A1D] transition-all font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-2 text-xs font-medium text-white bg-[#F56D2D] !rounded-lg transition-all font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             disabled={starting || !selectedTemplateId || (!clientId && !selectedClientId) || loadingTemplates}
           >
             {starting ? (

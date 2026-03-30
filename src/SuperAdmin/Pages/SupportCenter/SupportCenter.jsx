@@ -84,7 +84,7 @@ export default function SupportCenter() {
                     {(activeTab === "generalFAQs" || activeTab === "seqwensTraining") && userType !== 'billing_admin' && (
                         <button
                             onClick={handleAddNew}
-                            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold flex items-center transition-colors"
+                            className="bg-orange-500 text-white px-4 py-2 rounded-lg font-semibold flex items-center transition-colors"
                             style={{ borderRadius: '7px' }}
                         >
                             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

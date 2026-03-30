@@ -324,7 +324,7 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
             }}
         >
             <div
-                className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+                className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[75vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
                 style={{ fontFamily: 'BasisGrotesquePro' }}
             >
@@ -336,7 +336,7 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                     </div>
                     <button
                         onClick={handleClose}
-                        className="w-10 h-10 flex items-center justify-center !rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors ml-4 flex-shrink-0"
+                        className="w-10 h-10 flex items-center justify-center !rounded-lg bg-gray-100 text-gray-600 transition-colors ml-4 flex-shrink-0"
                         aria-label="Close modal"
                     >
                         <CrossesIcon className="w-5 h-5" />
@@ -805,7 +805,7 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                         <button
                             type="button"
                             onClick={handlePrevious}
-                            className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 font-[BasisGrotesquePro]"
+                            className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-[#E8F0FF] !rounded-lg transition-all duration-200 font-[BasisGrotesquePro]"
                         >
                             Previous
                         </button>
@@ -813,7 +813,7 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                     <button
                         type="button"
                         onClick={handleClose}
-                        className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 font-[BasisGrotesquePro]"
+                        className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-[#E8F0FF] !rounded-lg transition-all duration-200 font-[BasisGrotesquePro]"
                     >
                         Cancel
                     </button>
@@ -821,7 +821,7 @@ export default function AddOfficeModal({ isOpen, onClose, onOfficeCreated }) {
                         type="button"
                         onClick={handleContinue}
                         disabled={loading}
-                        className="px-6 py-2.5 text-sm font-semibold text-white bg-[#F56D2D] !rounded-lg hover:bg-[#E54A1B] transition-all duration-200 disabled:opacity-50 font-[BasisGrotesquePro] flex items-center gap-2"
+                        className="px-6 py-2.5 text-sm font-semibold text-white bg-[#F56D2D] !rounded-lg transition-all duration-200 disabled:opacity-50 font-[BasisGrotesquePro] flex items-center gap-2"
                     >
                         {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
                         {loading ? 'Saving...' : currentStep === steps.length ? 'Add Office' : 'Continue'}

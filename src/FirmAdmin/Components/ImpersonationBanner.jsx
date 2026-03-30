@@ -123,7 +123,7 @@ const ImpersonationBanner = () => {
                 <button
                     onClick={handleRevert}
                     disabled={isReverting}
-                    className="flex-shrink-0 px-3 py-1 bg-white text-orange-600 rounded-md font-bold text-xs hover:bg-orange-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="flex-shrink-0 px-3 py-1 bg-white text-orange-600 rounded-md font-bold text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                     {isReverting ? (
                         <>

@@ -678,7 +678,7 @@ export default function CalendarPage() {
             <div className="flex items-center gap-2 justify-end w-full md:w-auto pr-4 calendar-nav-buttons">
               <div className="flex items-center bg-white rounded-xl border border-[#E8F0FF] p-1 shadow-sm">
                 <button
-                  className="p-2 hover:bg-gray-50 text-gray-600 transition-all rounded-lg"
+                  className="p-2 text-gray-600 transition-all rounded-lg"
                   onClick={() => navigateCalendar(-1)}
                   title="Previous"
                 >
@@ -686,14 +686,14 @@ export default function CalendarPage() {
                 </button>
                 <div className="w-[1px] h-4 bg-[#E8F0FF] mx-1"></div>
                 <button
-                  className="px-4 py-1.5 hover:bg-gray-50 text-[#3B4A66] font-medium transition-all text-sm rounded-lg"
+                  className="px-4 py-1.5 text-[#3B4A66] font-medium transition-all text-sm rounded-lg"
                   onClick={goToToday}
                 >
                   Today
                 </button>
                 <div className="w-[1px] h-4 bg-[#E8F0FF] mx-1"></div>
                 <button
-                  className="p-2 hover:bg-gray-50 text-gray-600 transition-all rounded-lg"
+                  className="p-2 text-gray-600 transition-all rounded-lg"
                   onClick={() => navigateCalendar(1)}
                   title="Next"
                 >
@@ -974,7 +974,7 @@ export default function CalendarPage() {
             {/* Header */}
             <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="text-lg font-bold text-gray-900">Event Details</h3>
-              <button onClick={closeViewEventModal} className="text-gray-400 hover:text-gray-600 transition-colors">
+              <button onClick={closeViewEventModal} className="text-gray-400 transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
@@ -1087,7 +1087,7 @@ export default function CalendarPage() {
 
               <button
                 onClick={closeViewEventModal}
-                className="w-full py-2 text-gray-500 hover:text-gray-700 font-medium text-sm"
+                className="w-full py-2 text-gray-500 font-medium text-sm"
               >
                 Close
               </button>
@@ -1140,7 +1140,7 @@ export default function CalendarPage() {
 
                 <button
                   onClick={handleOpenCreateEventModal}
-                  className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-[#F56D2D] !rounded-xl text-white font-black !text-xs   md uppercase tracking-[0.2em] hover:opacity-90 hover:scale-[1.02] transition-all rounded-[20px] shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
+                  className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-[#F56D2D] !rounded-xl text-white font-black !text-xs   md uppercase tracking-[0.2em] transition-all rounded-[20px] shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
                 >
                   <AddTask />
                   <span>Create new Event</span>

@@ -307,7 +307,7 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
             <h5 className="upload-heading" style={{ fontSize: '18px', fontWeight: '600' }}>Upload Documents</h5>
             <p className="upload-subheading" style={{ fontSize: '13px' }}>Upload documents directly to the client's portal</p>
           </div>
-          <button onClick={resetModal} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+          <button onClick={resetModal} className="p-2 rounded-full transition-colors text-slate-400">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -354,7 +354,7 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
             <div className="flex items-center justify-between mb-2">
               <h6 className="m-0 text-sm font-semibold text-slate-700 font-[BasisGrotesquePro]">Selected File</h6>
               <button
-                className="p-0 text-xs text-red-500 hover:text-red-700 bg-transparent border-0 font-[BasisGrotesquePro]"
+                className="p-0 text-xs text-red-500 bg-transparent border-0 font-[BasisGrotesquePro]"
                 onClick={() => setFiles([])}
               >
                 Clear
@@ -469,7 +469,7 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
           <button
             onClick={resetModal}
             disabled={uploading}
-            className="px-4 py-2 text-sm font-bold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-all font-[BasisGrotesquePro] disabled:opacity-50"
+            className="px-4 py-2 text-sm font-bold text-slate-700 bg-white border border-slate-200 rounded-md transition-all font-[BasisGrotesquePro] disabled:opacity-50"
             style={{ borderRadius: "10px" }}
           >
             Cancel

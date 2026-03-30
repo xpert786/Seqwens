@@ -677,7 +677,7 @@ export default function FirmHeader({ onToggleSidebar, isSidebarOpen, sidebarWidt
                                                     : item.isPrimary
                                                         ? "text-primary fw-bold"
                                                         : "text-gray-700"
-                                                    } hover:bg-gray-50 transition-colors`}
+                                                   } transition-colors`}
                                                 onClick={() => handleMenuAction(item.action)}
                                                 role="menuitem"
                                                 style={{

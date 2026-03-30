@@ -127,13 +127,13 @@ export default function WebhooksTab() {
 
             {/* Action Buttons */}
             <div className="flex gap-2">
-              <button className="px-4 py-2 text-sm font-medium text-[#131323] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro]">
+              <button className="px-4 py-2 text-sm font-medium text-[#131323] bg-white !border border-[#E8F0FF] !rounded-lg transition font-[BasisGrotesquePro]">
                 Test Webhook
               </button>
-              <button className="px-4 py-2 text-sm font-medium text-[#131323] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro]">
+              <button className="px-4 py-2 text-sm font-medium text-[#131323] bg-white !border border-[#E8F0FF] !rounded-lg transition font-[BasisGrotesquePro]">
                 Edit
               </button>
-              <button className="px-4 py-2 text-sm font-medium text-red-600 bg-white !border border-[#EF4444] !rounded-lg hover:bg-red-50 transition font-[BasisGrotesquePro]">
+              <button className="px-4 py-2 text-sm font-medium text-red-600 bg-white !border border-[#EF4444] !rounded-lg transition font-[BasisGrotesquePro]">
                 Delete
               </button>
             </div>

@@ -188,21 +188,21 @@ const CalendarView = ({ tasksList, onTaskClick }) => {
         </div>
         <div className="d-flex align-items-center gap-2 bg-light rounded-pill p-1 border">
           <button
-            className="btn  btn-link text-dark text-decoration-none rounded-circle d-flex align-items-center justify-content-center p-0"
+            className="btn btn-link text-dark text-decoration-none rounded-circle d-flex align-items-center justify-content-center p-0"
             style={{ width: '32px', height: '32px' }}
             onClick={() => navigateMonth(-1)}
           >
             <FaChevronDown style={{ transform: 'rotate(90deg)', fontSize: '12px' }} />
           </button>
           <button
-            className="btn  btn-white text-dark fw-bold px-3 py-1 shadow-sm rounded-pill"
+            className="btn btn-white text-dark fw-bold px-3 py-1 shadow-sm rounded-pill"
             style={{ fontSize: '0.85rem' }}
             onClick={() => setCurrentDate(new Date())}
           >
             Today
           </button>
           <button
-            className="btn  btn-link text-dark text-decoration-none rounded-circle d-flex align-items-center justify-content-center p-0"
+            className="btn btn-link text-dark text-decoration-none rounded-circle d-flex align-items-center justify-content-center p-0"
             style={{ width: '32px', height: '32px' }}
             onClick={() => navigateMonth(1)}
           >
@@ -1938,8 +1938,8 @@ export default function TasksPage() {
                     <span style={{ cursor: 'grab', color: '#C2CCDE' }}>⋮⋮</span> {titleFor(k)}
                   </div>
                   {/* <div className="d-flex align-items-center" style={{ gap: 6 }}>
-                    <button className="btn  btn-light" disabled={idx === 0} onClick={() => setOrder(o => { const n=[...o]; const t=n[idx-1]; n[idx-1]=n[idx]; n[idx]=t; return n; })}>↑</button>
-                    <button className="btn  btn-light" disabled={idx === order.length-1} onClick={() => setOrder(o => { const n=[...o]; const t=n[idx+1]; n[idx+1]=n[idx]; n[idx]=t; return n; })}>↓</button>
+                    <button className="btn btn-light" disabled={idx === 0} onClick={() => setOrder(o => { const n=[...o]; const t=n[idx-1]; n[idx-1]=n[idx]; n[idx]=t; return n; })}>↑</button>
+                    <button className="btn btn-light" disabled={idx === order.length-1} onClick={() => setOrder(o => { const n=[...o]; const t=n[idx+1]; n[idx+1]=n[idx]; n[idx]=t; return n; })}>↓</button>
                   </div> */}
                 </div>
               ))}
@@ -2117,7 +2117,7 @@ export default function TasksPage() {
               </div>
               <div className="d-flex gap-2">
                 <button
-                  className="btn  btn-outline-secondary"
+                  className="btn btn-outline-secondary"
                   onClick={() => setTasksPagination(prev => ({ ...prev, page: prev.page - 1 }))}
                   disabled={!tasksPagination.has_previous}
                 >
@@ -2127,7 +2127,7 @@ export default function TasksPage() {
                   Page {tasksPagination.page} of {tasksPagination.total_pages}
                 </span>
                 <button
-                  className="btn  btn-outline-secondary"
+                  className="btn btn-outline-secondary"
                   onClick={() => setTasksPagination(prev => ({ ...prev, page: prev.page + 1 }))}
                   disabled={!tasksPagination.has_next}
                 >
@@ -2306,7 +2306,7 @@ export default function TasksPage() {
                               </div>
                               <button
                                 type="button"
-                                className="btn  btn-outline-primary d-flex align-items-center gap-2"
+                                className="btn btn-outline-primary d-flex align-items-center gap-2"
                                 onClick={() => handlePreviewFile(file)}
                                 style={{
                                   borderRadius: '6px',
@@ -2451,7 +2451,7 @@ export default function TasksPage() {
                           </div>
                           <button
                             type="button"
-                            className="btn  btn-outline-primary d-flex align-items-center gap-2"
+                            className="btn btn-outline-primary d-flex align-items-center gap-2"
                             onClick={() => handlePreviewFile(file)}
                             style={{ borderRadius: '6px' }}
                           >
@@ -3561,7 +3561,7 @@ export default function TasksPage() {
                             </div>
                             <button
                               type="button"
-                              className="btn  btn-link text-danger p-0"
+                              className="btn btn-link text-danger p-0"
                               onClick={() => removeUploadFile(index)}
                               style={{ textDecoration: 'none' }}
                             >

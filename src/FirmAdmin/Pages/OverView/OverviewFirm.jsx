@@ -1049,7 +1049,7 @@ export default function FirmAdminDashboard() {
             <button
               onClick={handleScheduleReport}
               disabled={scheduleLoading}
-              className="px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-orange-500 rounded-lg hover:bg-orange-600 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-orange-500 rounded-lg font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               style={{
                 borderRadius: '12px'
               }}
@@ -1233,8 +1233,7 @@ export default function FirmAdminDashboard() {
                 disabled={selectedDateRange === dateRange}
                 className="px-2 xl:px-3 py-1 text-[10px] xl:text-sm font-medium
                    font-[BasisGrotesquePro] bg-[#3B4A66] text-white
-                   !rounded-[5px] hover:bg-[#2d3a52]
-                   disabled:opacity-50 whitespace-nowrap"
+                  !rounded-[5px] disabled:opacity-50 whitespace-nowrap"
               >
                 Apply
               </button>
@@ -1246,8 +1245,8 @@ export default function FirmAdminDashboard() {
                 className="px-2 xl:px-4 py-1 xl:py-2 text-[#3B4A66] bg-white
                    border border-[#E5E7EB] !rounded-[7px]
                    text-[10px] xl:text-sm font-medium font-[BasisGrotesquePro]
-                   hover:bg-gray-50 whitespace-nowrap flex items-center gap-1
-                   max-md:flex-1 max-md:justify-center"
+                   whitespace-nowrap flex items-center gap-1
+                  max-md:flex-1 max-md:justify-center"
               >
                 <DownsIcon />
                 Export
@@ -1528,7 +1527,7 @@ export default function FirmAdminDashboard() {
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  className={`p-2 text-gray-500 hover:text-gray-700 ${engagementLayout === 'row' ? 'bg-gray-100 rounded-lg' : ''}`}
+                  className={`p-2 text-gray-500 ${engagementLayout === 'row' ? 'bg-gray-100 rounded-lg' : ''}`}
                   onClick={() => setEngagementLayout(engagementLayout === 'column' ? 'row' : 'column')}
                   title="Toggle layout"
                 >
@@ -1536,8 +1535,8 @@ export default function FirmAdminDashboard() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                   </svg>
                 </button>
-                <button className="p-2 text-gray-500 hover:text-gray-700" onClick={() => navigate('/firmadmin/client-engagement-details')}>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button className="p-2 text-gray-500" onClick={() => navigate('/firmadmin/client-engagement-details')}>
+                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
@@ -1597,13 +1596,11 @@ export default function FirmAdminDashboard() {
                 <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro]">Top performer this month</p>
               </div>
               <div className="flex items-center gap-2">
-                {/* <button className="p-2 text-gray-500 hover:text-gray-700">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {/* <button className="p-2 text-gray-500 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
               </svg>
             </button>
-            <button className="p-2 text-gray-500 hover:text-gray-700">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button className="p-2 text-gray-500 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
@@ -1714,7 +1711,7 @@ export default function FirmAdminDashboard() {
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  className={`p-2 text-gray-500 hover:text-gray-700 ${complianceLayout === 'row' ? 'bg-gray-100 rounded-lg' : ''}`}
+                  className={`p-2 text-gray-500 ${complianceLayout === 'row' ? 'bg-gray-100 rounded-lg' : ''}`}
                   onClick={() => setComplianceLayout(complianceLayout === 'column' ? 'row' : 'column')}
                   title="Toggle layout"
                 >

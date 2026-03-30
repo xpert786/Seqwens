@@ -291,7 +291,7 @@ const TaskDetails = () => {
                     <p className="text-red-600 font-[BasisGrotesquePro]">{error}</p>
                     <button
                         onClick={fetchTaskDetails}
-                        className="mt-4 px-4 py-2 bg-red-600 text-white !rounded-[10px] hover:bg-red-700 font-[BasisGrotesquePro]"
+                        className="mt-4 px-4 py-2 bg-red-600 text-white !rounded-[10px] font-[BasisGrotesquePro]"
                     >
                         Retry
                     </button>
@@ -419,7 +419,7 @@ const TaskDetails = () => {
                 <div className="mb-6 taskdetails-back-button">
                     <button
                         onClick={handleBack}
-                        className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-[#E8F0FF] !rounded-[10px] hover:bg-gray-50 transition-all active:scale-95 font-[BasisGrotesquePro] shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-[#E8F0FF] !rounded-[10px] transition-all active:scale-95 font-[BasisGrotesquePro] shadow-sm"
                     >
                         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M11.25 13.5L6.75 9L11.25 4.5" stroke="#3B4A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -452,7 +452,7 @@ const TaskDetails = () => {
                         <button
                             onClick={timeTrackingStatus?.is_tracking_active ? handlePauseTimer : handleStartTimer}
                             disabled={timeTrackingLoading}
-                            className="px-6 py-3 bg-white text-[#3B4A66] border border-[#E8F0FF] !rounded-[10px] hover:bg-gray-50 transition-all flex items-center justify-center gap-2 font-bold shadow-sm disabled:opacity-50 active:scale-95"
+                            className="px-6 py-3 bg-white text-[#3B4A66] border border-[#E8F0FF] !rounded-[10px] transition-all flex items-center justify-center gap-2 font-bold shadow-sm disabled:opacity-50 active:scale-95"
                         >
                             {timeTrackingStatus?.is_tracking_active ? (
                                 <>
@@ -622,7 +622,7 @@ const TaskDetails = () => {
                                         <button
                                             onClick={handleResetTimer}
                                             disabled={timeTrackingLoading || !timeTrackingStatus || timeTrackingStatus.total_sessions === 0}
-                                            className="py-2.5 px-4 bg-white border border-gray-200 text-gray-500 font-bold !rounded-[10px] text-xs hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-50"
+                                            className="py-2.5 px-4 bg-white border border-gray-200 text-gray-500 font-bold !rounded-[10px] text-xs transition-all active:scale-95 disabled:opacity-50"
                                         >
                                             Reset
                                         </button>
@@ -705,7 +705,7 @@ const TaskDetails = () => {
                                         type="button"
                                         onClick={handleReRequestDocument}
                                         disabled={processingAction || !reRequestComments.trim()}
-                                        className="w-full inline-flex justify-center !rounded-[10px] border border-transparent shadow-sm px-4 py-2 bg-[#F59E0B] text-base font-bold text-white hover:bg-[#D97706] focus:outline-none sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 transition-all font-[BasisGrotesquePro]"
+                                        className="w-full inline-flex justify-center !rounded-[10px] border border-transparent shadow-sm px-4 py-2 bg-[#F59E0B] text-base font-bold text-white focus:outline-none sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 transition-all font-[BasisGrotesquePro]"
                                     >
                                         {processingAction ? 'Sending...' : 'Re-request'}
                                     </button>

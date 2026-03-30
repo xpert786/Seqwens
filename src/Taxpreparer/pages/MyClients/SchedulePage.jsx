@@ -178,7 +178,7 @@ export default function SchedulePage() {
       <div className="mt-6">
         <div className="alert alert-danger" role="alert">
           <strong>Error:</strong> {error}
-          <button className="btn  btn-outline-danger ms-2" onClick={fetchUpcomingAppointments}>
+          <button className="btn btn-outline-danger ms-2" onClick={fetchUpcomingAppointments}>
             Retry
           </button>
         </div>
@@ -321,7 +321,7 @@ export default function SchedulePage() {
                     <div className="d-flex gap-2">
                       {!isFormer && (
                         <button
-                          className="btn  btn-outline-secondary d-flex align-items-center gap-1"
+                          className="btn btn-outline-secondary d-flex align-items-center gap-1"
                           style={{ fontSize: "12px", padding: "4px 8px", borderRadius: "6px" }}
                           onClick={(e) => openStatusModal(appointment, e)}
                         >
@@ -394,7 +394,7 @@ export default function SchedulePage() {
             </p>
             {searchQuery && (
               <button
-                className="btn  btn-outline-primary mt-2"
+                className="btn btn-outline-primary mt-2"
                 onClick={() => setSearchQuery("")}
               >
                 Clear Search
@@ -443,7 +443,7 @@ export default function SchedulePage() {
                 Cancel
               </button>
               <button
-                className="btn btn-primary  text-white"
+                className="btn btn-primary text-white"
                 style={{ backgroundColor: '#F56D2D', borderColor: '#F56D2D' }}
                 onClick={() => updateAppointmentStatus(selectedAppointment.id, newStatus)}
               >

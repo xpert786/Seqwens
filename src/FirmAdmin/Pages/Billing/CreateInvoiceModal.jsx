@@ -410,14 +410,14 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
           `}
         </style>
         {/* Header */}
-        <div className="flex justify-between items-center p-5 sm:p-6 border-b border-[#F1F5F9] bg-white sticky top-0 z-10">
+        <div className="flex justify-between items-center p-5 sm:p-6 border-b border-[#F1F5F9] bg-white sticky top-0 z-10 pb-2">
           <div>
             <h4 className="text-xl sm:text-2xl font-black text-gray-900 font-[BasisGrotesquePro]">Create Invoice</h4>
             <p className="text-xs sm:text-sm text-gray-500 font-[BasisGrotesquePro]">Generate a new professional invoice for your client</p>
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all shadow-sm"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-all shadow-sm"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -427,7 +427,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-8 space-y-8 custom-scrollbar bg-white">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-8 space-y-8 custom-scrollbar bg-white pt-2">
           {/* Error/Success Messages */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
@@ -687,7 +687,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
               })}
               <button
                 onClick={handleAddItem}
-                className="w-full md:w-auto px-4 py-2 text-sm font-medium text-[#3B4A66] !rounded-lg !border border-[#E8F0FF] hover:bg-gray-50 transition"
+                className="w-full md:w-auto px-4 py-2 text-sm font-medium text-[#3B4A66] !rounded-lg !border border-[#E8F0FF] transition"
               >
                 + Add Item
               </button>
@@ -709,7 +709,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
             <button
               onClick={onClose}
               disabled={loading}
-              className="flex-1 sm:flex-none px-6 py-2.5 bg-white border border-gray-200 !rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all font-[BasisGrotesquePro]"
+              className="flex-1 sm:flex-none px-6 py-2.5 bg-white border border-gray-200 !rounded-xl text-sm font-bold text-gray-700 transition-all font-[BasisGrotesquePro]"
             >
               Cancel
             </button>

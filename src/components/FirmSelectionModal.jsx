@@ -232,8 +232,8 @@ export default function FirmSelectionModal({ firms, onSelect, onClose, loginCate
         w-full sm:w-auto relative flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 font-bold transition-all duration-300 text-sm shadow-md
         ${!selectedMembership || loading
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                                : 'bg-gradient-to-r from-[#3AD6F2] to-[#2BB1CC] text-white hover:shadow-xl hover:shadow-[#3AD6F2]/30 hover:-translate-y-0.5 active:translate-y-0 border border-[#3AD6F2]/20'}
-    `}
+                                : 'bg-gradient-to-r from-[#3AD6F2] to-[#2BB1CC] text-white   active:translate-y-0 border border-[#3AD6F2]/20'}
+   `}
                     >
                         {loading ? (
                             <>

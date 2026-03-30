@@ -228,7 +228,7 @@ export default function AddSubscription({ planType, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center gap-2 text-sm text-[var(--sa-text-primary)] hover:underline focus:outline-none"
+            className="inline-flex items-center gap-2 text-sm text-[var(--sa-text-primary)] focus:outline-none"
           >
             ← Back to Subscription Plans
           </button>
@@ -495,7 +495,7 @@ export default function AddSubscription({ planType, onClose }) {
                     <button
                       type="button"
                       onClick={autoFillFeatures}
-                      className="text-[10px] font-bold px-2 py-1 rounded bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 uppercase tracking-tighter"
+                      className="text-[10px] font-bold px-2 py-1 rounded bg-blue-50 text-blue-600 border border-blue-200 uppercase tracking-tighter"
                     >
                       Auto-fill from limits
                     </button>
@@ -527,7 +527,7 @@ export default function AddSubscription({ planType, onClose }) {
                     <button
                       type="button"
                       onClick={addFeatureBullet}
-                      className="w-full py-2 border border-dashed border-[var(--sa-border-color)] rounded-lg text-sm font-medium text-[var(--sa-text-secondary)] hover:bg-[var(--sa-bg-secondary)] flex items-center justify-center gap-2"
+                      className="w-full py-2 border border-dashed border-[var(--sa-border-color)] rounded-lg text-sm font-medium text-[var(--sa-text-secondary)] flex items-center justify-center gap-2"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />

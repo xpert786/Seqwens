@@ -585,7 +585,7 @@ export default function Topbar({
                                         {filteredSuggestions.map((item, index) => (
                                             <li key={index}>
                                                 <button
-                                                    className="d-flex align-items-center gap-2 w-100 px-3 py-2 border-0 bg-transparent text-start text-dark hover:bg-light transition-colors"
+                                                    className="d-flex align-items-center gap-2 w-100 px-3 py-2 border-0 bg-transparent text-start text-dark transition-colors"
                                                     onClick={() => handleSuggestionClick(item.path)}
                                                     style={{ cursor: "pointer" }}
                                                     onMouseEnter={(e) => e.target.style.backgroundColor = "#f8f9fa"}

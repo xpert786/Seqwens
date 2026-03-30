@@ -9,7 +9,7 @@ const Templates = () => {
                     <h4 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2 font-[BasisGrotesquePro]">Workflow Templates</h4>
                     <p className="text-sm sm:text-base text-gray-600 font-[BasisGrotesquePro]">Pre-built workflows for common processes</p>
                 </div>
-                <button className="px-3 sm:px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center justify-center gap-2 text-sm sm:text-base font-[BasisGrotesquePro] w-full sm:w-auto">
+                <button className="px-3 sm:px-4 py-2 bg-[#F56D2D] text-white !rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base font-[BasisGrotesquePro] w-full sm:w-auto">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
@@ -34,10 +34,10 @@ const Templates = () => {
                         <span className="font-semibold">10</span>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-6">
-                        <button className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white !border border-[#E8F0FF] text-gray-700 !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]">
+                        <button className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white !border border-[#E8F0FF] text-gray-700 !rounded-lg transition-colors font-[BasisGrotesquePro]">
                             Preview
                         </button>
-                        <button className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] whitespace-nowrap">
+                        <button className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-[#F56D2D] text-white !rounded-lg transition-colors font-[BasisGrotesquePro] whitespace-nowrap">
                             Use Template
                         </button>
                     </div>
@@ -58,10 +58,10 @@ const Templates = () => {
                         <span className="font-semibold">15</span>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-6">
-                        <button className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white !border border-[#E8F0FF] text-gray-700 !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]">
+                        <button className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white !border border-[#E8F0FF] text-gray-700 !rounded-lg transition-colors font-[BasisGrotesquePro]">
                             Preview
                         </button>
-                        <button className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] whitespace-nowrap">
+                        <button className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-[#F56D2D] text-white !rounded-lg transition-colors font-[BasisGrotesquePro] whitespace-nowrap">
                             Use Template
                         </button>
                     </div>
@@ -82,10 +82,10 @@ const Templates = () => {
                         <span className="font-semibold">6</span>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-6">
-                        <button className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white !border border-[#E8F0FF] text-gray-700 !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]">
+                        <button className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white !border border-[#E8F0FF] text-gray-700 !rounded-lg transition-colors font-[BasisGrotesquePro]">
                             Preview
                         </button>
-                        <button className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] whitespace-nowrap">
+                        <button className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-[#F56D2D] text-white !rounded-lg transition-colors font-[BasisGrotesquePro] whitespace-nowrap">
                             Use Template
                         </button>
                     </div>

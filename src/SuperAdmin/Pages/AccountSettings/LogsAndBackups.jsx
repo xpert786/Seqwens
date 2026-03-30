@@ -380,7 +380,7 @@ export default function LogsAndBackups() {
                         <p className="text-sm text-red-700 font-[BasisGrotesquePro]">{error}</p>
                         <button
                             onClick={fetchAuditLogs}
-                            className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+                            className="mt-2 text-sm text-red-600 underline"
                         >
                             Retry
                         </button>
@@ -426,7 +426,7 @@ export default function LogsAndBackups() {
                             <div className="text-sm text-gray-900 font-[BasisGrotesquePro]">{log.message}</div>
                             <div>
                                 <button
-                                    className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                                    className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center transition-colors"
                                     title="View details"
                                     onClick={() => openLogDetails(log)}
                                 >
@@ -530,7 +530,7 @@ export default function LogsAndBackups() {
                             <button
                                 onClick={handleCreateBackup}
                                 disabled={submittingBackup}
-                                className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg text-sm font-[BasisGrotesquePro] hover:bg-[#E55A1F] transition-colors disabled:opacity-50"
+                                className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg text-sm font-[BasisGrotesquePro] transition-colors disabled:opacity-50"
                                 style={{ borderRadius: "7px" }}
                             >
                                 {submittingBackup ? 'Starting...' : 'Create Backup'}
@@ -596,7 +596,7 @@ export default function LogsAndBackups() {
                             <div className="backup-cell backup-actions">
                                 <div className="flex gap-2">
                                     <button
-                                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors"
+                                        className="w-8 h-8 flex items-center justify-center rounded-full transition-colors"
                                         title="Download"
                                         onClick={() => handleDownloadBackup(backup)}
                                         disabled={backup.status !== 'completed'}
@@ -606,7 +606,7 @@ export default function LogsAndBackups() {
                                         </svg>
                                     </button>
                                     <button
-                                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors"
+                                        className="w-8 h-8 flex items-center justify-center rounded-full transition-colors"
                                         title="Delete"
                                         onClick={() => handleDeleteBackup(backup.id)}
                                     >

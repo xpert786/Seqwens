@@ -784,7 +784,7 @@ export default function AcceptInvite() {
                                         You can update their office assignments or permissions instead.
                                     </p>
                                     <button
-                                        className="btn  btn-primary mt-2"
+                                        className="btn btn-primary mt-2"
                                         onClick={() => navigate("/firmadmin/staff")}
                                         style={{ marginTop: '0.5rem' }}
                                     >
@@ -1237,7 +1237,7 @@ export default function AcceptInvite() {
                             </button>
                             <button
                                 onClick={confirmAcceptInvitation}
-                                className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro] flex items-center"
+                                className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-opacity font-[BasisGrotesquePro] flex items-center"
                                 style={{ backgroundColor: '#00C0C6' }}
                                 disabled={isAccepting}
                             >
@@ -1310,7 +1310,7 @@ export default function AcceptInvite() {
                             </button>
                             <button
                                 onClick={confirmDenyInvitation}
-                                className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro] flex items-center"
+                                className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-opacity font-[BasisGrotesquePro] flex items-center"
                                 style={{ backgroundColor: '#EF4444' }}
                                 disabled={isDenying}
                             >

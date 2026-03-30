@@ -348,7 +348,7 @@ export default function TaxpayerManagementModal({ show, onClose, officeId, offic
           <div className="mt-auto px-4 sm:px-6 py-4 border-t border-[#E8F0FF] bg-[#F8FAFF] flex justify-end items-center gap-3 flex-shrink-0 rounded-b-xl">
             <button
               onClick={onClose}
-              className="px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-gray-700 bg-white border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+              className="px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-gray-700 bg-white border border-[#E8F0FF] !rounded-lg transition-colors font-[BasisGrotesquePro]"
             >
               Close
             </button>
@@ -356,7 +356,7 @@ export default function TaxpayerManagementModal({ show, onClose, officeId, offic
               <button
                 onClick={handleAssignTaxpayers}
                 disabled={assigning}
-                className="px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white bg-[#00C0C6] !rounded-lg hover:bg-[#00A8AD] transition-all shadow-md disabled:opacity-50 font-[BasisGrotesquePro]"
+                className="px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white bg-[#00C0C6] !rounded-lg transition-all shadow-md disabled:opacity-50 font-[BasisGrotesquePro]"
               >
                 {assigning ? 'Assigning...' : `Assign ${selectedTaxpayers.length}`}
               </button>

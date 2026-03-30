@@ -220,7 +220,7 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
                             <p className="text-[10px] sm:text-xs text-[#7B8AB2] font-semibold tracking-wider">PREVIEW & SEND</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 text-[#7B8AB2] hover:text-[#1F2A55] hover:bg-white/50 rounded-full transition-all">
+                    <button onClick={onClose} className="p-2 text-[#7B8AB2] rounded-full transition-all">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                             <path d="M18 6L6 18M6 6l12 12" />
                         </svg>
@@ -307,7 +307,7 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
                             <button
                                 type="button"
                                 onClick={handleSendToSelf}
-                                className="text-xs font-extrabold text-[#3AD6F2] hover:text-[#2BC5E0] bg-[#3AD6F2]/5 px-4 py-2 rounded-lg flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                                className="text-xs font-extrabold text-[#3AD6F2] bg-[#3AD6F2]/5 px-4 py-2 rounded-lg flex items-center gap-2 transition-all active:scale-95"
                             >
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -378,7 +378,7 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
                                         <div className="h-[1px] flex-1 bg-gradient-to-r from-[#E8F0FF] to-transparent"></div>
                                         <button
                                             onClick={loadVariables}
-                                            className="p-1.5 text-[#3AD6F2] hover:bg-[#3AD6F2]/10 rounded-full transition-all"
+                                            className="p-1.5 text-[#3AD6F2] rounded-full transition-all"
                                             disabled={variablesLoading}
                                             title="Sync variables"
                                         >
@@ -427,14 +427,14 @@ const SendEmailModal = ({ template, onClose, onSend }) => {
                 <div className="px-6 sm:px-8 py-4 sm:py-6 border-t border-[#E8F0FF]/30 bg-transparent flex flex-col sm:flex-row items-center justify-end gap-3 sm:gap-4 sticky bottom-0">
                     <button
                         onClick={onClose}
-                        className="w-full sm:w-auto px-6 py-3 text-sm font-extrabold text-[#3B4A66] hover:bg-white/60 rounded-xl sm:rounded-2xl border border-white/50 transition-all active:scale-95 order-2 sm:order-1"
+                        className="w-full sm:w-auto px-6 py-3 text-sm font-extrabold text-[#3B4A66] rounded-xl sm:rounded-2xl border border-white/50 transition-all active:scale-95 order-2 sm:order-1"
                     >
                         CANCEL
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={sending}
-                        className="w-full sm:w-auto px-10 py-3 text-sm font-black bg-gradient-to-r from-[#F56D2D] to-[#E55A1D] text-white rounded-xl sm:rounded-2xl hover:shadow-[0_10px_30px_rgba(245,109,45,0.4)] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 order-1 sm:order-2"
+                        className="w-full sm:w-auto px-10 py-3 text-sm font-black bg-gradient-to-r from-[#F56D2D] to-[#E55A1D] text-white rounded-xl sm:rounded-2xl transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 order-1 sm:order-2"
                     >
                         {sending ? (
                             <>

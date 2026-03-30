@@ -114,15 +114,14 @@ const VisualEmailBuilder = ({
                 </div>
                 <div className="flex gap-[12px]">
                     <button
-                        className="px-4 py-2.5 !rounded-[10px] font-semibold text-sm cursor-pointer transition-all duration-200 border-2 bg-white text-[#1f2a55] border-[#e8f0ff] hover:bg-[#f3f6fd] hover:border-[#3ad6f2]"
-                        onClick={() => setPreviewMode(!previewMode)}
+                        className="px-4 py-2.5 !rounded-[10px] font-semibold text-sm cursor-pointer transition-all duration-200 border-2 bg-white text-[#1f2a55] border-[#e8f0ff] " onClick={() => setPreviewMode(!previewMode)}
                     >
                         {previewMode ? 'Edit Mode' : 'Preview Mode'}
                     </button>
                     {onSave && (
                         <button
-                            className="px-4 py-2.5 !rounded-[10px] font-semibold text-sm cursor-pointer transition-all duration-200 bg-[#3ad6f2] text-white hover:bg-[#2bc5e0]"
                             onClick={() => onSave(blocks)}
+                            className="px-4 py-2.5 !rounded-[10px] font-semibold text-sm cursor-pointer transition-all duration-200 bg-[#3ad6f2] text-white"
                         >
                             Save Template
                         </button>

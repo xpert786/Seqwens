@@ -356,13 +356,13 @@ export default function BulkTaxPreparerImportModal({ isOpen, onClose, onImportSu
               <button
                 onClick={selectAllValid}
                 disabled={validNonDuplicateRowsCount === 0}
-                className="px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Select All Valid
               </button>
               <button
                 onClick={deselectAll}
-                className="px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro]"
+                className="px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg font-[BasisGrotesquePro]"
               >
                 Deselect All
               </button>
@@ -735,7 +735,7 @@ export default function BulkTaxPreparerImportModal({ isOpen, onClose, onImportSu
             </div>
             <button
               onClick={onClose}
-              className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-gray-600 text-xl leading-none transition-colors shadow-sm"
+              className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-50 text-gray-600 text-xl leading-none transition-colors shadow-sm"
             >
               <CrossesIcon className="w-4 h-4 text-blue-500" />
             </button>

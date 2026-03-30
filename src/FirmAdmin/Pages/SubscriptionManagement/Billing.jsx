@@ -384,7 +384,7 @@ const Billing = () => {
                                         </td>
                                         <td className="py-3 px-4">
                                             <button
-                                                className="text-gray-600 hover:text-gray-900 transition-colors"
+                                                className="text-gray-600 transition-colors"
                                                 title="Download Invoice"
                                             >
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

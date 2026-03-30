@@ -98,7 +98,7 @@ const BulkAction = ({ isOpen, onClose, selectedCount }) => {
             <h3 className="text-xl font-bold" style={{ color: '#3B4A66', fontSize: '18px' }}>Bulk Actions</h3>
             <button
               onClick={onClose}
-              className="flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+              className="flex items-center justify-center rounded-full transition-colors"
               style={{ width: '20px', height: '20px' }}
             >
               <CrossesIcon className="w-4 h-4 text-blue-500" />

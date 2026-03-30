@@ -163,7 +163,7 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
           </h4>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -378,7 +378,7 @@ const SetAvailabilityModal = ({ isOpen, onClose, onSuccess, isTaxpayer = false }
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="px-6 py-2 bg-white border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
+              className="px-6 py-2 bg-white border border-gray-300 text-sm font-medium text-gray-700 transition disabled:opacity-50"
               style={{ borderRadius: '10px' }}
             >
               Cancel

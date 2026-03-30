@@ -138,10 +138,10 @@ const EnhancedVariablesPanel = ({ onInsertVariable, onClose }) => {
                 {Object.entries(filteredGroups).map(([groupKey, group]) => (
                     <div key={groupKey} className="mb-[8px] border border-[#e8f0ff] rounded-[8px] overflow-hidden bg-white">
                         <button
-                            className="w-full p-[12px_16px] bg-[#f9fbff] border-none flex items-center gap-[8px] cursor-pointer transition-all duration-200 text-left hover:bg-[#f3f6fd]"
+                            className="w-full p-[12px_16px] bg-[#f9fbff] border-none flex items-center gap-[8px] cursor-pointer transition-all duration-200 text-left "
                             onClick={() => toggleGroup(groupKey)}
-                        >
-                            <span className="text-[18px]">{group.icon}</span>
+                       >
+                           <span className="text-[18px]">{group.icon}</span>
                             <span className="flex-1 text-[13px] font-bold text-[#1f2a55]">{group.label}</span>
                             <span className="text-[11px] text-[#6e7dae] font-semibold">({group.variables.length})</span>
                             <span className={`text-[10px] text-[#6e7dae] transition-transform duration-200 ${expandedGroups.includes(groupKey) ? 'rotate-180' : ''}`}>

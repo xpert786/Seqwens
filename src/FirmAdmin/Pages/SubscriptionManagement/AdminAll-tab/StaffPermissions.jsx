@@ -370,7 +370,7 @@ const StaffPermissions = () => {
                             <button
                                 onClick={handleSaveConfiguration}
                                 disabled={saving}
-                                className="flex-1 px-6 py-3 bg-[#F56D2D] text-white !rounded-xl text-sm font-bold shadow-md hover:bg-[#E55A1D] hover:shadow-lg transition-all disabled:opacity-50 font-[BasisGrotesquePro]"
+                                className="flex-1 px-6 py-3 bg-[#F56D2D] text-white !rounded-xl text-sm font-bold shadow-md transition-all disabled:opacity-50 font-[BasisGrotesquePro]"
                             >
                                 {saving ? 'Applying...' : 'Save Settings'}
                             </button>

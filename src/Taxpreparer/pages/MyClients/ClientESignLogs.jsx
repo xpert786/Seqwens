@@ -140,7 +140,7 @@ export default function ClientESignLogs() {
             <div className="text-red-600 mb-4">{error}</div>
             <button
               onClick={fetchESignLogs}
-              className="px-4 py-2 bg-[#00C0C6] text-white rounded-lg hover:bg-[#00a8b0] transition-colors"
+              className="px-4 py-2 bg-[#00C0C6] text-white rounded-lg transition-colors"
             >
               Retry
             </button>

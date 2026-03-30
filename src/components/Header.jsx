@@ -256,7 +256,7 @@ export default function Header() {
           {isUserLoggedIn ? (
             <button
               onClick={handleUserLogoClick}
-              className="flex items-center cursor-pointer flex-shrink-0  bg-transparent border-none p-0"
+              className="flex items-center cursor-pointer flex-shrink-0 bg-transparent border-none p-0"
             >
               <img
                 src={seqwensLogo}
@@ -316,10 +316,9 @@ export default function Header() {
               {isUserLoggedIn ? (
                 <button
                   onClick={handleUserLogoClick}
-                  className="text-sm font-medium transition-colors duration-200 relative group text-white hover:text-white"
-                >
+                  className="text-sm font-medium transition-colors duration-200 relative group text-white >
                   Client Portal
-                  <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-white scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
+                 <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-white scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
                 </button>
               ) : (
                 <Link
@@ -372,7 +371,7 @@ export default function Header() {
                 {/* User Avatar */}
                 <button
                   onClick={handleUserLogoClick}
-                  className={`w-10 h-10 rounded-full ${!headerProfilePicture ? 'bg-[#3AD6F2] text-white flex items-center justify-center font-semibold font-[BasisGrotesquePro]' : 'p-0 overflow-hidden'} hover:bg-[#2BC5E0] transition-colors cursor-pointer`}
+                  className={`w-10 h-10 rounded-full ${!headerProfilePicture ? 'bg-[#3AD6F2] text-white flex items-center justify-center font-semibold font-[BasisGrotesquePro]' : 'p-0 overflow-hidden'} transition-colors cursor-pointer`}
                   title="Go to Dashboard"
                 >
                   {headerProfilePicture ? (
@@ -394,7 +393,7 @@ export default function Header() {
 
           {/* Mobile Menu Button */}
           <button
-            className="flex md:hidden text-white hover:text-zinc-300 p-2 rounded-lg hover:bg-white/5 transition-colors duration-200"
+            className="flex md:hidden text-white p-2 rounded-lg transition-colors duration-200"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             <span className="sr-only">Toggle menu</span>

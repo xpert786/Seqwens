@@ -548,11 +548,11 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
         <div className="flex flex-wrap justify-between items-center mb-3 gap-2">
           <div className="flex gap-1.5">
             <button onClick={selectAllValid} disabled={validNonDup === 0}
-              className="px-3 py-1 text-xs text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro] disabled:opacity-40">
+              className="px-3 py-1 text-xs text-gray-700 bg-white border border-gray-300 rounded-lg font-[BasisGrotesquePro] disabled:opacity-40">
               ✓ Select All Valid
             </button>
             <button onClick={deselectAll}
-              className="px-3 py-1 text-xs text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro]">
+              className="px-3 py-1 text-xs text-gray-700 bg-white border border-gray-300 rounded-lg font-[BasisGrotesquePro]">
               Deselect All
             </button>
           </div>
@@ -721,11 +721,11 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
               <div className="ml-7 mt-1 space-y-2">
                 <div className="flex gap-2">
                   <button onClick={selectAllInvitations}
-                    className="px-3 py-1 text-xs text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro]">
+                    className="px-3 py-1 text-xs text-gray-700 bg-white border border-gray-300 rounded-lg font-[BasisGrotesquePro]">
                     Select All
                   </button>
                   <button onClick={deselectAllInvitations}
-                    className="px-3 py-1 text-xs text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro]">
+                    className="px-3 py-1 text-xs text-gray-700 bg-white border border-gray-300 rounded-lg font-[BasisGrotesquePro]">
                     Deselect All
                   </button>
                 </div>
@@ -885,7 +885,7 @@ export default function BulkTaxpayerImportModal({ isOpen, onClose, onImportSucce
       >
         {/* Close */}
         <button onClick={onClose}
-          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-[#3B4A66] transition z-20">
+          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-[#3B4A66] transition z-20">
           <IoMdClose size={24} />
         </button>
 

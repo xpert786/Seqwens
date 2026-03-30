@@ -137,7 +137,7 @@ export default function SuperHeader({ onToggleSidebar = () => { }, isSidebarOpen
               <button
                 type="button"
                 onClick={onToggleSidebar}
-                className="d-flex align-items-center justify-content-center px-3 h-full cursor-pointer hover:bg-black/5 transition-colors focus:outline-none"
+                className="d-flex align-items-center justify-content-center px-3 h-full cursor-pointer transition-colors focus:outline-none"
                 style={{ background: "transparent", border: "none", width: '50px' }}
                 aria-label={isSidebarOpen ? "Collapse navigation" : "Expand navigation"}
               >

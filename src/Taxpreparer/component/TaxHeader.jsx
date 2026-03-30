@@ -535,7 +535,7 @@ export default function Topbar({
               <button
                 type="button"
                 onClick={onToggleSidebar}
-                className="sidebar-toggle-btn d-flex align-items-center justify-content-center px-3 h-full cursor-pointer hover:bg-gray-50 transition-colors"
+                className="sidebar-toggle-btn d-flex align-items-center justify-content-center px-3 h-full cursor-pointer transition-colors"
                 aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
                 style={{ background: "transparent", border: "none", width: '40px', flexShrink: 0 }}
               >
@@ -570,7 +570,7 @@ export default function Topbar({
                     {filteredSuggestions.map((item, index) => (
                       <li key={index}>
                         <button
-                          className="d-flex align-items-center gap-2 w-100 px-3 py-2 border-0 bg-transparent text-start text-dark hover:bg-light transition-colors"
+                          className="d-flex align-items-center gap-2 w-100 px-3 py-2 border-0 bg-transparent text-start text-dark transition-colors"
                           onClick={() => handleSuggestionClick(item.path)}
                           style={{ cursor: "pointer" }}
                           onMouseEnter={(e) => e.target.style.backgroundColor = "#f8f9fa"}

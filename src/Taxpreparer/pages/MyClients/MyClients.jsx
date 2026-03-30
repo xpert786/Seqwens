@@ -1314,7 +1314,7 @@ export default function MyClients() {
       <div className="myclients-container">
         <div className="alert alert-danger" role="alert">
           <strong>Error:</strong> {error}
-          <button className="btn  btn-outline-danger ms-2" onClick={fetchClients} style={{ borderRadius: '8px' }}>
+          <button className="btn btn-outline-danger ms-2" onClick={fetchClients} style={{ borderRadius: '8px' }}>
             Retry
           </button>
         </div>
@@ -1604,7 +1604,7 @@ export default function MyClients() {
             <div className="text-center py-5">
               <p className="text-muted">No clients found</p>
               {(searchQuery || statusFilter || priorityFilter) && (
-                <button className="btn  btn-outline-primary mt-2" onClick={clearFilters}>
+                <button className="btn btn-outline-primary mt-2" onClick={clearFilters}>
                   Clear filters to see all clients
                 </button>
               )}
@@ -1820,7 +1820,7 @@ export default function MyClients() {
           ) : invitesError ? (
             <div className="alert alert-danger" role="alert">
               <strong>Error:</strong> {invitesError}
-              <button className="btn  btn-outline-danger ms-2" onClick={() => fetchPendingInvites()}>
+              <button className="btn btn-outline-danger ms-2" onClick={() => fetchPendingInvites()}>
                 Retry
               </button>
             </div>
@@ -1902,7 +1902,7 @@ export default function MyClients() {
                       <div className="d-flex gap-2 invite-copy-btn-wrapper">
                         {invite.invite_link && (
                           <button
-                            className="btn  btn-outline-primary"
+                            className="btn btn-outline-primary"
                             onClick={(e) => {
                               e.stopPropagation();
                               navigator.clipboard.writeText(invite.invite_link);
@@ -1931,14 +1931,14 @@ export default function MyClients() {
               </div>
               <div className="d-flex gap-2">
                 <button
-                  className="btn  btn-outline-primary"
+                  className="btn btn-outline-primary"
                   onClick={() => fetchPendingInvites(invitesPagination.page - 1)}
                   disabled={invitesPagination.page === 1 || loadingInvites}
                 >
                   Previous
                 </button>
                 <button
-                  className="btn  btn-outline-primary"
+                  className="btn btn-outline-primary"
                   onClick={() => fetchPendingInvites(invitesPagination.page + 1)}
                   disabled={invitesPagination.page >= invitesPagination.total_pages || loadingInvites}
                 >
@@ -1968,7 +1968,7 @@ export default function MyClients() {
           ) : unlinkedTaxpayersError ? (
             <div className="alert alert-danger" role="alert">
               <strong>Error:</strong> {unlinkedTaxpayersError}
-              <button className="btn  btn-outline-danger ms-2" onClick={() => fetchUnlinkedTaxpayers()}>
+              <button className="btn btn-outline-danger ms-2" onClick={() => fetchUnlinkedTaxpayers()}>
                 Retry
               </button>
             </div>
@@ -2079,14 +2079,14 @@ export default function MyClients() {
                   </div>
                   <div className="d-flex gap-2">
                     <button
-                      className="btn  btn-outline-primary"
+                      className="btn btn-outline-primary"
                       onClick={() => fetchUnlinkedTaxpayers(unlinkedTaxpayersPagination.page - 1)}
                       disabled={unlinkedTaxpayersPagination.page === 1 || loadingUnlinkedTaxpayers}
                     >
                       Previous
                     </button>
                     <button
-                      className="btn  btn-outline-primary"
+                      className="btn btn-outline-primary"
                       onClick={() => fetchUnlinkedTaxpayers(unlinkedTaxpayersPagination.page + 1)}
                       disabled={unlinkedTaxpayersPagination.page >= unlinkedTaxpayersPagination.total_pages || loadingUnlinkedTaxpayers}
                     >

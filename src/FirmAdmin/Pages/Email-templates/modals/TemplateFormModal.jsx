@@ -230,7 +230,7 @@ const TemplateFormModal = ({ template, onClose, onSubmit, onRevert }) => {
     return createPortal(
         <>
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[99999]">
-                <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+                <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-5xl max-h-[75vh] overflow-y-auto">
                     <div className="flex justify-between items-start mb-6">
                         <div className="flex-1">
                             <h3 className="text-xl font-bold text-[#1F2A55]">
@@ -245,7 +245,7 @@ const TemplateFormModal = ({ template, onClose, onSubmit, onRevert }) => {
                                 </p>
                             </div>
                         </div>
-                        <button onClick={onClose} className="text-[#7B8AB2] hover:text-[#1F2A55] hover:bg-gray-100 p-2 rounded-full transition-all">
+                        <button onClick={onClose} className="text-[#7B8AB2] p-2 rounded-full transition-all">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M18 6L6 18M6 6l12 12" />
                             </svg>
@@ -370,7 +370,7 @@ const TemplateFormModal = ({ template, onClose, onSubmit, onRevert }) => {
                             <button
                                 type="button"
                                 onClick={handlePreview}
-                                className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] !rounded-[10px] hover:bg-gray-50 disabled:opacity-50"
+                                className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] !rounded-[10px] disabled:opacity-50"
                                 disabled={previewLoading}
                             >
                                 {previewLoading ? 'Generating preview...' : 'Preview'}
@@ -382,21 +382,21 @@ const TemplateFormModal = ({ template, onClose, onSubmit, onRevert }) => {
                                     type="button"
                                     onClick={handleRevert}
                                     disabled={submitting}
-                                    className="px-4 py-2 text-sm text-[#F56D2D] bg-[#FFF5F2] border border-[#F56D2D] !rounded-[10px] hover:bg-[#FFE0D4] disabled:opacity-50"
+                                    className="px-4 py-2 text-sm text-[#F56D2D] bg-[#FFF5F2] border border-[#F56D2D] !rounded-[10px] disabled:opacity-50"
                                 >
                                     Reset to Default
                                 </button>
                             )}
                             <button
                                 onClick={onClose}
-                                className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] !rounded-[10px] hover:bg-gray-50"
+                                className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] !rounded-[10px]"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleSubmit}
                                 disabled={submitting}
-                                className="px-4 py-2 text-sm !rounded-[10px] disabled:opacity-50 text-white bg-[#F56D2D] hover:bg-[#F56D2D] transition-none"
+                               className="px-4 py-2 text-sm !rounded-[10px] disabled:opacity-50 text-white bg-[#F56D2D] transition-none"
                                 style={{
                                     color: 'white'
                                 }}
@@ -435,7 +435,7 @@ const TemplateFormModal = ({ template, onClose, onSubmit, onRevert }) => {
                                 </button>
                                 <button
                                     onClick={confirmRevert}
-                                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-[#F56D2D] hover:bg-[#E55A1D] shadow-lg shadow-[#F56D2D]/20 !rounded-[12px] transition-all"
+                                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-[#F56D2D] shadow-lg shadow-[#F56D2D]/20 !rounded-[12px] transition-all"
                                 >
                                     Reset Template
                                 </button>

@@ -450,7 +450,7 @@ export default function DocumentDetailsModal({ show, handleClose, clientId, docu
                       <button
                         onClick={handleSaveUpdate}
                         disabled={saving}
-                        className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                       >
                         {saving ? (
                           <>
@@ -594,7 +594,7 @@ export default function DocumentDetailsModal({ show, handleClose, clientId, docu
                   <button
                     onClick={handleAddComment}
                     disabled={addingComment || !newComment.trim()}
-                    className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     {addingComment ? (
                       <>
@@ -618,7 +618,7 @@ export default function DocumentDetailsModal({ show, handleClose, clientId, docu
       <Modal.Footer className="border-t border-gray-200">
         <button
           onClick={handleClose}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg transition-colors font-[BasisGrotesquePro]"
         >
           Close
         </button>

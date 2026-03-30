@@ -447,7 +447,7 @@ export default function IRSFAQs({ onAddFAQModalToggle, showAddFAQModal, userType
                                 <h4 className="text-xl font-semibold text-gray-800">Add New FAQs</h4>
                                 <button
                                     onClick={handleCloseModal}
-                                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                                    className="text-gray-400 transition-colors"
                                 >
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <rect width="24" height="24" rx="12" fill="#E8F0FF" />
@@ -506,7 +506,7 @@ export default function IRSFAQs({ onAddFAQModalToggle, showAddFAQModal, userType
                             <div className="flex justify-end space-x-3 p-3  gap-2">
                                 <button
                                     onClick={handleCloseModal}
-                                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg transition-colors"
                                     style={{ borderRadius: '7px' }}
                                 >
                                     Cancel
@@ -514,7 +514,7 @@ export default function IRSFAQs({ onAddFAQModalToggle, showAddFAQModal, userType
                                 <button
                                     onClick={handleSubmitFAQ}
                                     disabled={saving}
-                                    className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-4 py-2 bg-orange-500 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     style={{ borderRadius: '7px' }}
                                 >
                                     {saving ? 'Adding...' : 'Add'}

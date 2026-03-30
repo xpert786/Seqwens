@@ -793,7 +793,7 @@ const SubscriptionManagement = () => {
                                     <button
                                         onClick={handleCancelSubscriptionClick}
                                         disabled={cancellingSubscription || subscriptionOverview?.overview?.plan?.status === 'canceled'}
-                                        className={`flex-1 px-6 py-3 bg-white border border-red-100 text-red-500 !rounded-xl hover:bg-red-50 hover:border-red-200 transition-all font-bold text-sm font-[BasisGrotesquePro] disabled:opacity-50 ${subscriptionOverview?.overview?.plan?.status === 'canceled' ? 'w-full !text-gray-400 !border-gray-100' : ''}`}
+                                        className={`flex-1 px-6 py-3 bg-white border border-red-100 text-red-500 !rounded-xl transition-all font-bold text-sm font-[BasisGrotesquePro] disabled:opacity-50 ${subscriptionOverview?.overview?.plan?.status === 'canceled' ? 'w-full !text-gray-400 !border-gray-100' : ''}`}
                                     >
                                         {cancellingSubscription ? 'Processing...' : (subscriptionOverview?.overview?.plan?.status === 'canceled' ? 'Service Canceled' : 'Cancel Service')}
                                     </button>
@@ -1045,7 +1045,7 @@ const SubscriptionManagement = () => {
                                 <button
                                     onClick={handleCancelSubscription}
                                     disabled={cancellingSubscription}
-                                    className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E66F2F] transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                     style={{ borderRadius: '8px' }}
                                 >
                                     {cancellingSubscription ? 'Cancelling...' : 'Yes, Cancel Subscription'}

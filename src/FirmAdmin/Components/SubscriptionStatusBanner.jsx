@@ -145,7 +145,7 @@ const SubscriptionStatusBanner = () => {
                             className={`btn  fw-semibold px-3 py-1.5 rounded-pill shadow-sm ${status === 'pending_payment'
                                 ? 'btn-dark'
                                 : 'btn-light'
-                                }`}
+                               }`}
                             style={{
                                 fontSize: '13px',
                                 minWidth: '120px',

@@ -414,7 +414,7 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+            className="w-10 h-10 flex items-center justify-center text-gray-400 rounded-full transition-colors"
           >
             <FiX size={20} />
           </button>
@@ -683,7 +683,7 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
               ))}
               <button
                 onClick={handleAddItem}
-                className="w-full md:w-auto px-4 py-2 text-sm font-medium text-[#3B4A66] !rounded-lg !border border-[#E8F0FF] hover:bg-gray-50 transition"
+                className="w-full md:w-auto px-4 py-2 text-sm font-medium text-[#3B4A66] !rounded-lg !border border-[#E8F0FF] transition"
               >
                 + Add Item
               </button>
@@ -706,7 +706,7 @@ export default function TaxPreparerCreateInvoiceModal({ onClose, onInvoiceCreate
             <button
               onClick={onClose}
               disabled={loading}
-              className="px-6 py-2.5 bg-white border border-gray-300 !rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all disabled:opacity-50"
+              className="px-6 py-2.5 bg-white border border-gray-300 !rounded-lg text-sm font-semibold text-gray-700 transition-all disabled:opacity-50"
             >
               Cancel
             </button>

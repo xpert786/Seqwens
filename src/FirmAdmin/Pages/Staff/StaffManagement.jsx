@@ -1180,7 +1180,7 @@ export default function StaffManagement() {
               <button
                 onClick={handleDownloadPerformanceReport}
                 disabled={downloadingReport}
-                className={`px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button ${downloadingReport ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={`px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button ${downloadingReport ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 {downloadingReport ? (
                   <>
@@ -1220,7 +1220,7 @@ export default function StaffManagement() {
               {!advancedReportingEnabled && (
                 <button
                   onClick={exportStaffToPDF}
-                  className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button"
+                  className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap staff-action-button"
                 >
                   <DownsIcon />
                   Export Report
@@ -1788,7 +1788,7 @@ export default function StaffManagement() {
                 return (
                   <>
                     <button
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 font-[BasisGrotesquePro]"
 
                       onClick={() => {
                         setSelectedStaffForMessage({
@@ -1802,7 +1802,7 @@ export default function StaffManagement() {
                       Send Message
                     </button>
                     <button
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-[BasisGrotesquePro]"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 font-[BasisGrotesquePro]"
                       onClick={() => {
                         navigate(`/firmadmin/staff/${mappedStaff.id}`);
                         setShowDropdown(null);
@@ -1865,7 +1865,7 @@ export default function StaffManagement() {
               </div>
               <button
                 onClick={closeInviteActionsModal}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500"
                 aria-label="Close"
               >
                 <CrossesIcon className="w-4 h-4" />
@@ -1973,8 +1973,7 @@ export default function StaffManagement() {
             <div className="mt-6 text-right">
               <button
                 type="button"
-                className="btn btn-secondary hover:!bg-white hover:!text-black hover:!opacity-100 !transition-none hover:!shadow-none"
-                style={{ color: "black", backgroundColor: "white" }}
+                className="btn btn-secondary !transition-none"
                 onClick={closeInviteActionsModal}
               >
                 Done

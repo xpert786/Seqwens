@@ -57,7 +57,7 @@ export default function StaffMessageModal({ isOpen, onClose, staffId, staffName 
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        className="text-gray-400 transition-colors"
                     >
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <rect width="24" height="24" rx="12" fill="#E8F0FF" />
@@ -83,14 +83,14 @@ export default function StaffMessageModal({ isOpen, onClose, staffId, staffName 
                 <div className="p-4 border-t border-[#E8F0FF] flex justify-end gap-3 flex-shrink-0">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition font-[BasisGrotesquePro]"
+                        className="px-4 py-2 text-sm font-medium text-gray-700 rounded-lg transition font-[BasisGrotesquePro]"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSendMessage}
                         disabled={sending || !message.trim()}
-                        className="px-4 py-2 bg-[#F56D2D] text-white text-sm font-bold rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="px-4 py-2 bg-[#F56D2D] text-white text-sm font-bold rounded-lg transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         style={{ borderRadius: "10px" }}
                     >
                         {sending ? (

@@ -296,9 +296,8 @@ export default function FirmSidebar({ isSidebarOpen = true, isImpersonating = fa
               <button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="flex items-center gap-2 !text-sm font-medium rounded w-full text-left whitespace-nowrap border-none cursor-pointer text-[#EF4444] bg-transparent hover:text-[#EF4444]/70"
-              >
-                <span className="w-6 h-6 text-[#EF4444]">
+                className="flex items-center gap-2 !text-sm font-medium rounded w-full text-left whitespace-nowrap border-none cursor-pointer text-[#EF4444] bg-transparent" >
+               <span className="w-6 h-6 text-[#EF4444]">
                   <Out />
                 </span>
                 <span>

@@ -312,7 +312,7 @@ export default function EmailSettingsView() {
                   Upload Logo
                 </label>
                 <div className="mt-1 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#C8D5FF] bg-[#F8FBFF] p-6 text-sm">
-                  <button className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-[#1F2A55] shadow-sm ring-1 ring-[#DDE5FF] hover:bg-[#F0F4FF] transition">
+                  <button className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-[#1F2A55] shadow-sm ring-1 ring-[#DDE5FF] transition">
                     <UploadIcon />
                     Upload Logo
                   </button>
@@ -378,7 +378,7 @@ export default function EmailSettingsView() {
         <button
           onClick={handleSaveSettings}
           disabled={saving}
-          className="!rounded-lg bg-[#F56D2D] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#FF7142] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="!rounded-lg bg-[#F56D2D] px-6 py-2.5 text-sm font-semibold text-white transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
           {saving ? 'Saving...' : 'Save Settings'}
         </button>

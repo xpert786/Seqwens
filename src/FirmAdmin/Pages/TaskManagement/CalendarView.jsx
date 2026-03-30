@@ -170,7 +170,7 @@ const CalendarView = () => {
             </button>
             <button
               onClick={goToToday}
-              className="bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 !rounded-lg transition-colors font-[BasisGrotesquePro] !border border-[#E8F0FF] whitespace-nowrap"
+              className="bg-white px-4 py-2 text-sm text-gray-700 !rounded-lg transition-colors font-[BasisGrotesquePro] !border border-[#E8F0FF] whitespace-nowrap"
             >
               Today
             </button>

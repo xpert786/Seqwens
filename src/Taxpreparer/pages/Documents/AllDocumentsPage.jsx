@@ -147,10 +147,10 @@ export default function AllDocumentsPage() {
                     </div>
                   </div>
                   <div className="btn-group">
-                    <button className="btn  btn-outline-secondary">
+                    <button className="btn btn-outline-secondary">
                       <i className="bi bi-download"></i>
                     </button>
-                    <button className="btn  btn-outline-secondary">
+                    <button className="btn btn-outline-secondary">
                       <i className="bi bi-trash"></i>
                     </button>
                   </div>

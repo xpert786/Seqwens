@@ -313,7 +313,7 @@ export default function APIKeysTab() {
                             <button
                                 onClick={handleUpdate}
                                 disabled={submitting}
-                                className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-[#FF7142] transition font-[BasisGrotesquePro] disabled:opacity-50"
+                                className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg transition font-[BasisGrotesquePro] disabled:opacity-50"
                             >
                                 {submitting ? "Updating..." : "Update Key"}
                             </button>

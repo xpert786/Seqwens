@@ -921,3 +921,7 @@ div[style*="z-index"][style*="fixed"] {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #9CA3AF;
 }
+
+.firm-panel button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-gray"]):not([class*="bg-transparent"]):hover, .firm-dashboard-layout button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-gray"]):not([class*="bg-transparent"]):hover, .firm-panel button[style*="background-color"]:not([style*="color"]):hover, .btn-primary:hover {
+    color: #000000 !important;
+}

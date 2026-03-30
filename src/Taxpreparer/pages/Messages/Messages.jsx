@@ -1117,7 +1117,7 @@ export default function MessagePage() {
       </div>
 
       <button
-        className="flex items-center gap-2 px-4 py-2 !rounded-xl bg-[#F56D2D] text-white font-semibold shadow-md hover:bg-[#e55a1a] !text-xs transition-all transform hover:-translate-y-0.5 uppercase"
+        className="flex items-center gap-2 px-4 py-2 !rounded-xl bg-[#F56D2D] text-white font-semibold shadow-md !text-xs transition-all transform uppercase"
         onClick={handleOpenComposeModal}
       >
         <PLusIcon />
@@ -1355,7 +1355,7 @@ export default function MessagePage() {
                     <div className="flex items-center gap-3">
                       {isMobile && (
                         <button
-                          className="p-2 -ml-2 text-gray-500 hover:text-[#F56D2D] transition-colors"
+                          className="p-2 -ml-2 text-gray-500 transition-colors"
                           onClick={() => setShowChatOnMobile(false)}
                         >
                           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -1488,7 +1488,7 @@ export default function MessagePage() {
                         />
                         <button
                           type="button"
-                          className="flex-shrink-0 w-10 h-10 !rounded-xl bg-white text-gray-500 border border-gray-100 flex items-center justify-center hover:bg-[#F56D2D]/5 hover:text-[#F56D2D] hover:border-[#F56D2D]/20 transition-all shadow-sm active:scale-95 group"
+                          className="flex-shrink-0 w-10 h-10 !rounded-xl bg-white text-gray-500 border border-gray-100 flex items-center justify-center transition-all shadow-sm active:scale-95 group"
                           onClick={() => messageFileInputRef.current?.click()}
                           title="Attach file"
                         >
@@ -1529,9 +1529,9 @@ export default function MessagePage() {
                         <button
                           type="button"
                           className={`flex-shrink-0 w-10 h-10 !rounded-xl flex items-center justify-center transition-all shadow-md active:scale-95 ${(newMessage.trim() || messageAttachment) && !sendingMessage
-                            ? "bg-[#F56D2D] text-white shadow-[#F56D2D]/30 hover:shadow-[#F56D2D]/40 hover:-translate-y-0.5"
+                            ? "bg-[#F56D2D] text-white shadow-[#F56D2D]/30"
                             : "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
-                            }`}
+                          }`}
                           onClick={handleSend}
                           disabled={!(newMessage.trim() || messageAttachment) || sendingMessage}
                         >

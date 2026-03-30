@@ -499,7 +499,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
           <button
             type="button"
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-[#3B4A66] transition-all duration-200"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-50 text-[#3B4A66] transition-all duration-200"
             style={{ borderRadius: "50%" }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -595,7 +595,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
                   <button
                     type="button"
                     className={`w-full px-3 py-2 bg-white border rounded-lg text-sm text-gray-900 text-left flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-[#3AD6F2] transition-all ${errors.tax_preparer_id ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                     }`}
                     onClick={() => setShowTaxPreparerDropdown(!showTaxPreparerDropdown)}
                   >
                     <span className="truncate">
@@ -940,7 +940,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-medium font-[BasisGrotesquePro] text-sm transition-all"
+            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white font-medium font-[BasisGrotesquePro] text-sm transition-all"
             style={{ borderRadius: "10px" }}
           >
             Cancel
@@ -949,7 +949,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
             type="submit"
             form="create-task-form"
             disabled={loading}
-            className="px-8 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 font-medium font-[BasisGrotesquePro] text-sm transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+            className="px-8 py-2 bg-[#F56D2D] text-white rounded-lg font-medium font-[BasisGrotesquePro] text-sm transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
             style={{ borderRadius: "10px" }}
           >
             {loading ? (

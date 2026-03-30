@@ -337,7 +337,7 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
             }}
         >
             <div
-                className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+                className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[75vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
                 style={{ fontFamily: 'BasisGrotesquePro' }}
             >
@@ -349,7 +349,7 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                     </div>
                     <button
                         onClick={onClose}
-                        className="w-10 h-10 flex items-center justify-center !rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors ml-4 flex-shrink-0"
+                        className="w-10 h-10 flex items-center justify-center !rounded-lg bg-gray-100 text-gray-600 transition-colors ml-4 flex-shrink-0"
                         aria-label="Close modal"
                     >
                         <CrossesIcon className="w-5 h-5" />
@@ -810,7 +810,7 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 font-[BasisGrotesquePro]"
+                        className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-[#E8F0FF] !rounded-lg transition-all duration-200 font-[BasisGrotesquePro]"
                     >
                         Cancel
                     </button>
@@ -818,7 +818,7 @@ export default function EditOfficeModal({ isOpen, onClose, officeId, officeData,
                         type="button"
                         onClick={handleSubmit}
                         disabled={loading}
-                        className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[#F56D2D] to-[#ff8c57] !rounded-lg hover:shadow-md transition-all duration-200 disabled:opacity-50 font-[BasisGrotesquePro] flex items-center gap-2"
+                        className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[#F56D2D] to-[#ff8c57] !rounded-lg transition-all duration-200 disabled:opacity-50 font-[BasisGrotesquePro] flex items-center gap-2"
                     >
                         {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
                         {loading ? 'Updating...' : 'Update Office'}

@@ -54,7 +54,7 @@ const TriggerConfigurationModal = ({ isOpen, onClose, onSave, stages = [], curre
           <h3 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">Add Trigger</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 transition-colors"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect width="24" height="24" rx="12" fill="#E8F0FF" />
@@ -207,14 +207,14 @@ const TriggerConfigurationModal = ({ isOpen, onClose, onSave, stages = [], curre
         <div className="flex justify-end gap-3 p-6 border-t border-[#E8F0FF]">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg transition-colors font-[BasisGrotesquePro]"
             style={{ borderRadius: '8px' }}
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro]"
+            className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg transition-colors font-[BasisGrotesquePro]"
             style={{ borderRadius: '8px' }}
           >
             Save Trigger

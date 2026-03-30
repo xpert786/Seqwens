@@ -611,7 +611,7 @@ export default function TaxPreparerBilling() {
               <button
                 onClick={handlePlatformPayment}
                 disabled={paymentProcessing}
-                className="w-full py-4 bg-[#635BFF] hover:bg-[#5851E1] text-white rounded-lg font-bold text-lg shadow-lg shadow-indigo-100 transition-all flex items-center justify-center gap-2"
+                className="w-full py-4 bg-[#635BFF] text-white rounded-lg font-bold text-lg shadow-lg shadow-indigo-100 transition-all flex items-center justify-center gap-2"
               >
                 {paymentProcessing ? (
                   <>

@@ -134,7 +134,7 @@ const PaymentFormInner = ({ onSubmit, onCancel, processing }) => {
           type="button"
           onClick={onCancel}
           disabled={processing}
-          className="px-6 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 font-[BasisGrotesquePro]"
+          className="px-6 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 transition disabled:opacity-50 font-[BasisGrotesquePro]"
         >
           Cancel
         </button>

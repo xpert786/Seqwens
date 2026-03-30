@@ -33,7 +33,7 @@ const SlideSwitch = ({ value, onChange, disabled = false, id }) => {
           transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#F56D2D] focus:ring-offset-2
           ${isChecked ? 'bg-[#F56D2D]' : 'bg-gray-200'}
           ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-        `}
+       `}
                 style={{ borderRadius: "9999px" }}
             >
                 <span

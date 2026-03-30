@@ -633,7 +633,7 @@ export default function Folders({ onFolderSelect }) {
                     <div className="d-flex align-items-center gap-2 flex-wrap">
                         <button
                             onClick={handleBackToFolders}
-                            className="btn  text-primary p-0 border-0 bg-transparent"
+                            className="btn text-primary p-0 border-0 bg-transparent"
                             style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}
                         >
                             <i className="bi bi-house me-1"></i>
@@ -686,7 +686,7 @@ export default function Folders({ onFolderSelect }) {
                         </div>
                     </div>
                     <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
-                        <button className="btn  d-flex align-items-center gap-2 rounded custom-btn" style={{ backgroundColor: "white" }}>
+                        <button className="btn d-flex align-items-center gap-2 rounded custom-btn" style={{ backgroundColor: "white" }}>
                             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M6.64282 9.3795C4.77757 7.9845 3.44707 6.45 2.72032 5.5875C2.49532 5.3205 2.42182 5.12475 2.37757 4.7805C2.22607 3.6015 2.15032 3.012 2.49607 2.631C2.84182 2.25 3.45307 2.25 4.67557 2.25H13.3246C14.5471 2.25 15.1583 2.25 15.5041 2.63025C15.8498 3.01125 15.7741 3.60075 15.6226 4.77975C15.5776 5.124 15.5041 5.31975 15.2798 5.58675C14.5523 6.45075 13.2196 7.98825 11.3498 9.3855C11.2634 9.45278 11.1919 9.53735 11.14 9.63382C11.0881 9.73029 11.0568 9.83653 11.0483 9.94575C10.8631 11.994 10.6921 13.116 10.5856 13.683C10.4138 14.5995 9.11557 15.1508 8.41957 15.642C8.00557 15.9345 7.50307 15.5865 7.44982 15.1335C7.25067 13.4074 7.08214 11.6779 6.94432 9.94575C6.93661 9.83549 6.90579 9.72809 6.85384 9.63053C6.80189 9.53297 6.73 9.44744 6.64282 9.3795Z" stroke="#131323" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
@@ -1151,7 +1151,7 @@ export default function Folders({ onFolderSelect }) {
                         </div>
                     </div>
                     <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
-                        <button className="btn  d-flex align-items-center gap-2 rounded custom-btn" style={{ backgroundColor: "white" }}>
+                        <button className="btn d-flex align-items-center gap-2 rounded custom-btn" style={{ backgroundColor: "white" }}>
                             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M6.64282 9.3795C4.77757 7.9845 3.44707 6.45 2.72032 5.5875C2.49532 5.3205 2.42182 5.12475 2.37757 4.7805C2.22607 3.6015 2.15032 3.012 2.49607 2.631C2.84182 2.25 3.45307 2.25 4.67557 2.25H13.3246C14.5471 2.25 15.1583 2.25 15.5041 2.63025C15.8498 3.01125 15.7741 3.60075 15.6226 4.77975C15.5776 5.124 15.5041 5.31975 15.2798 5.58675C14.5523 6.45075 13.2196 7.98825 11.3498 9.3855C11.2634 9.45278 11.1919 9.53735 11.14 9.63382C11.0881 9.73029 11.0568 9.83653 11.0483 9.94575C10.8631 11.994 10.6921 13.116 10.5856 13.683C10.4138 14.5995 9.11557 15.1508 8.41957 15.642C8.00557 15.9345 7.50307 15.5865 7.44982 15.1335C7.25067 13.4074 7.08214 11.6779 6.94432 9.94575C6.93661 9.83549 6.90579 9.72809 6.85384 9.63053C6.80189 9.53297 6.73 9.44744 6.64282 9.3795Z" stroke="#131323" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
@@ -1197,7 +1197,7 @@ export default function Folders({ onFolderSelect }) {
                     <div className="mb-3 px-2">
                         <div className="d-flex align-items-center gap-2 flex-wrap" style={{ backgroundColor: "white", padding: "12px 16px", borderRadius: "8px" }}>
                             <button
-                                className="btn  text-primary p-0 border-0 bg-transparent"
+                                className="btn text-primary p-0 border-0 bg-transparent"
                                 onClick={() => {
                                     setCurrentFolder(null);
                                     setFolderPath([]);
@@ -1214,7 +1214,7 @@ export default function Folders({ onFolderSelect }) {
                                 <React.Fragment key={idx}>
                                     <span style={{ color: "#6B7280", fontFamily: "BasisGrotesquePro" }}>/</span>
                                     <button
-                                        className="btn  text-primary p-0 border-0 bg-transparent"
+                                        className="btn text-primary p-0 border-0 bg-transparent"
                                         onClick={() => {
                                             // Navigate to this folder level - would need to track folder IDs
                                             // For now, just show the path

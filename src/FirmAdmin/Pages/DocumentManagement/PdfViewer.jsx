@@ -348,7 +348,7 @@ export default function PdfViewer() {
       <div className="mb-4">
         <button
           onClick={handleBack}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 transition-colors text-sm font-medium"
           style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
         >
           <BackArrowIcon />
@@ -661,7 +661,7 @@ export default function PdfViewer() {
               <button
                 onClick={handleAddComment}
                 disabled={addingComment || !newComment.trim()}
-                className="w-fit flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-sm text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-fit flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg transition-colors shadow-sm text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
               >
                 {addingComment ? (

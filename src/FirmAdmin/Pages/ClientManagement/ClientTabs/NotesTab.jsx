@@ -332,7 +332,7 @@ export default function NotesTab({ client }) {
                 <button
                   onClick={createNote}
                   disabled={creatingNote || !noteContent.trim()}
-                  className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] !rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] !rounded-lg transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {creatingNote ? 'Adding...' : 'Add Note'}
                 </button>

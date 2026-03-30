@@ -58,7 +58,7 @@ export default function AnalyticsView() {
           <p className="text-red-600 mb-4">{error}</p>
           <button
             onClick={fetchAnalytics}
-            className="px-4 py-2 bg-[#3AD6F2] text-white rounded-lg hover:bg-[#2BC4E0] transition-colors"
+            className="px-4 py-2 bg-[#3AD6F2] text-white rounded-lg transition-colors"
           >
             Retry
           </button>

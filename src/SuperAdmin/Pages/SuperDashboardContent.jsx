@@ -726,7 +726,7 @@ export default function SuperDashboardContent() {
           <p className="text-[var(--sa-text-secondary)] mb-4">{error}</p>
           <button
             onClick={handleRefresh}
-            className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+            className="px-4 py-2 bg-orange-500 text-white rounded-md transition-colors"
           >
             Try Again
           </button>
@@ -747,7 +747,7 @@ export default function SuperDashboardContent() {
         <button
           onClick={handleRefresh}
           disabled={loading}
-          className="taxdashboardr-titler flex items-center gap-2 px-4 py-1.5 text-sm text-black dark:text-white bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-lg transition-colors disabled:opacity-50 border border-gray-100 dark:border-gray-700 hover:bg-[var(--sa-bg-secondary)] dark:hover:bg-gray-700"
+          className="taxdashboardr-titler flex items-center gap-2 px-4 py-1.5 text-sm text-black dark:text-white bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-lg transition-colors disabled:opacity-50 border border-gray-100 dark:border-gray-700"
           style={{ borderRadius: '7px' }}
         >
           <RefreshIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -1002,86 +1002,255 @@ export default function SuperDashboardContent() {
 
           {/* Growth Metrics Display - Show when a specific month is selected */}
           {selectedRevenueMonth !== 'all' && revenueData.length > 0 && (
-            <div className="mt-6 pt-6 border-t border-[var(--sa-border-color)]">
-              <h4 className="text-sm font-semibold text-[var(--sa-text-primary)] mb-4">Growth Metrics</h4>
+            <div className="mt-6 pt-6 border-t border-[var(--sa-border-color)] dark:border-gray-700">
+
+              {/* Section Title */}
+              <h4 className="text-sm font-semibold 
+      text-[var(--sa-text-primary)] 
+      dark:text-gray-100 
+      mb-4">
+                Growth Metrics
+              </h4>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
                 {revenueData.map((item, index) => {
+
                   const revenueGrowth = item.revenueGrowth ?? 0;
                   const subscriberGrowth = item.subscriberGrowth ?? 0;
+
                   const isRevenuePositive = revenueGrowth > 0;
                   const isRevenueNegative = revenueGrowth < 0;
+
                   const isSubscriberPositive = subscriberGrowth > 0;
                   const isSubscriberNegative = subscriberGrowth < 0;
 
                   return (
                     <React.Fragment key={index}>
+
+                      {/* ========================= */}
                       {/* Revenue Growth Card */}
-                      <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl p-4 border border-green-200 dark:border-green-800/30 shadow-sm transition-all hover:shadow-md">
+                      {/* ========================= */}
+
+                      <div className="bg-gradient-to-br
+              from-green-50 to-green-100
+              dark:from-green-900/40 dark:to-green-800/30
+              rounded-xl p-4
+              border border-green-200 dark:border-green-700/50
+              shadow-sm transition-all duration-200
+              hover:shadow-md">
+
                         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 bg-green-500 rounded-full flex items-center justify-center shadow-sm">
-                              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+
+                            <div className="w-9 h-9 
+                    bg-green-500 
+                    rounded-full 
+                    flex items-center justify-center 
+                    shadow-sm">
+
+                              <svg
+                                className="w-5 h-5 text-white"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 8c-1.657 0-3 .895-3 2s1.343 
+                        2 3 2 3 .895 3 2-1.343 
+                        2-3 2m0-8c1.11 0 2.08.402 
+                        2.599 1M12 8V7m0 1v8m0 
+                        0v1m0-1c-1.11 0-2.08-.402-2.599-1
+                        M21 12a9 9 0 11-18 0 
+                        9 9 0 0118 0z"
+                                />
                               </svg>
+
                             </div>
-                            <span className="text-sm font-semibold text-[var(--sa-text-primary)] dark:text-gray-200">Revenue Growth</span>
+
+                            <span className="text-sm font-semibold 
+                    text-[var(--sa-text-primary)] 
+                    dark:text-gray-100">
+                              Revenue Growth
+                            </span>
+
                           </div>
-                          <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm ${isRevenuePositive ? 'bg-green-500 text-white' :
-                            isRevenueNegative ? 'bg-red-500 text-white' :
-                              'bg-gray-400 text-white'
-                            }`}>
+
+                          <div
+                            className={`flex items-center gap-1 px-2.5 py-1 
+                    rounded-full text-[11px] font-bold shadow-sm
+                    ${isRevenuePositive
+                                ? "bg-green-500 text-white"
+                                : isRevenueNegative
+                                  ? "bg-red-500 text-white"
+                                  : "bg-gray-400 text-white"
+                              }`}
+                          >
+
                             {isRevenuePositive ? (
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                              <svg
+                                className="w-3 h-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2.5}
+                                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                                />
                               </svg>
                             ) : isRevenueNegative ? (
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 17l5-5m0 0l-5-5m5 5H6" />
+                              <svg
+                                className="w-3 h-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2.5}
+                                  d="M13 17l5-5m0 0l-5-5m5 5H6"
+                                />
                               </svg>
                             ) : null}
+
                             <span>
-                              {revenueGrowth > 0 ? '+' : ''}{revenueGrowth.toFixed(1)}%
+                              {revenueGrowth > 0 ? "+" : ""}
+                              {revenueGrowth.toFixed(1)}%
                             </span>
+
                           </div>
+
                         </div>
-                        <p className="text-[10px] text-gray-600 font-medium uppercase tracking-wider">Compared to previous month</p>
+
+                        <p className="text-[10px] font-medium uppercase tracking-wider
+                text-gray-600 dark:text-gray-400">
+                          Compared to previous month
+                        </p>
+
                       </div>
 
+                      {/* ========================= */}
                       {/* Subscriber Growth Card */}
-                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800/30 shadow-sm transition-all hover:shadow-md">
+                      {/* ========================= */}
+
+                      <div className="bg-gradient-to-br
+              from-blue-50 to-blue-100
+              dark:from-blue-900/40 dark:to-blue-800/30
+              rounded-xl p-4
+              border border-blue-200 dark:border-blue-700/50
+              shadow-sm transition-all duration-200
+              hover:shadow-md">
+
                         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center shadow-sm">
-                              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+
+                            <div className="w-9 h-9 
+                    bg-blue-500 
+                    rounded-full 
+                    flex items-center justify-center 
+                    shadow-sm">
+
+                              <svg
+                                className="w-5 h-5 text-white"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 4.354a4 4 0 110 5.292
+                        M15 21H3v-1a6 6 0 0112 0v1zm0 
+                        0h6v-1a6 6 0 00-9-5.197
+                        M13 7a4 4 0 11-8 0 
+                        4 4 0 018 0z"
+                                />
                               </svg>
+
                             </div>
-                            <span className="text-sm font-semibold text-[var(--sa-text-primary)] dark:text-gray-200">Subscriber Growth</span>
+
+                            <span className="text-sm font-semibold 
+                    text-[var(--sa-text-primary)] 
+                    dark:text-gray-100">
+                              Subscriber Growth
+                            </span>
+
                           </div>
-                          <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm ${isSubscriberPositive ? 'bg-green-500 text-white' :
-                            isSubscriberNegative ? 'bg-red-500 text-white' :
-                              'bg-gray-400 text-white'
-                            }`}>
+
+                          <div
+                            className={`flex items-center gap-1 px-2.5 py-1 
+                    rounded-full text-[11px] font-bold shadow-sm
+                    ${isSubscriberPositive
+                                ? "bg-green-500 text-white"
+                                : isSubscriberNegative
+                                  ? "bg-red-500 text-white"
+                                  : "bg-gray-400 text-white"
+                              }`}
+                          >
+
                             {isSubscriberPositive ? (
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                              <svg
+                                className="w-3 h-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2.5}
+                                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                                />
                               </svg>
                             ) : isSubscriberNegative ? (
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 17l5-5m0 0l-5-5m5 5H6" />
+                              <svg
+                                className="w-3 h-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2.5}
+                                  d="M13 17l5-5m0 0l-5-5m5 5H6"
+                                />
                               </svg>
                             ) : null}
+
                             <span>
-                              {subscriberGrowth > 0 ? '+' : ''}{subscriberGrowth.toFixed(1)}%
+                              {subscriberGrowth > 0 ? "+" : ""}
+                              {subscriberGrowth.toFixed(1)}%
                             </span>
+
                           </div>
+
                         </div>
-                        <p className="text-[10px] text-gray-600 font-medium uppercase tracking-wider">Compared to previous month</p>
+
+                        <p className="text-[10px] font-medium uppercase tracking-wider
+                text-gray-600 dark:text-gray-400">
+                          Compared to previous month
+                        </p>
+
                       </div>
+
                     </React.Fragment>
                   );
+
                 })}
+
               </div>
+
             </div>
           )}
         </div>
@@ -1310,8 +1479,7 @@ export default function SuperDashboardContent() {
               {totalFirms > FIRMS_PER_PAGE && (
                 <button
                   onClick={handleViewAll}
-                  className="text-black dark:text-white text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors border border-[var(--sa-border-color)] dark:border-gray-700 rounded-lg hover:bg-[var(--sa-bg-secondary)] dark:hover:bg-gray-700"
-                  style={{ borderRadius: '6px' }}
+                  className="text-black dark:text-white text-sm font-medium cursor-pointer px-3 py-2 transition-colors border border-[var(--sa-border-color)] dark:border-gray-700 rounded-lg"
                 >
                   {showAllFirms ? 'Show Less' : 'View All'}
                 </button>
@@ -1769,7 +1937,7 @@ export default function SuperDashboardContent() {
         </Modal.Body>
         <Modal.Footer className="border-t border-[var(--sa-border-color)] dark:border-gray-700 bg-[var(--sa-bg-card)] dark:bg-gray-800" style={{ padding: '24px' }}>
           <button
-            className="btn dark:text-white dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
+            className="btn dark:text-white dark:bg-gray-700 dark:border-gray-600"
             onClick={() => {
               setShowActiveUsersModal(false);
               setActiveUsersData(null);

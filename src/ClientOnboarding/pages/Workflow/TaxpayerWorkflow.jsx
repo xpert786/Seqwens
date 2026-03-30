@@ -122,7 +122,7 @@ const TaxpayerWorkflow = () => {
           <p className="text-red-600 mb-4 font-[BasisGrotesquePro]">{error}</p>
           <button
             onClick={fetchWorkflow}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-[BasisGrotesquePro]"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg transition font-[BasisGrotesquePro]"
           >
             Retry
           </button>
@@ -182,7 +182,7 @@ const TaxpayerWorkflow = () => {
               </h3>
               <button
                 onClick={handleUploadCancel}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

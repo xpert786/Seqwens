@@ -293,7 +293,7 @@ export default function OfficePricing() {
               </div>
               <button
                 onClick={handleCloseModal}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -357,13 +357,13 @@ export default function OfficePricing() {
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-4 py-2 border border-[#E8F0FF] bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm font-medium"
+                  className="px-4 py-2 border border-[#E8F0FF] bg-white text-gray-700 rounded-lg transition-colors font-[BasisGrotesquePro] text-sm font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro] text-sm font-medium"
+                  className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg transition-colors font-[BasisGrotesquePro] text-sm font-medium"
                 >
                   {editingPricing ? 'Update' : 'Create'}
                 </button>

@@ -252,7 +252,7 @@ export default function DashboardFirst() {
           <h5 className="text-red-800 font-semibold mb-2">Error Loading Dashboard</h5>
           <p className="text-red-700 mb-3">{error}</p>
           <button
-            className="px-4 py-2 bg-white border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors"
+            className="px-4 py-2 bg-white border border-red-300 text-red-700 rounded-lg transition-colors"
             onClick={() => window.location.reload()}
           >
             Retry
@@ -453,7 +453,7 @@ export default function DashboardFirst() {
                 </h6>
               </div>
               <button
-                className="w-full py-2.5 text-xs sm:text-sm bg-[#F9FBFF] border border-[#E0E6ED] text-[#3B4A66] font-bold rounded-lg hover:bg-[#F56D2D] hover:text-white hover:border-[#F56D2D] transition-all"
+                className="w-full py-2.5 text-xs sm:text-sm bg-[#F9FBFF] border border-[#E0E6ED] text-[#3B4A66] font-bold rounded-lg transition-all"
                 onClick={() => navigate(action.route)}
               >
                 {action.button}

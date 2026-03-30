@@ -127,7 +127,7 @@ const UsageAlerts = () => {
             <div className="pt-4 flex justify-center">
                 <button
                     onClick={fetchAlerts}
-                    className="flex items-center gap-2 px-8 py-3 bg-white !border border-[#E8F0FF] text-[#3B4A66] !rounded-xl hover:bg-gray-50 hover:border-[#3AD6F2]/30 transition-all font-[BasisGrotesquePro] text-sm font-bold shadow-sm"
+                    className="flex items-center gap-2 px-8 py-3 bg-white !border border-[#E8F0FF] text-[#3B4A66] !rounded-xl transition-all font-[BasisGrotesquePro] text-sm font-bold shadow-sm"
                 >
                     <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

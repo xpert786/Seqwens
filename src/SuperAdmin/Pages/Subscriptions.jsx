@@ -688,7 +688,7 @@ export default function Subscriptions() {
         <div className="flex gap-3 subscriptions-actions">
           <button
             onClick={handleExportReport}
-            className="px-2 py-1 text-[10px] bg-[var(--sa-bg-card)] border border-[var(--sa-border-color)] text-[var(--sa-text-primary)] rounded-lg hover:bg-[var(--sa-bg-secondary)] transition-colors flex items-center"
+            className="px-2 py-1 text-[10px] bg-[var(--sa-bg-card)] border border-[var(--sa-border-color)] text-[var(--sa-text-primary)] rounded-lg transition-colors flex items-center gap-1"
             style={{ borderRadius: '7px' }}
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1677,7 +1677,7 @@ const SubscribersListModal = ({ isOpen, onClose, loading, subscribers }) => {
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-[var(--sa-bg-secondary)] rounded-full transition-colors"
+            className="p-2 rounded-full transition-colors"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M18 6L6 18M6 6L18 18" stroke="var(--sa-text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -1733,7 +1733,7 @@ const SubscribersListModal = ({ isOpen, onClose, loading, subscribers }) => {
         <div className="p-6 border-t border-[var(--sa-border-color)] bg-[var(--sa-bg-secondary)] flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-[#3AD6F2] text-white font-bold rounded-lg hover:bg-[#32c0db] transition-colors"
+            className="px-6 py-2 bg-[#3AD6F2] text-white font-bold rounded-lg transition-colors"
             style={{ borderRadius: '7px' }}
           >
             Close
@@ -2141,7 +2141,7 @@ const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, sub
               <span className="text-sm text-[var(--sa-text-secondary)]">• Firm ID: {subscription?.firm_id}</span>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-[var(--sa-bg-secondary)] rounded-full transition-colors">
+          <button onClick={onClose} className="p-2 rounded-full transition-colors">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="var(--sa-text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
         </div>
@@ -2301,7 +2301,7 @@ const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, sub
 
         {/* Modal Footer */}
         <div className="p-6 border-t border-[var(--sa-border-color)] bg-[var(--sa-bg-secondary)] flex justify-end">
-          <button onClick={onClose} className="px-6 py-2 bg-[#3AD6F2] text-white font-bold rounded-lg hover:bg-[#32c0db] transition-colors shadow-sm">
+          <button onClick={onClose} className="px-6 py-2 bg-[#3AD6F2] text-white font-bold rounded-lg transition-colors shadow-sm">
             Close
           </button>
         </div>
@@ -2361,7 +2361,7 @@ const ManagePlansModal = ({ isOpen, onClose, firm, onUpdate }) => {
       <div className="bg-[var(--sa-bg-card)] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
         <div className="p-6 border-b border-[var(--sa-border-color)] flex justify-between items-center bg-[var(--sa-bg-card)]">
           <h3 className="text-xl font-bold text-[var(--sa-text-primary)]">Manage Firm Plan</h3>
-          <button onClick={onClose} className="p-2 hover:bg-[var(--sa-bg-secondary)] rounded-full transition-colors">
+          <button onClick={onClose} className="p-2 rounded-full transition-colors">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="var(--sa-text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
         </div>
@@ -2410,14 +2410,14 @@ const ManagePlansModal = ({ isOpen, onClose, firm, onUpdate }) => {
         <div className="p-6 border-t border-[var(--sa-border-color)] bg-[var(--sa-bg-secondary)] flex gap-3">
           <button 
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-[var(--sa-border-color)] text-[var(--sa-text-secondary)] font-bold rounded-lg hover:bg-[var(--sa-bg-secondary)] transition-colors"
+            className="flex-1 px-4 py-2 border border-[var(--sa-border-color)] text-[var(--sa-text-secondary)] font-bold rounded-lg transition-colors"
           >
             Cancel
           </button>
           <button 
             onClick={handleUpdate}
             disabled={updating || !selectedPlan || selectedPlan === firm?.subscription_plan}
-            className="flex-1 px-4 py-2 bg-[#F56D2D] text-white font-bold rounded-lg hover:bg-[#e05d20] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-2 bg-[#F56D2D] text-white font-bold rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {updating ? 'Updating...' : 'Save Changes'}
           </button>
@@ -2495,7 +2495,7 @@ const EditPlanModal = ({ isOpen, onClose, plan, onUpdate }) => {
             <h3 className="text-xl font-bold text-[var(--sa-text-primary)]">Edit Plan: {plan.display_name}</h3>
             <p className="text-xs text-[var(--sa-text-secondary)] mt-1 uppercase tracking-widest">{plan.subscription_type}</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-[var(--sa-bg-secondary)] rounded-full transition-colors">
+          <button onClick={onClose} className="p-2 rounded-full transition-colors">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--sa-text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
@@ -2646,7 +2646,7 @@ const EditPlanModal = ({ isOpen, onClose, plan, onUpdate }) => {
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-6 py-2 border border-[var(--sa-border-color)] text-[var(--sa-text-secondary)] font-bold rounded-lg hover:bg-[var(--sa-bg-secondary)] transition-colors"
+            className="flex-1 px-6 py-2 border border-[var(--sa-border-color)] text-[var(--sa-text-secondary)] font-bold rounded-lg transition-colors"
           >
             Cancel
           </button>
@@ -2654,7 +2654,7 @@ const EditPlanModal = ({ isOpen, onClose, plan, onUpdate }) => {
             type="submit"
             onClick={handleSubmit}
             disabled={saving}
-            className="flex-1 px-6 py-2 bg-[#F56D2D] text-white font-bold rounded-lg hover:bg-[#e05d20] transition-colors shadow-sm disabled:opacity-50"
+            className="flex-1 px-6 py-2 bg-[#F56D2D] text-white font-bold rounded-lg transition-colors shadow-sm disabled:opacity-50"
           >
             {saving ? 'Saving Changes...' : 'Save Plan Settings'}
           </button>

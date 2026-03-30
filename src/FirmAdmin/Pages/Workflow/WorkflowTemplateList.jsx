@@ -79,7 +79,7 @@ const WorkflowTemplateList = ({ templates, onViewTemplate, onEditTemplate, onCre
             />
             <button
               onClick={onCreateTemplate}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg font-[BasisGrotesquePro] flex items-center justify-center gap-2 whitespace-nowrap shadow-sm hover:bg-[#e45d1d] transition-colors"
+              className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg font-[BasisGrotesquePro] flex items-center justify-center gap-2 whitespace-nowrap shadow-sm transition-colors"
               style={{ borderRadius: '8px' }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

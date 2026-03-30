@@ -477,7 +477,7 @@ export default function PendingInviteDetails() {
                   <button
                     onClick={handleEditToggle}
                     disabled={!canEdit}
-                    className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center justify-center gap-2 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ borderRadius: '7px' }}
                     title={!canEdit ? 'Cannot edit expired invitations' : ''}
                   >
@@ -489,7 +489,7 @@ export default function PendingInviteDetails() {
                 <>
                   <button
                     onClick={handleEditToggle}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center gap-2 font-[BasisGrotesquePro]"
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center justify-center gap-2 font-[BasisGrotesquePro]"
                     style={{ borderRadius: '7px' }}
                   >
                     <FaTimes size={14} />
@@ -498,7 +498,7 @@ export default function PendingInviteDetails() {
                   <button
                     onClick={handleSave}
                     disabled={saving || !canEdit}
-                    className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition-colors flex items-center justify-center gap-2 font-[BasisGrotesquePro] disabled:opacity-50"
+                    className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-[BasisGrotesquePro] disabled:opacity-50"
                     style={{ borderRadius: '7px' }}
                   >
                     <FaSave size={14} />
@@ -618,7 +618,7 @@ export default function PendingInviteDetails() {
                   <button
                     onClick={handleCopyInviteLink}
                     disabled={!invite.invite_link}
-                    className="px-3 sm:px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 font-[BasisGrotesquePro] disabled:opacity-50 whitespace-nowrap"
+                    className="px-3 sm:px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg transition-colors flex items-center gap-2 font-[BasisGrotesquePro] disabled:opacity-50 whitespace-nowrap"
                     style={{ borderRadius: '7px' }}
                   >
                     <FaCopy size={14} />
@@ -627,7 +627,7 @@ export default function PendingInviteDetails() {
                   <button
                     onClick={handleRefreshInviteLink}
                     disabled={inviteLinkRefreshing}
-                    className="px-3 sm:px-4 py-2 bg-[#00C0C6] text-white rounded-lg hover:bg-[#00A8AE] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 whitespace-nowrap"
+                    className="px-3 sm:px-4 py-2 bg-[#00C0C6] text-white rounded-lg transition-colors font-[BasisGrotesquePro] disabled:opacity-50 whitespace-nowrap"
                     style={{ borderRadius: '7px' }}
                   >
                     {inviteLinkRefreshing ? 'Refreshing...' : 'Refresh'}
@@ -709,7 +709,7 @@ export default function PendingInviteDetails() {
                 <button
                   onClick={handleSendEmailInviteNow}
                   disabled={inviteActionLoading || !editedInviteEmail}
-                  className="px-4 py-2 bg-[#00C0C6] text-white rounded-lg hover:bg-[#00A8AE] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 whitespace-nowrap"
+                  className="px-4 py-2 bg-[#00C0C6] text-white rounded-lg transition-colors font-[BasisGrotesquePro] disabled:opacity-50 whitespace-nowrap"
                   style={{ borderRadius: '7px' }}
                 >
                   {inviteActionLoading && inviteActionMethod === "email" ? "Sending..." : "Send Email"}
@@ -750,7 +750,7 @@ export default function PendingInviteDetails() {
                   <button
                     onClick={handleSendSmsInviteNow}
                     disabled={inviteActionLoading || !smsPhoneOverride}
-                    className="w-full h-[44px] px-6 bg-[#00C0C6] text-white rounded-lg hover:bg-[#00A8AE] transition-all flex items-center justify-center gap-2 font-[BasisGrotesquePro] font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.98]"
+                    className="w-full h-[44px] px-6 bg-[#00C0C6] text-white rounded-lg transition-all flex items-center justify-center gap-2 font-[BasisGrotesquePro] font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.98]"
                     style={{ borderRadius: '7px' }}
                   >
                     {inviteActionLoading && inviteActionMethod === "sms" ? (
@@ -810,7 +810,7 @@ export default function PendingInviteDetails() {
                 <button
                   onClick={handleDeleteInvite}
                   disabled={deletingInvite}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-[BasisGrotesquePro] disabled:opacity-50 flex items-center gap-2"
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg transition-colors font-[BasisGrotesquePro] disabled:opacity-50 flex items-center gap-2"
                   style={{ borderRadius: '7px' }}
                 >
                   {deletingInvite ? 'Deleting...' : 'Delete'}

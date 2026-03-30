@@ -1016,7 +1016,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                         {totalTicketCards > TICKET_CARDS_PER_PAGE && (
                             <button
                                 onClick={handleViewAllTicketCards}
-                                className="text-black text-sm font-medium hover:underline cursor-pointer px-3 py-2 transition-colors support-tickets-view-toggle"
+                                className="text-black text-sm font-medium cursor-pointer px-3 py-2 transition-colors support-tickets-view-toggle"
                                 style={{ border: '1px solid #E8F0FF', borderRadius: '8px' }}
                             >
                                 {showAllTicketCards ? 'Show Less' : 'View All'}
@@ -1218,7 +1218,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                                         >
                                             <button
                                                 type="button"
-                                                className="w-full px-4 py-2 text-left text-sm text-[#3B4A66] hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+                                                className="w-full px-4 py-2 text-left text-sm text-[#3B4A66] transition-colors font-[BasisGrotesquePro]"
                                                 onClick={(event) => openAssignModalForTicket(event, ticket)}
                                                 data-ticket-action-menu="true"
                                             >
@@ -1226,7 +1226,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                                             </button>
                                             <button
                                                 type="button"
-                                                className="w-full px-4 py-2 text-left text-sm text-[#3B4A66] hover:bg-gray-50 transition-colors font-[BasisGrotesquePro]"
+                                                className="w-full px-4 py-2 text-left text-sm text-[#3B4A66] transition-colors font-[BasisGrotesquePro]"
                                                 onClick={(event) => handleReplyToTicket(event, ticket.id)}
                                                 data-ticket-action-menu="true"
                                             >
@@ -1234,7 +1234,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                                             </button>
                                             <button
                                                 type="button"
-                                                className="w-full px-4 py-2 text-left text-sm text-[#B91C1C] hover:bg-red-50 transition-colors font-[BasisGrotesquePro] disabled:opacity-60"
+                                                className="w-full px-4 py-2 text-left text-sm text-[#B91C1C] transition-colors font-[BasisGrotesquePro] disabled:opacity-60"
                                                 onClick={(event) => handleCloseTicket(event, ticket.id)}
                                                 disabled={actionBusyTicketId === ticket.id}
                                                 data-ticket-action-menu="true"
@@ -1300,7 +1300,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                             <button
                                 type="button"
                                 onClick={closeAssignModal}
-                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                className="text-gray-400 transition-colors"
                                 aria-label="Close"
                                 disabled={assignSubmitLoading}
                                 data-ticket-action-menu="true"
@@ -1356,7 +1356,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                         <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#E8F0FF]" data-ticket-action-menu="true">
                             <button
                                 type="button"
-                                className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md hover:bg-[#F8FAFC] transition-colors font-[BasisGrotesquePro]"
+                                className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md transition-colors font-[BasisGrotesquePro]"
                                 style={{ borderRadius: "7px" }}
                                 onClick={closeAssignModal}
                                 disabled={assignSubmitLoading}
@@ -1366,7 +1366,7 @@ export default function Overview({ showHeader = false, onTicketDetailToggle }) {
                             </button>
                             <button
                                 type="button"
-                                className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors disabled:opacity-60 font-[BasisGrotesquePro]"
+                                className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md transition-colors disabled:opacity-60 font-[BasisGrotesquePro]"
                                 style={{ borderRadius: "7px" }}
                                 onClick={handleSubmitAssignTicket}
                                 disabled={assignSubmitLoading || assignListLoading}

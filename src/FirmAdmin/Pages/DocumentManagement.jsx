@@ -544,7 +544,7 @@ export default function DocumentManagement() {
             {/* Buttons Section */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 mt-3 lg:mt-0 w-full sm:w-auto">
               <button
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-firm-primary text-white hover:brightness-90 transition-all text-sm font-medium docmanage-upload-button"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-firm-primary text-white transition-all text-sm font-medium docmanage-upload-button"
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
                 onClick={() => setShowUploadModal(true)}
               >
@@ -623,7 +623,7 @@ export default function DocumentManagement() {
               <p className="text-red-800 font-[BasisGrotesquePro]">{error}</p>
               <button
                 onClick={() => fetchDocuments(null)}
-                className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-[BasisGrotesquePro]"
+                className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg font-[BasisGrotesquePro]"
               >
                 Retry
               </button>
@@ -907,7 +907,7 @@ export default function DocumentManagement() {
                         Due: Apr 15, 2024
                       </p>
                     </div>
-                    <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                        <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                       Resolve
                     </button>
                   </div>
@@ -933,7 +933,7 @@ export default function DocumentManagement() {
                         Due: Apr 01, 2024
                       </p>
                     </div>
-                    <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                        <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                       Resolve
                     </button>
                   </div>
@@ -959,7 +959,7 @@ export default function DocumentManagement() {
                         Due: Apr 30, 2024
                       </p>
                     </div>
-                    <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                        <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                       Resolve
                     </button>
                   </div>
@@ -988,7 +988,7 @@ export default function DocumentManagement() {
                       <option>Next 60 Days</option>
                       <option>Next 90 Days</option>
                     </select>
-                    <button className="px-4 py-2.5 bg-firm-primary text-white rounded-lg hover:brightness-90 transition-all text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                    <button className="px-4 py-2.5 bg-firm-primary text-white rounded-lg transition-all text-sm font-medium" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                       Configure
                     </button>
                   </div>
@@ -1084,7 +1084,7 @@ export default function DocumentManagement() {
                             </span>
                           </td>
                           <td className="py-4 px-4">
-                            <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                                <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                               Resolve
                             </button>
                           </td>
@@ -1118,7 +1118,7 @@ export default function DocumentManagement() {
                             </span>
                           </td>
                           <td className="py-4 px-4">
-                            <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                                <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                               Resolve
                             </button>
                           </td>
@@ -1152,7 +1152,7 @@ export default function DocumentManagement() {
                             </span>
                           </td>
                           <td className="py-4 px-4">
-                            <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                                <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                               Resolve
                             </button>
                           </td>
@@ -1186,7 +1186,7 @@ export default function DocumentManagement() {
                             </span>
                           </td>
                           <td className="py-4 px-4">
-                            <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                                <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                               Resolve
                             </button>
                           </td>
@@ -1222,7 +1222,7 @@ export default function DocumentManagement() {
                           <span className="text-xs text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Michael Chen</span>
                         </div>
                       </div>
-                      <button className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                      <button className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                         Resolve
                       </button>
                     </div>
@@ -1252,7 +1252,7 @@ export default function DocumentManagement() {
                           <span className="text-xs text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Jason Roy</span>
                         </div>
                       </div>
-                      <button className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                      <button className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                         Resolve
                       </button>
                     </div>
@@ -1282,7 +1282,7 @@ export default function DocumentManagement() {
                           <span className="text-xs text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Stuart Vince</span>
                         </div>
                       </div>
-                      <button className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                      <button className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                         Resolve
                       </button>
                     </div>
@@ -1312,7 +1312,7 @@ export default function DocumentManagement() {
                           <span className="text-xs text-gray-700" style={{ fontFamily: 'BasisGrotesquePro' }}>Sarah Johnson</span>
                         </div>
                       </div>
-                      <button className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      <button className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro' }}>
                         Resolve
                       </button>
                     </div>
@@ -1364,10 +1364,10 @@ export default function DocumentManagement() {
                       </div>
                     </div>
                     <div className="flex gap-2 md:flex-shrink-0">
-                      <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                            <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                         Configure
                       </button>
-                      <button className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                      <button className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg transition-colors whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                         Disable
                       </button>
                     </div>
@@ -1400,10 +1400,10 @@ export default function DocumentManagement() {
                       </div>
                     </div>
                     <div className="flex gap-2 md:flex-shrink-0">
-                      <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                            <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                         Configure
                       </button>
-                      <button className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                      <button className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg transition-colors whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                         Disable
                       </button>
                     </div>
@@ -1439,10 +1439,10 @@ export default function DocumentManagement() {
                       </div>
                     </div>
                     <div className="flex gap-2 md:flex-shrink-0">
-                      <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                            <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                         Configure
                       </button>
-                      <button className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                      <button className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg transition-colors whitespace-nowrap" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                         Disable
                       </button>
                     </div>
@@ -1741,7 +1741,7 @@ export default function DocumentManagement() {
                             </span>
                           </td>
                           <td className="py-4 px-4">
-                            <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                                <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                               Notify Client
                             </button>
                           </td>
@@ -1775,7 +1775,7 @@ export default function DocumentManagement() {
                             </span>
                           </td>
                           <td className="py-4 px-4">
-                            <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                                <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                               Notify Client
                             </button>
                           </td>
@@ -1809,7 +1809,7 @@ export default function DocumentManagement() {
                             </span>
                           </td>
                           <td className="py-4 px-4">
-                            <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                                <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                               Notify Client
                             </button>
                           </td>
@@ -1843,7 +1843,7 @@ export default function DocumentManagement() {
                             </span>
                           </td>
                           <td className="py-4 px-4">
-                            <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
+                                <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}>
                               Notify Client
                             </button>
                           </td>
@@ -1881,7 +1881,7 @@ export default function DocumentManagement() {
                           </span>
                         </div>
                       </div>
-                      <button className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      <button className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro' }}>
                         Notify Client
                       </button>
                     </div>
@@ -1913,7 +1913,7 @@ export default function DocumentManagement() {
                           </span>
                         </div>
                       </div>
-                      <button className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      <button className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro' }}>
                         Notify Client
                       </button>
                     </div>
@@ -1945,7 +1945,7 @@ export default function DocumentManagement() {
                           </span>
                         </div>
                       </div>
-                      <button className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      <button className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro' }}>
                         Notify Client
                       </button>
                     </div>
@@ -1977,7 +1977,7 @@ export default function DocumentManagement() {
                           </span>
                         </div>
                       </div>
-                      <button className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" style={{ fontFamily: 'BasisGrotesquePro' }}>
+                      <button className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors" style={{ fontFamily: 'BasisGrotesquePro' }}>
                         Notify Client
                       </button>
                     </div>
@@ -2146,7 +2146,7 @@ export default function DocumentManagement() {
                     <button
                       onClick={handleWmToolPreview}
                       disabled={wmToolLoading || !wmToolFile}
-                      className="flex-1 rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm font-semibold text-[#374151] hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                      className="flex-1 rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm font-semibold text-[#374151] disabled:opacity-50 transition-colors"
                       style={{ borderRadius: '8px' }}
                     >
                       Generate Preview
@@ -2154,7 +2154,7 @@ export default function DocumentManagement() {
                     <button
                       onClick={handleWmToolDownload}
                       disabled={wmToolLoading || !wmToolFile}
-                      className="flex-1 rounded-lg bg-[#3AD6F2] px-3 py-2 text-sm font-semibold text-white hover:bg-[#34c3db] disabled:opacity-50 transition-colors shadow-sm"
+                      className="flex-1 rounded-lg bg-[#3AD6F2] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50 transition-colors shadow-sm"
                       style={{ borderRadius: '8px' }}
                     >
                       Download Watermarked File

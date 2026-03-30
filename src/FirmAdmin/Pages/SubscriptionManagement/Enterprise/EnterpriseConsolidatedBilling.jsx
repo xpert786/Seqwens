@@ -181,7 +181,7 @@ const EnterpriseConsolidatedBilling = () => {
         </div>
 
         <div>
-          <button className="!rounded-lg bg-[#F56D2D] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#EA580C] font-[BasisGrotesquePro]">
+          <button className="!rounded-lg bg-[#F56D2D] px-5 py-2.5 text-sm font-medium text-white transition-colors font-[BasisGrotesquePro]">
             Save Billing Settings
           </button>
         </div>

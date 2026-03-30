@@ -358,7 +358,7 @@ export default function TicketDetail({ ticketId, onBack }) {
                 <div className="mb-6">
                     <button
                         onClick={onBack}
-                        className="mb-4 text-blue-600 hover:text-blue-800 font-[BasisGrotesquePro] flex items-center"
+                        className="mb-4 text-blue-600 font-[BasisGrotesquePro] flex items-center"
                     >
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -553,7 +553,7 @@ export default function TicketDetail({ ticketId, onBack }) {
                                                     <button
                                                         type="button"
                                                         onClick={closeAssignModal}
-                                                        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+                                                        className="absolute top-4 right-4 text-gray-400 transition-colors"
                                                     >
                                                         <span className="sr-only">Close</span>
                                                         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -608,7 +608,7 @@ export default function TicketDetail({ ticketId, onBack }) {
                                                         <button
                                                             type="button"
                                                             onClick={closeAssignModal}
-                                                            className="px-4 py-2 rounded-lg border border-[#D1D5DB] text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] hover:bg-[#F3F4F6] transition-colors"
+                                                            className="px-4 py-2 rounded-lg border border-[#D1D5DB] text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] transition-colors"
                                                             disabled={assigningTicket}
                                                         >
                                                             Cancel
@@ -616,7 +616,7 @@ export default function TicketDetail({ ticketId, onBack }) {
                                                         <button
                                                             type="button"
                                                             onClick={handleAssignTicket}
-                                                            className="px-4 py-2 rounded-lg bg-[#F56D2D] text-white text-sm font-medium font-[BasisGrotesquePro] hover:bg-[#e15f1f] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                                            className="px-4 py-2 rounded-lg bg-[#F56D2D] text-white text-sm font-medium font-[BasisGrotesquePro] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                                                             style={{ borderRadius: "7px" }}
                                                             disabled={assigningTicket || assignListLoading || !assignableAdmins.length}
                                                         >
@@ -663,7 +663,7 @@ export default function TicketDetail({ ticketId, onBack }) {
                                 </span>
                                 <button
                                     onClick={handleRemoveAttachment}
-                                    className="text-xs text-[#F56D2D] font-medium hover:text-[#E4561F]"
+                                    className="text-xs text-[#F56D2D] font-medium"
                                     disabled={submitting}
                                 >
                                     Remove
@@ -714,7 +714,7 @@ export default function TicketDetail({ ticketId, onBack }) {
 
                             <button
                                 onClick={handleSendReply}
-                                className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg text-sm font-medium hover:bg-orange-600 font-[BasisGrotesquePro] flex items-center disabled:opacity-60"
+                                className="px-6 py-2 bg-[#F56D2D] text-white rounded-lg text-sm font-medium font-[BasisGrotesquePro] flex items-center disabled:opacity-60"
                                 style={{ borderRadius: "7px" }}
                                 disabled={submitting}
                                 type="button"
@@ -742,7 +742,7 @@ export default function TicketDetail({ ticketId, onBack }) {
                         <button
                             type="button"
                             onClick={closeAssignModal}
-                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+                            className="absolute top-4 right-4 text-gray-400 transition-colors"
                         >
                             <span className="sr-only">Close</span>
                             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -796,7 +796,7 @@ export default function TicketDetail({ ticketId, onBack }) {
                             <button
                                 type="button"
                                 onClick={closeAssignModal}
-                                className="px-4 py-2 border border-[#D1D5DB] text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] hover:bg-[#F3F4F6] transition-colors rounded-[7px]"
+                                className="px-4 py-2 border border-[#D1D5DB] text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro] transition-colors rounded-[7px]"
                                 style={{ borderRadius: "7px" }}
                                 disabled={assigningTicket}
                             >
@@ -806,7 +806,7 @@ export default function TicketDetail({ ticketId, onBack }) {
                             <button
                                 type="button"
                                 onClick={handleAssignTicket}
-                                className="px-4 py-2 bg-[#F56D2D] text-white text-sm font-medium font-[BasisGrotesquePro] hover:bg-[#e15f1f] transition-colors disabled:opacity-60 disabled:cursor-not-allowed rounded-[7px]"
+                                className="px-4 py-2 bg-[#F56D2D] text-white text-sm font-medium font-[BasisGrotesquePro] transition-colors disabled:opacity-60 disabled:cursor-not-allowed rounded-[7px]"
                                 style={{ borderRadius: "7px" }}
                                 disabled={assigningTicket || assignListLoading || !assignableAdmins.length}
                             >

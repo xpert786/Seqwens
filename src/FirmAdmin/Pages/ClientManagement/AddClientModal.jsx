@@ -845,7 +845,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
             </style>
             <button
               onClick={onClose}
-              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-[#3B4A66] transition-all duration-200 z-[20]"
+              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 z-[20]"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -903,7 +903,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                     type="button"
                     onClick={confirmLinkCreate}
                     disabled={loading}
-                    className="px-4 py-2 text-white rounded-lg hover:brightness-90 font-medium font-[BasisGrotesquePro] flex items-center"
+                    className="px-4 py-2 text-white rounded-lg font-medium font-[BasisGrotesquePro] flex items-center"
                     style={{ backgroundColor: 'var(--firm-primary-color, #ea580c)' }}
                   >
                     {loading ? (
@@ -947,7 +947,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                     type="button"
                     onClick={handleRestoreArchivedClient}
                     disabled={restoring}
-                    className="px-4 py-2 text-white rounded-lg hover:brightness-90 font-medium font-[BasisGrotesquePro] flex items-center"
+                    className="px-4 py-2 text-white rounded-lg font-medium font-[BasisGrotesquePro] flex items-center"
                     style={{ backgroundColor: 'var(--firm-primary-color, #ea580c)' }}
                   >
                     {restoring ? (
@@ -1075,14 +1075,14 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                     type="button"
                     onClick={onClose}
                     style={{ borderRadius: '10px' }}
-                    className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition font-[BasisGrotesquePro] text-sm font-medium"
+                    className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white transition font-[BasisGrotesquePro] text-sm font-medium"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-6 py-2 text-white hover:brightness-90 transition disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] text-sm font-medium"
+                    className="px-6 py-2 text-white transition disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro] text-sm font-medium"
                     style={{ borderRadius: '8px', backgroundColor: 'var(--firm-primary-color, #F56D2D)' }}
                   >
                     {loading ? 'Creating...' : 'Add Client'}
@@ -1112,7 +1112,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
               <h5 className="text-lg font-bold text-[#3B4A66] font-[BasisGrotesquePro]">Share Taxpayer Invite</h5>
               <button 
                 onClick={closeInviteActionsModal}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+                className="p-2 text-gray-400 rounded-full transition-all"
               >
                 <IoMdClose size={22} />
               </button>
@@ -1170,7 +1170,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                   />
                   <button
                     type="button"
-                    className="px-6 py-2.5 bg-[#00C0C6] hover:bg-[#00A8AE] text-white rounded-xl text-sm font-bold shadow-lg shadow-[#00C0C6]/20 transition-all active:scale-95 whitespace-nowrap disabled:opacity-50"
+                    className="px-6 py-2.5 bg-[#00C0C6] text-white rounded-xl text-sm font-bold shadow-lg shadow-[#00C0C6]/20 transition-all active:scale-95 whitespace-nowrap disabled:opacity-50"
                     onClick={handleSendEmailInviteNow}
                     disabled={inviteActionLoading}
                   >
@@ -1213,7 +1213,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                   </div>
                   <button
                     type="button"
-                    className="px-6 py-2.5 bg-[#00C0C6] hover:bg-[#00A8AE] text-white rounded-xl text-sm font-bold shadow-lg shadow-[#00C0C6]/20 transition-all active:scale-95 whitespace-nowrap disabled:opacity-50"
+                    className="px-6 py-2.5 bg-[#00C0C6] text-white rounded-xl text-sm font-bold shadow-lg shadow-[#00C0C6]/20 transition-all active:scale-95 whitespace-nowrap disabled:opacity-50"
                     onClick={handleSendSmsInviteNow}
                     disabled={inviteActionLoading}
                   >
@@ -1234,7 +1234,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
               <div className="w-full sm:w-auto order-2 sm:order-1">
                 {(activeInviteDetails?.id || activeInviteDetails?.invite_id) && (
                   <button
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-all disabled:opacity-50"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold text-red-500 rounded-xl transition-all disabled:opacity-50"
                     onClick={handleDeleteInvite}
                     disabled={deletingInvite}
                   >
@@ -1245,7 +1245,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
               </div>
               <div className="w-full sm:w-auto flex items-center gap-3 order-1 sm:order-2">
                 <button 
-                  className="flex-1 sm:flex-none px-6 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-100 transition-all font-[BasisGrotesquePro]" 
+                  className="flex-1 sm:flex-none px-6 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold transition-all font-[BasisGrotesquePro]" 
                   onClick={closeInviteActionsModal}
                 >
                   Invite Later
@@ -1323,7 +1323,7 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
               </button>
               <button
                 onClick={confirmDeleteInvite}
-                className="px-6 py-2.5 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl shadow-lg shadow-red-200 transition-all transform active:scale-95 disabled:opacity-50 font-[BasisGrotesquePro]"
+                className="px-6 py-2.5 text-sm font-bold text-white bg-red-500 rounded-xl shadow-lg shadow-red-200 transition-all transform active:scale-95 disabled:opacity-50 font-[BasisGrotesquePro]"
                 disabled={deletingInvite}
               >
                 {deletingInvite ? 'Deleting...' : 'Delete Forever'}

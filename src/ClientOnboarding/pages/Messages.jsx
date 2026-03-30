@@ -1321,7 +1321,7 @@ export default function Messages() {
               <div className="text-center py-5">
                 <p className="text-danger small">{error}</p>
                 <button
-                  className="btn  btn-outline-primary mt-2"
+                  className="btn btn-outline-primary mt-2"
                   onClick={() => window.location.reload()}
                 >
                   Retry

@@ -275,7 +275,7 @@ export default function AddonsManagement() {
           </div>
           <button
             onClick={handleOpenAddModal}
-            className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro] text-sm font-medium"
+            className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg transition-colors font-[BasisGrotesquePro] text-sm font-medium"
             style={{ borderRadius: '7px' }}
           >
             + Add Addon
@@ -426,7 +426,7 @@ export default function AddonsManagement() {
               </div>
               <button
                 onClick={handleCloseModal}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -635,7 +635,7 @@ export default function AddonsManagement() {
                 <button
                   type="button"
                   onClick={handleAddFeature}
-                  className="mt-2 px-3 py-1 text-sm text-[#3AD6F2] hover:text-[#2BC5E0] font-[BasisGrotesquePro]"
+                  className="mt-2 px-3 py-1 text-sm text-[#3AD6F2] font-[BasisGrotesquePro]"
                 >
                   + Add Feature
                 </button>
@@ -706,13 +706,13 @@ export default function AddonsManagement() {
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-6 py-2.5 border border-[#E8F0FF] dark:border-gray-700 bg-white dark:bg-transparent text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all font-[BasisGrotesquePro] text-sm font-bold shadow-sm"
+                  className="px-6 py-2.5 border border-[#E8F0FF] dark:border-gray-700 bg-white dark:bg-transparent text-gray-700 dark:text-gray-300 rounded-xl dark:transition-all font-[BasisGrotesquePro] text-sm font-bold shadow-sm"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-8 py-2.5 bg-[#F56D2D] text-white rounded-xl hover:bg-orange-600 transition-all font-[BasisGrotesquePro] text-sm font-bold shadow-md shadow-orange-500/20 active:scale-[0.98]"
+                  className="px-8 py-2.5 bg-[#F56D2D] text-white rounded-xl transition-all font-[BasisGrotesquePro] text-sm font-bold shadow-md shadow-orange-500/20 active:scale-[0.98]"
                 >
                   {editingAddon ? 'Update Addon' : 'Create Addon'}
                 </button>

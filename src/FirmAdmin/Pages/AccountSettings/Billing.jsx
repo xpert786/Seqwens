@@ -170,7 +170,7 @@ export default function Billing() {
                             <button
                                 onClick={handleSaveAddress}
                                 disabled={saving}
-                                className="px-6 py-2 bg-[#3AD6F2] text-white rounded-lg hover:bg-[#2BC5E0] transition font-[BasisGrotesquePro] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-6 py-2 bg-[#3AD6F2] text-white rounded-lg transition font-[BasisGrotesquePro] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {saving ? 'Saving...' : 'Save Address'}
                             </button>
@@ -196,7 +196,7 @@ export default function Billing() {
                             <p className="text-sm text-[#6B7280] font-[BasisGrotesquePro] mb-4">
                                 No payment methods added yet
                             </p>
-                            <button className="px-4 py-2 bg-[#3AD6F2] text-white rounded-lg hover:bg-[#2BC5E0] transition font-[BasisGrotesquePro] text-sm">
+                            <button className="px-4 py-2 bg-[#3AD6F2] text-white rounded-lg transition font-[BasisGrotesquePro] text-sm">
                                 Add Payment Method
                             </button>
                         </div>

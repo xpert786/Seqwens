@@ -252,7 +252,7 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
           <button
             onClick={onClose}
             disabled={saving}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors disabled:opacity-50"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors disabled:opacity-50"
           >
             <FiX size={20} />
           </button>
@@ -408,14 +408,14 @@ export default function CustomRoleModal({ show, onClose, onSave, role = null }) 
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="px-4 py-2 border border-[#E8F0FF] bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50"
+              className="px-4 py-2 border border-[#E8F0FF] bg-white text-gray-700 rounded-lg transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 bg-[#32B582] text-white rounded-lg hover:bg-[#2A9D6F] transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 bg-[#32B582] text-white rounded-lg transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {saving ? (
                 <>

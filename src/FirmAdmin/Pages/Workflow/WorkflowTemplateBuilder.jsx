@@ -231,13 +231,13 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
 
   return (
     <div className="min-h-screen bg-[#F3F7FF] p-3 sm:p-4 lg:p-6">
-      <div className="w-full max-w-5xl mx-auto">
+      <div className="w-full">
         {/* Header */}
         <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 sm:p-5 mb-4 sm:mb-6">
           {/* Back Button */}
           <button
             onClick={onCancel}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4 font-[BasisGrotesquePro]"
+            className="flex items-center gap-2 text-sm text-gray-600 mb-4 font-[BasisGrotesquePro]"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -257,14 +257,14 @@ const WorkflowTemplateBuilder = ({ template, onSave, onCancel }) => {
             <div className="flex flex-row gap-2 sm:gap-3">
               <button
                 onClick={onCancel}
-                className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-gray-700 bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro]"
+                className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-gray-700 bg-white !border border-[#E8F0FF] !rounded-lg font-[BasisGrotesquePro]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] !rounded-lg hover:bg-[#E55A1D] disabled:opacity-50 font-[BasisGrotesquePro] flex items-center justify-center gap-2"
+                className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] !rounded-lg disabled:opacity-50 font-[BasisGrotesquePro] flex items-center justify-center gap-2"
               >
                 {saving ? (
                   <>

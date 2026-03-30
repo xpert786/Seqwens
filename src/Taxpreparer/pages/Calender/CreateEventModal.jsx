@@ -387,7 +387,7 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
           <button
             onClick={onClose}
             aria-label="Close"
-            className="flex items-center justify-center bg-blue-50 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors shadow-sm"
+            className="flex items-center justify-center bg-blue-50 text-gray-400 transition-colors shadow-sm"
             style={{
               width: '32px',
               height: '32px',
@@ -540,7 +540,7 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
               <button
                 type="button"
                 onClick={addTimeSlot}
-                className="px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-2"
+                className="px-3 py-2 text-sm font-medium text-blue-600 transition-colors flex items-center gap-2"
                 style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)', borderRadius: '8px' }}
               >
                 <PlusIcon className="w-4 h-4" />
@@ -594,7 +594,7 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               style={{ border: '1px solid var(--Palette2-Dark-blue-100, #E8F0FF)', borderRadius: '8px', opacity: submitting ? 0.6 : 1 }}
             >
               Cancel
@@ -602,7 +602,7 @@ const CreateEventModal = ({ isOpen, onClose, onSubmit, preSelectedClient }) => {
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-orange-500 text-white text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ borderRadius: '8px' }}
             >
               {submitting ? 'Scheduling...' : 'Schedule Appointments'}

@@ -545,7 +545,7 @@ export default function NotificationsPanel({ onClose, onChange, userType = "clie
         <div className="text-center text-danger py-4">
           Error: {error}
           <button
-            className="btn  btn-link"
+            className="btn btn-link"
             onClick={fetchNotifications}
           >
             Retry

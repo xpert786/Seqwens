@@ -411,7 +411,7 @@ const Appointments = () => {
                                     </button>
                                     <button
                                         onClick={goToToday}
-                                        className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white !border border-[#E8F0FF] rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro] transition-colors text-gray-600"
+                                        className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white !border border-[#E8F0FF] rounded-lg font-[BasisGrotesquePro] transition-colors text-gray-600"
                                     >
                                         Today
                                     </button>

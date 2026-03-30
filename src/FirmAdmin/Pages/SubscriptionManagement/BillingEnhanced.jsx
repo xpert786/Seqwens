@@ -290,9 +290,9 @@ const BillingEnhanced = () => {
                                     onClick={toggleBasePlanCoverage}
                                     disabled={savingConfig}
                                     className={`w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${splitConfig.base_plan.firm_pays
-                                        ? 'bg-[#3AD6F2] text-white shadow-md hover:bg-[#2BC4E0]'
+                                        ? 'bg-[#3AD6F2] text-white shadow-md'
                                         : 'bg-gray-100 text-gray-500 border border-gray-200'
-                                        }`}
+                                       }`}
                                     style={{ borderRadius: '10px' }}
                                 >
                                     {splitConfig.base_plan.firm_pays ? 'Firm Pays' : 'Staff Pays'}
@@ -328,9 +328,9 @@ const BillingEnhanced = () => {
                                     onClick={toggleStaffAddonsCoverage}
                                     disabled={savingConfig}
                                     className={`w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${splitConfig.staff_addons.firm_pays
-                                        ? 'bg-[#3AD6F2] text-white shadow-md hover:bg-[#2BC4E0]'
+                                        ? 'bg-[#3AD6F2] text-white shadow-md'
                                         : 'bg-gray-100 text-gray-500 border border-gray-200'
-                                        }`}
+                                       }`}
                                     style={{ borderRadius: '10px' }}
                                 >
                                     {splitConfig.staff_addons.firm_pays ? 'Firm Pays' : 'Staff Pays'}
@@ -386,8 +386,8 @@ const BillingEnhanced = () => {
 
             {/* Split Percentage Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px]">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-5 sm:p-8 animate-in fade-in zoom-in duration-200" style={{ borderRadius: '15px' }}>
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-4 sm:p-6 animate-in fade-in zoom-in duration-200" style={{ borderRadius: '15px' }}>
                         <div className="flex justify-between items-start mb-6">
                             <div>
                                 <h3 className="text-xl font-bold text-[#1F2A55] font-[BasisGrotesquePro]">
@@ -430,7 +430,7 @@ const BillingEnhanced = () => {
                                 </div>
                             </div>
 
-                            <div className="bg-[#F3F7FF] rounded-xl p-4 border border-[#E8F0FF]">
+                            <div className="bg-[#F3F7FF] rounded-xl p-3 border border-[#E8F0FF]">
                                 <p className="text-xs text-[#3B4A66] font-[BasisGrotesquePro] leading-relaxed">
                                     <span className="font-bold text-[#3AD6F2] uppercase text-[10px] block mb-1">Usage-Based Logic</span>
                                     Costs for SMS and E-Signatures will be calculated at the end of each billing cycle and distributed according to these percentages.

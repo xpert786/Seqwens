@@ -11,21 +11,27 @@ export default function SupportCenter() {
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Documentation</h3>
           <p className="text-gray-600 mb-4">Browse our comprehensive guides and tutorials</p>
-          <button className="text-blue-600 hover:text-blue-800">View Docs</button>
+          <button className="text-blue-600">
+            View Docs
+          </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+       <div className="bg-white rounded-lg shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Contact Support</h3>
           <p className="text-gray-600 mb-4">Get in touch with our support team</p>
-          <button className="text-blue-600 hover:text-blue-800">Contact Us</button>
+          <button className="text-blue-600">
+            Contact Us
+          </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+       <div className="bg-white rounded-lg shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">FAQ</h3>
           <p className="text-gray-600 mb-4">Find answers to common questions</p>
-          <button className="text-blue-600 hover:text-blue-800">View FAQ</button>
+          <button className="text-blue-600">
+            View FAQ
+          </button>
         </div>
       </div>
     </div>
-  );
+ );
 }

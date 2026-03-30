@@ -483,7 +483,7 @@ export default function BrandingTab() {
               </select>
             </div>
 
-            <button className="w-full px-4 py-2 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] flex items-center justify-center gap-2">
+            <button className="w-full px-4 py-2 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg transition font-[BasisGrotesquePro] flex items-center justify-center gap-2">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M1.5 9C1.5 9 3.75 3.75 9 3.75C14.25 3.75 16.5 9 16.5 9C16.5 9 14.25 14.25 9 14.25C3.75 14.25 1.5 9 1.5 9Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
                 <path d="M9 11.25C10.2426 11.25 11.25 10.2426 11.25 9C11.25 7.75736 10.2426 6.75 9 6.75C7.75736 6.75 6.75 7.75736 6.75 9C6.75 10.2426 7.75736 11.25 9 11.25Z" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
@@ -586,7 +586,7 @@ export default function BrandingTab() {
           </div>
 
           <button
-            className="px-4 py-2 text-sm font-medium text-white !rounded-lg hover:brightness-90 transition font-[BasisGrotesquePro] flex items-center gap-2"
+            className="px-4 py-2 text-sm font-medium text-white !rounded-lg transition font-[BasisGrotesquePro] flex items-center gap-2"
             style={{ backgroundColor: 'var(--firm-primary-color, #1E40AF)' }}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -641,14 +641,14 @@ export default function BrandingTab() {
         <button
           onClick={handleResetBranding}
           disabled={saving}
-          className="px-4 py-2 text-sm font-medium text-[#131323] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 text-sm font-medium text-[#131323] bg-white !border border-[#E8F0FF] !rounded-lg transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Reset Branding
         </button>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-4 py-2 text-sm font-medium text-white !rounded-lg hover:brightness-90 transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-4 py-2 text-sm font-medium text-white !rounded-lg transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           style={{ backgroundColor: 'var(--firm-primary-color, #1E40AF)' }}
         >
           {saving ? (

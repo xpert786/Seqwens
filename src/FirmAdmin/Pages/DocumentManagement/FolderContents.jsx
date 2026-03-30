@@ -457,7 +457,7 @@ export default function FolderContents() {
               <p className="text-red-800 font-[BasisGrotesquePro]">{error}</p>
               <button
                 onClick={fetchFolderContents}
-                className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-[BasisGrotesquePro]"
+                className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg font-[BasisGrotesquePro]"
               >
                 Retry
               </button>
@@ -694,7 +694,7 @@ export default function FolderContents() {
                     ) : (
                       <button
                         onClick={handleShowLessDocuments}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors foldercontents-pagination-button"
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg transition-colors foldercontents-pagination-button"
                         style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
                       >
                         Show Less
@@ -704,7 +704,7 @@ export default function FolderContents() {
                   {!showAllDocuments && (
                     <button
                       onClick={handleViewAllDocuments}
-                      className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors foldercontents-view-all-button"
+                      className="px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg transition-colors foldercontents-view-all-button"
                       style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
                     >
                       View All ({documents.length})

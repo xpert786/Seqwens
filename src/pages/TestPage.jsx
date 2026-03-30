@@ -80,13 +80,13 @@ const App = () => {
                         </nav>
                         <div className="hidden md:block">
                             <a href="/sign-in">
-                                <button className="bg-white text-black px-6 py-2.5 rounded-lg font-semibold text-sm hover:bg-zinc-100 transition-colors duration-200 shadow-lg">
+                                <button className="bg-white text-black px-6 py-2.5 rounded-lg font-semibold text-sm transition-colors duration-200 shadow-lg">
                                     Get Started
                                 </button>
                             </a>
                         </div>
                         <div className="flex md:hidden">
-                            <button type="button" className="text-white hover:text-zinc-300 p-2 rounded-lg hover:bg-white/5 transition-colors duration-200">
+                            <button type="button" className="text-white p-2 rounded-lg transition-colors duration-200">
                                 <span className="sr-only">Toggle menu</span>
                                 <Menu className="h-6 w-6" />
                             </button>
@@ -130,9 +130,8 @@ const App = () => {
                         </p>
                         <div className="mb-16 animate-fade-in">
                             <a href="/sign-in">
-                                <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap h-11 rounded-md bg-white text-black hover:bg-zinc-100 px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                                    Get Started
-                                    <ChevronRight className="ml-2 w-5 h-5" />
+                                <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap h-11 rounded-md bg-white text-black px-8 py-4 text-lg font-semibold shadow-lg transition-all duration-300 transform">
+                                   <ChevronRight className="ml-2 w-5 h-5" />
                                 </button>
                             </a>
                         </div>
@@ -301,7 +300,7 @@ const App = () => {
 
                                     <div className="mt-10 space-y-4 animate-fade-in">
                                         <a href="/sign-in">
-                                            <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap h-10 bg-white hover:bg-zinc-100 text-black shadow-lg shadow-white/20 px-8 py-6 rounded-lg text-base font-semibold w-full sm:w-auto transition-all duration-300 hover:scale-105">
+                                            <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap h-10 bg-white text-black shadow-lg shadow-white/20 px-8 py-6 rounded-lg text-base font-semibold w-full sm:w-auto transition-all duration-300">
                                                 Start Creating Now
                                                 <ArrowRight className="ml-2 w-5 h-5" />
                                             </button>

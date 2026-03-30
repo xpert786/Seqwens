@@ -116,7 +116,7 @@ export default function AvailableTab() {
               <button className="flex-1 px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] !rounded-lg font-[BasisGrotesquePro]">
                 Connect
               </button>
-              <button className="flex-1 px-4 py-2 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition font-[BasisGrotesquePro]">
+              <button className="flex-1 px-4 py-2 text-sm font-medium text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg transition font-[BasisGrotesquePro]">
                 Learn More
               </button>
             </div>

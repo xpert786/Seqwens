@@ -127,7 +127,7 @@ export default function RoleManagement({ onShowModal }) {
                     <div className="flex justify-end">
                         <button
                             onClick={handleAddUser}
-                            className="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium font-[BasisGrotesquePro] hover:bg-orange-600 transition-colors flex items-center gap-2"
+                            className="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium font-[BasisGrotesquePro] transition-colors flex items-center gap-2"
                             style={{ borderRadius: "7px" }}
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,7 +167,7 @@ export default function RoleManagement({ onShowModal }) {
                             <p className="text-sm text-red-700 font-[BasisGrotesquePro]">{error}</p>
                             <button
                                 onClick={fetchRoles}
-                                className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+                                className="mt-2 text-sm text-red-600 underline"
                             >
                                 Retry
                             </button>

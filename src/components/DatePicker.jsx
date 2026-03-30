@@ -184,7 +184,7 @@ const DatePicker = ({
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <button
               onClick={goToPreviousMonth}
-              className="p-1 hover:bg-gray-100 rounded-md"
+              className="p-1 rounded-md"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -195,7 +195,7 @@ const DatePicker = ({
             </h5>
             <button
               onClick={goToNextMonth}
-              className="p-1 hover:bg-gray-100 rounded-md"
+              className="p-1 rounded-md"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

@@ -232,7 +232,7 @@ export default function TaxDashboardMain() {
                   <h6 className="quick-card-title">{action.title}</h6>
                 </div>
 
-                <button className="btn  w-100 quick-card-btn">
+                <button className="btn w-100 quick-card-btn">
                   {action.button}
                 </button>
               </div>

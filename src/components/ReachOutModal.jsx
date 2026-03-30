@@ -52,7 +52,7 @@ const ReachOutModal = ({ isOpen, onClose }) => {
                         <h3 className="text-2xl font-bold text-white">Reach Out</h3>
                         <button
                             onClick={onClose}
-                            className="text-zinc-400 hover:text-white transition-colors"
+                            className="text-zinc-400 transition-colors"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         </button>
@@ -104,7 +104,7 @@ const ReachOutModal = ({ isOpen, onClose }) => {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className={`w-full py-4 rounded-xl font-bold transition-all transform active:scale-[0.98] ${isSubmitting ? 'bg-zinc-800 text-zinc-500' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/25'}`}
+                            className={`w-full py-4 rounded-xl font-bold transition-all transform active:scale-[0.98] ${isSubmitting ? 'bg-zinc-800 text-zinc-500' : 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'}`}
                         >
                             {isSubmitting ? 'Sending...' : 'Send Message'}
                         </button>

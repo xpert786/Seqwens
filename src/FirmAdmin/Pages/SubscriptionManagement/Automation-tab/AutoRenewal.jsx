@@ -181,7 +181,7 @@ const AutoRenewal = () => {
                     <button
                         onClick={handleSaveSettings}
                         disabled={saving}
-                        className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#EA580C] transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {saving ? (
                             <>

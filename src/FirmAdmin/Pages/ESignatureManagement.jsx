@@ -1199,7 +1199,7 @@ export default function ESignatureManagement() {
   return (
     <div className="p-2 sm:p-4 md:p-6 pt-0 sm:pt-2 min-h-screen">
       {/* Header Section */}
-      <div className="mb-2 md:mb-4">
+      <div className="mb-2 md:m-4">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div className="flex-1">
             <h4 className="text-[16px] font-bold text-gray-900 font-[BasisGrotesquePro]">E-Signature Management</h4>
@@ -1562,7 +1562,7 @@ export default function ESignatureManagement() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex justify-between items-start p-4 sm:p-6  sticky top-0 bg-white z-10 rounded-t-lg">
+            <div className="flex justify-between items-start p-4 sm:p-6 sm:pb-1 sticky top-0 bg-white z-10 rounded-t-lg">
               <div className="flex-1 pr-4">
                 <h4 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-1" style={{ fontFamily: 'BasisGrotesquePro' }}>
                   Create Signature Request
@@ -2159,8 +2159,8 @@ export default function ESignatureManagement() {
                 disabled={loading || !taskTitle.trim() || selectedClientIds.length === 0 || uploadedFiles.length === 0}
                 className={`w-full sm:w-auto px-4 sm:px-6 py-2.5 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${loading || !taskTitle.trim() || selectedClientIds.length === 0 || uploadedFiles.length === 0
                   ? 'text-gray-400 bg-gray-200 cursor-not-allowed'
-                  : 'text-white bg-firm-primary hover:brightness-90 transition-all'
-                  }`}
+                  : 'text-white bg-firm-primary transition-all'
+                 }`}
                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '10px' }}
               >
                 {loading ? (
@@ -2484,14 +2484,14 @@ export default function ESignatureManagement() {
                       <div className="flex justify-end gap-2 mt-3">
                         <button
                           onClick={handleCloseCommentInput}
-                          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg transition-colors"
                           style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
                         >
                           Cancel
                         </button>
                         <button
                           onClick={handleSaveComment}
-                          className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors"
+                          className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg transition-colors"
                           style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
                         >
                           Comment
@@ -2810,7 +2810,7 @@ export default function ESignatureManagement() {
                   </button>
                   <button
                     onClick={handleCreateTemplate}
-                    className="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-opacity font-[BasisGrotesquePro]"
+                    className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-opacity font-[BasisGrotesquePro]"
                     style={{ background: '#F56D2D' }}
                     disabled={creatingTemplate}
                   >

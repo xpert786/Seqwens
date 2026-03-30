@@ -166,7 +166,7 @@ const OverviewTab = ({ userData }) => {
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-[#3B4A66] text-sm font-medium">Owner:</span>
-              <span className="text-gray-[#3B4A66] font-medium">{userData.owner}</span>
+              <span className="text-[#3B4A66] font-medium">{userData.owner}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[#3B4A66] text-sm font-medium   ">Email:</span>
@@ -327,22 +327,46 @@ const SubscriptionTab = ({ userData, onViewBilling }) => {
                   <td className="py-3 px-2 text-[#3B4A66] text-sm">{billing.endDate}</td>
                   <td className="py-3 px-2">
                     <div className="flex gap-2">
+
+                      {/* View Button */}
                       <button
                         onClick={() => onViewBilling(billing)}
                         className="text-[#3B4A66] hover:text-blue-600"
                       >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                           <circle cx="12" cy="12" r="3" />
                         </svg>
                       </button>
-                      <button className="text-[#3B4A66] hover:text-blue-600">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+
+                      {/* Download Button */}
+                      <button
+                        className="text-[#3B4A66] hover:text-blue-600"
+                        onClick={() => {
+                          console.log("Download invoice", billing);
+                        }}
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
                           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                           <polyline points="7,10 12,15 17,10" />
                           <line x1="12" y1="15" x2="12" y2="3" />
                         </svg>
                       </button>
+
                     </div>
                   </td>
                 </tr>
@@ -370,7 +394,7 @@ const BillingModal = ({ billing, userData, onClose }) => {
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 transition-colors"
           >
             <FiX size={24} />
           </button>
@@ -423,7 +447,7 @@ const BillingModal = ({ billing, userData, onClose }) => {
 
             <div>
               <h6 className="text-xs font-semibold text-[#3B4A66] mb-2">Billing Information</h6>
-              <div className="space-y-1 text-xs flex flex-row gap-31">
+              <div className="space-y-1 text-xs flex flex-row gap-8">
                 <div className="flex flex-col">
                   <span className="text-gray-600">Billed To:</span>
                   <span className="text-[#3B4A66] font-medium">Michael Chen<br />123 Main Street<br />New York, NY</span>
@@ -501,7 +525,7 @@ const BillingModal = ({ billing, userData, onClose }) => {
         <div className=" border border-[#E8F0FF] p-4" style={{ borderRadius: '0 0 10px 10px' }}>
           <div className="flex justify-start">
             <button
-              className="bg-[#F56D2D] text-white py-2 px-4 font-medium hover:bg-[#E55A1A] transition-colors"
+              className="bg-[#F56D2D] text-white py-2 px-4 font-medium transition-colors"
               style={{ borderRadius: '10px' }}
               onClick={() => {
                 // Handle download logic here

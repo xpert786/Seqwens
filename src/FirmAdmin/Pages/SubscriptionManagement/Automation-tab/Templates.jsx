@@ -227,7 +227,7 @@ const Templates = () => {
 
                 {/* Save Button */}
                 <div className="flex justify-start">
-                    <button className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#EA580C] transition-colors font-[BasisGrotesquePro] text-sm font-medium">
+                    <button className="px-6 py-2 bg-[#F56D2D] text-white !rounded-lg transition-colors font-[BasisGrotesquePro] text-sm font-medium">
                         Save Notification Settings
                     </button>
                 </div>

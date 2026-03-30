@@ -1446,14 +1446,14 @@ export default function ClientManage() {
           {/* Top Row - 2-3 buttons */}
           <div className="flex flex-wrap items-center gap-2 clientmanage-actions-top-row">
             <button
-              className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
+              className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
               onClick={() => setShowBulkTaxpayerImportModal(true)}
             >
               <BulkImport />
               Bulk Import Taxpayers
             </button>
             <button
-              className="px-3 py-2 text-white bg-firm-primary !rounded-[7px] hover:brightness-90 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
+              className="px-3 py-2 text-white bg-firm-primary !rounded-[7px] font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
               onClick={() => setShowAddClientModal(true)}
             >
               <AddClient />
@@ -1464,7 +1464,7 @@ export default function ClientManage() {
           {/* Bottom Row - 1 button */}
           <div className="flex items-center clientmanage-actions-bottom-row">
             <button
-              className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] hover:bg-gray-50 font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
+              className="px-3 py-2 text-gray-700 bg-white border border-gray-300 !rounded-[7px] font-[BasisGrotesquePro] flex items-center gap-2 text-sm whitespace-nowrap clientmanage-action-button"
               onClick={exportClientsToPDF}
             >
               <ExportReport />
@@ -1659,7 +1659,7 @@ export default function ClientManage() {
             ) : unlinkedTaxpayersError ? (
               <div className="alert alert-danger" role="alert">
                 <strong>Error:</strong> {unlinkedTaxpayersError}
-                <button className="btn  btn-outline-danger ms-2" onClick={() => fetchUnlinkedTaxpayers(1, unlinkedTaxpayersPagination.page_size)}>
+                <button className="btn btn-outline-danger ms-2" onClick={() => fetchUnlinkedTaxpayers(1, unlinkedTaxpayersPagination.page_size)}>
                   Retry
                 </button>
               </div>
@@ -1855,7 +1855,7 @@ export default function ClientManage() {
             ) : pendingInvitesError ? (
               <div className="alert alert-danger" role="alert">
                 <strong>Error:</strong> {pendingInvitesError}
-                <button className="btn  btn-outline-danger ms-2" onClick={() => fetchPendingInvites()}>
+                <button className="btn btn-outline-danger ms-2" onClick={() => fetchPendingInvites()}>
                   Retry
                 </button>
               </div>
@@ -2078,8 +2078,7 @@ export default function ClientManage() {
                     <button
                       className={`px-3 py-2 text-sm font-medium transition-colors ${activeFilter === 'true'
                         ? 'bg-[#00C0C6] text-white border-0'
-                        : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
-                        }`}
+                        : 'bg-white text-gray-700 border border-[#E8F0FF]'}`}
                       onClick={() => {
                         setActiveFilter('true');
                         setCurrentPage(1);
@@ -2091,8 +2090,7 @@ export default function ClientManage() {
                     <button
                       className={`px-3 py-2 text-sm font-medium transition-colors ${activeFilter === 'false'
                         ? 'bg-[#00C0C6] text-white border-0'
-                        : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
-                        }`}
+                        : 'bg-white text-gray-700 border border-[#E8F0FF]'}`}
                       onClick={() => {
                         setActiveFilter('false');
                         setCurrentPage(1);
@@ -2104,8 +2102,7 @@ export default function ClientManage() {
                     <button
                       className={`px-3 py-2 text-sm font-medium transition-colors ${activeFilter === 'all'
                         ? 'bg-[#00C0C6] text-white border-0'
-                        : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
-                        }`}
+                        : 'bg-white text-gray-700 border border-[#E8F0FF]'}`}
                       onClick={() => {
                         setActiveFilter('all');
                         setCurrentPage(1);
@@ -2117,8 +2114,7 @@ export default function ClientManage() {
                     <button
                       className={`px-3 py-2 text-sm font-medium transition-colors ${activeFilter === 'archived'
                         ? 'bg-[#00C0C6] text-white border-0'
-                        : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
-                        }`}
+                        : 'bg-white text-gray-700 border border-[#E8F0FF]'}`}
                       onClick={() => {
                         setActiveFilter('archived');
                         setCurrentPage(1);
@@ -2137,8 +2133,7 @@ export default function ClientManage() {
                     <button
                       className={`px-3 py-2 text-sm font-medium transition-colors ${linkStatusFilter === 'all'
                         ? 'bg-[#00C0C6] text-white border-0'
-                        : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
-                        }`}
+                        : 'bg-white text-gray-700 border border-[#E8F0FF]'}`}
                       onClick={() => {
                         setLinkStatusFilter('all');
                         setCurrentPage(1);
@@ -2150,8 +2145,7 @@ export default function ClientManage() {
                     <button
                       className={`px-3 py-2 text-sm font-medium transition-colors d-flex align-items-center justify-content-center gap-1 ${linkStatusFilter === 'linked'
                         ? 'bg-[#00C0C6] text-white border-0'
-                        : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
-                        }`}
+                        : 'bg-white text-gray-700 border border-[#E8F0FF]'}`}
                       onClick={() => {
                         setLinkStatusFilter('linked');
                         setCurrentPage(1);
@@ -2166,8 +2160,7 @@ export default function ClientManage() {
                     <button
                       className={`px-3 py-2 text-sm font-medium transition-colors d-flex align-items-center justify-content-center gap-1 ${linkStatusFilter === 'unlinked'
                         ? 'bg-[#00C0C6] text-white border-0'
-                        : 'bg-white text-gray-700 border border-[#E8F0FF] hover:bg-gray-50'
-                        }`}
+                        : 'bg-white text-gray-700 border border-[#E8F0FF]'}`}
                       onClick={() => {
                         setLinkStatusFilter('unlinked');
                         setCurrentPage(1);
@@ -2394,7 +2387,7 @@ export default function ClientManage() {
                                   <div className="p" style={{ paddingLeft: "20px", paddingRight: "20px", paddingTop: "10px" }}>
                                     {client.is_deleted ? (
                                       <button
-                                        className="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 font-bold"
+                                        className="block w-full text-left px-4 py-2 text-sm text-blue-600 font-bold"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           handleRestoreClient(client.id);
@@ -2445,7 +2438,7 @@ export default function ClientManage() {
                                     {!client.is_deleted && (
                                       <>
                                         <button
-                                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                          className="block w-full text-left px-4 py-2 text-sm text-gray-700"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             setSelectedClientForWorkflow({
@@ -2460,7 +2453,7 @@ export default function ClientManage() {
                                           Start Workflow
                                         </button>
                                         <button
-                                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                          className="block w-full text-left px-4 py-2 text-sm text-gray-700"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             setSelectedClientForMessage({
@@ -2477,7 +2470,7 @@ export default function ClientManage() {
                                       </>
                                     )}
                                     <button
-                                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                                      className="block w-full text-left px-4 py-2 text-sm"
                                       style={{ color: 'var(--color-red-500, #EF4444)' }}
                                       onClick={() => {
                                         setSelectedClientForDelete(client.id);
@@ -2504,7 +2497,7 @@ export default function ClientManage() {
 
           {/* Pagination */}
           {pagination.total_count > 0 && (
-            <div className="p-3 sm:p-4 border-t border-gray-200 flex flex-nowrap items-center justify-between gap-2 overflow-x-auto">
+           <div className="p-3 sm:p-4 border-t border-gray-200 flex flex-nowrap items-center justify-between gap-2 overflow-x-auto">
               <div className="text-[10px] sm:text-xs text-gray-600 font-[BasisGrotesquePro] whitespace-nowrap">
                 Showing {((pagination.page - 1) * pagination.page_size) + 1}-{Math.min(pagination.page * pagination.page_size, pagination.total_count)} of {pagination.total_count}
               </div>
@@ -3088,7 +3081,7 @@ export default function ClientManage() {
                 </div>
                 <div className="w-full sm:w-auto flex items-center gap-3">
                   <button
-                    className="w-full sm:w-auto px-8 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-100 transition-all font-[BasisGrotesquePro]"
+                    className="w-full sm:w-auto px-8 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold transition-all font-[BasisGrotesquePro]"
                     style={{ borderRadius: '10px' }}
                     onClick={closeInviteActionsModal}
                   >

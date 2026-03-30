@@ -357,10 +357,10 @@ export default function ServicePerformance({ activeTab, setActiveTab, tabs, peri
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Add-On Performance</h3>
             {!advancedReportingEnabled && (
-              <button className="text-sm text-blue-600 hover:text-blue-800">Export CSV</button>
+              <button className="text-sm text-blue-600 CSV"></button>
             )}
           </div>
-          <div className="h-64">
+         <div className="h-64">
             {upsellData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={upsellData}>

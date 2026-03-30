@@ -177,7 +177,7 @@ export default function BlockedAccounts() {
           </div>
           <button
             type="submit"
-            className="px-6 py-2 bg-[#3AD6F2] text-white rounded-lg hover:bg-[#2BC4E0] transition-colors font-medium"
+            className="px-6 py-2 bg-[#3AD6F2] text-white rounded-lg transition-colors font-medium"
             style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '7px' }}
           >
             Search

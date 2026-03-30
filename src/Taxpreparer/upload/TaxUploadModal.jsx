@@ -425,7 +425,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                     <button
                         type="button"
                         onClick={handleClose}
-                        className="p-1 px-2.5 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
+                        className="p-1 px-2.5 rounded-full text-gray-400 transition-colors"
                     >
                         <IoMdClose size={24} />
                     </button>
@@ -534,8 +534,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                                     {['Configure', 'Preview'].map((tab) => (
                                         <button
                                             key={tab}
-                                            className={`flex-1 py-3 text-sm font-bold transition-all relative ${(!previewMode && tab === 'Configure') || (previewMode && tab === 'Preview') ? 'text-primary' : 'text-gray-400 hover:text-gray-600'}`}
-                                            onClick={() => setPreviewMode(tab === 'Preview')}
+                                            className={`flex-1 py-3 text-sm font-bold transition-all relative ${(!previewMode && tab === 'Configure') || (previewMode && tab === 'Preview') ? 'text-primary' : 'text-gray-400 onClick={() => setPreviewMode(tab === 'Preview')}
                                         >
                                             {tab}
                                             {((!previewMode && tab === 'Configure') || (previewMode && tab === 'Preview')) && (
@@ -552,7 +551,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                                                 <h6 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-4">Target Folder</h6>
                                                 <div className="relative" ref={folderDropdownRef}>
                                                     <div
-                                                        className={`w-full h-12 px-4 border rounded-xl flex items-center justify-between cursor-pointer transition-all ${folderDropdownOpen ? 'border-primary ring-4 ring-primary/5 shadow-sm' : 'border-gray-200 hover:border-gray-300'} ${currentFile?.errors.some(e => e.includes('folder')) ? 'border-red-300 bg-red-50/10' : ''}`}
+                                                       className={`w-full h-12 px-4 border rounded-xl flex items-center justify-between cursor-pointer transition-all ${folderDropdownOpen ? 'border-primary ring-4 ring-primary/5 shadow-sm' : 'border-gray-200 hover:border-gray-300'} ${currentFile?.errors.some(e => e.includes('folder')) ? 'border-red-300 bg-red-50/10' : ''}`}
                                                         onClick={() => setFolderDropdownOpen(!folderDropdownOpen)}
                                                     >
                                                         <div className="flex items-center gap-3 truncate">
@@ -706,7 +705,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                 <div className="p-6 px-8 border-t border-[#E8F0FF] flex justify-between items-center bg-gray-50/50 shrink-0">
                     <button
                         type="button"
-                        className="px-8 py-3 text-sm font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-all active:scale-95"
+                        className="px-8 py-3 text-sm font-bold text-gray-500 rounded-xl transition-all active:scale-95"
                         onClick={handleClose}
                         style={{ fontFamily: 'BasisGrotesquePro' }}
                     >
@@ -715,8 +714,7 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                     {step === 2 && (
                         <button
                             type="button"
-                            className={`px-10 py-3 text-sm font-bold text-white rounded-xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 whitespace-nowrap ${uploading ? 'bg-gray-400 cursor-not-allowed shadow-none' : 'bg-[#F56D2D] hover:bg-[#ff7a2f] shadow-[#F56D2D]/20 hover:shadow-[#F56D2D]/30'}`}
-                            onClick={performUpload}
+                            className={`px-10 py-3 text-sm font-bold text-white rounded-xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 whitespace-nowrap ${uploading ? 'bg-gray-400 cursor-not-allowed shadow-none' : 'bg-[#F56D2D]  shadow-[#F56D2D]/20 onClick={performUpload}
                             disabled={uploading}
                             style={{ fontFamily: 'BasisGrotesquePro' }}
                         >
@@ -734,5 +732,5 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
             </div>
         </div>,
         document.body
-    );
+   );
 }

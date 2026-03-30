@@ -958,7 +958,7 @@ export default function DocumentsPage() {
                 <div className="mb-4">
                   <div className="d-flex align-items-center gap-2 flex-wrap breadcrumb-container" style={{ backgroundColor: "#f8f9fa", padding: "12px 16px", borderRadius: "8px" }}>
                     <button
-                      className="btn  text-primary p-0 border-0 bg-transparent"
+                      className="btn text-primary p-0 border-0 bg-transparent"
                       onClick={() => setFileManagerSelectedFolderId(null)}
                       style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}
                     >
@@ -969,7 +969,7 @@ export default function DocumentsPage() {
                       <React.Fragment key={idx}>
                         <span style={{ color: "#6B7280", fontFamily: "BasisGrotesquePro" }}>/</span>
                         <button
-                          className="btn  text-primary p-0 border-0 bg-transparent"
+                          className="btn text-primary p-0 border-0 bg-transparent"
                           onClick={() => setFileManagerSelectedFolderId(breadcrumb.id)}
                           style={{ fontFamily: "BasisGrotesquePro", fontSize: "14px" }}
                         >
@@ -1058,7 +1058,7 @@ export default function DocumentsPage() {
                 {fileManagerError && !fileManagerLoading && (
                   <div className="alert alert-danger" role="alert">
                     <strong>Error:</strong> {fileManagerError}
-                    <button className="btn  btn-outline-danger ms-2" onClick={() => fetchFileManagerDocuments(fileManagerSelectedFolderId, debouncedSearchQuery)}>
+                    <button className="btn btn-outline-danger ms-2" onClick={() => fetchFileManagerDocuments(fileManagerSelectedFolderId, debouncedSearchQuery)}>
                       Retry
                     </button>
                   </div>

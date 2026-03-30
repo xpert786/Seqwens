@@ -428,7 +428,7 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
           </style>
           <button
             onClick={handleClose}
-            className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-[#3B4A66] transition-all duration-200 z-[20]"
+            className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-[#3B4A66] transition-all duration-200 z-[20]"
           >
             <CrossesIcon className="w-5 h-5" />
           </button>
@@ -571,14 +571,14 @@ export default function AddStaffModal({ isOpen, onClose, onInviteCreated, onRefr
                 type="button"
                 onClick={handleClose}
                 disabled={loading}
-                className="px-4 py-1.5 !border border-gray-300 !rounded-md text-gray-700 hover:bg-gray-100 transition font-[BasisGrotesquePro] text-sm disabled:opacity-50"
+                className="px-4 py-1.5 !border border-gray-300 !rounded-md text-gray-700 transition font-[BasisGrotesquePro] text-sm disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-4 py-1.5 bg-[#F56D2D] text-white !rounded-md hover:bg-orange-600 transition font-[BasisGrotesquePro] font-medium text-sm disabled:opacity-50"
+                className="px-4 py-1.5 bg-[#F56D2D] text-white !rounded-md transition font-[BasisGrotesquePro] font-medium text-sm disabled:opacity-50"
               >
                 {loading ? "Sending Invite..." : "Send Invite"}
               </button>

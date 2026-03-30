@@ -410,7 +410,7 @@ const SchedulingCalendar = () => {
                         <div className="w-5 h-5 !rounded-full bg-blue-50 flex items-center justify-center text-[10px] text-blue-600 font-bold">C</div>
                         <button
                             type="button"
-                            className="text-xs text-blue-600 hover:text-blue-800 font-bold font-[BasisGrotesquePro] transition-colors"
+                            className="text-xs text-blue-600 font-bold font-[BasisGrotesquePro] transition-colors"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handleNavigateToClient(event);
@@ -426,7 +426,7 @@ const SchedulingCalendar = () => {
                         <div className="w-5 h-5 !rounded-full bg-indigo-50 flex items-center justify-center text-[10px] text-indigo-600 font-bold">S</div>
                         <button
                             type="button"
-                            className="text-xs text-indigo-600 hover:text-indigo-800 font-bold font-[BasisGrotesquePro] transition-colors"
+                            className="text-xs text-indigo-600 font-bold font-[BasisGrotesquePro] transition-colors"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handleNavigateToStaff(event);
@@ -1332,7 +1332,7 @@ const SchedulingCalendar = () => {
                                 </button>
                                 <button
                                     onClick={goToToday}
-                                    className="h-9 px-4 text-xs font-black bg-white !border border-[#E8F0FF] !rounded-xl hover:bg-gray-50 font-[BasisGrotesquePro] transition-all text-gray-500 hover:text-gray-900 active:scale-95 uppercase tracking-wider"
+                                    className="h-9 px-4 text-xs font-black bg-white !border border-[#E8F0FF] !rounded-xl font-[BasisGrotesquePro] transition-all text-gray-500 active:scale-95 uppercase tracking-wider"
                                 >
                                     Today
                                 </button>
@@ -1424,7 +1424,7 @@ const SchedulingCalendar = () => {
                                                 ))}
                                                 {dayAppointments.length > 3 && (
                                                     <button
-                                                        className="w-full text-[9px] font-black text-[#F56D2D] hover:underline"
+                                                        className="w-full text-center text-[9px] font-black text-[#F56D2D] bg-[#F56D2D]/5 py-0.5 rounded"
                                                         onClick={() => openEventsModal(dateObj, dayAppointments)}
                                                     >
                                                         + {dayAppointments.length - 3} more
@@ -1438,7 +1438,7 @@ const SchedulingCalendar = () => {
                         )}
 
                         {viewMode === 'Monthly' && (
-                            <div className="grid grid-cols-7 min-w-[800px] lg:min-w-0">
+                           <div className="grid grid-cols-7 min-w-[800px] lg:min-w-0">
                                 {dayNames.map((day) => (
                                     <div key={day} className="text-center text-[10px] font-black text-gray-400 uppercase tracking-widest py-4 border-b border-[#E8F0FF] border-r border-[#E8F0FF]/50 last:border-r-0">
                                         {day}
@@ -1718,7 +1718,7 @@ const SchedulingCalendar = () => {
                             </div>
                             <button
                                 onClick={closeEventsModal}
-                                className="w-10 h-10 flex items-center justify-center !rounded-xl bg-[#F3F7FF] text-gray-400 hover:text-gray-900 hover:bg-[#E8F0FF] transition-all"
+                                className="w-10 h-10 flex items-center justify-center !rounded-xl bg-[#F3F7FF] text-gray-400 transition-all"
                                 aria-label="Close"
                             >
                                 <CloseIcon />
@@ -1855,7 +1855,7 @@ const SchedulingCalendar = () => {
                         <div className="p-5 border-t border-[#F8FAFF] flex justify-end flex-shrink-0">
                             <button
                                 onClick={closeEventsModal}
-                                className="px-6 py-2 text-[10px] font-black bg-white !border border-[#E8F0FF] !rounded-xl hover:bg-gray-50 text-gray-900 transition-all uppercase tracking-[0.2em]"
+                                className="px-6 py-2 text-[10px] font-black bg-white !border border-[#E8F0FF] !rounded-xl text-gray-900 transition-all uppercase tracking-[0.2em]"
                             >
                                 Close
                             </button>
@@ -1988,7 +1988,7 @@ const SchedulingCalendar = () => {
                             <button
                                 onClick={handleConfirmOverwrite}
                                 disabled={confirmingOverwrite}
-                                className="flex-1 max-w-sm px-6 py-3 text-[10px] font-black text-white bg-red-500 hover:bg-red-600 !rounded-xl transition-all shadow-lg shadow-red-100 uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 max-w-sm px-6 py-3 text-[10px] font-black text-white bg-red-500 !rounded-xl transition-all shadow-lg shadow-red-100 uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {confirmingOverwrite ? 'Processing...' : `Overwrite & Cancel (${overlappingAppointments.length}) Conflicts`}
                             </button>
@@ -2000,9 +2000,9 @@ const SchedulingCalendar = () => {
             {/* Add Calendar Event Modal - Premium Responsive */}
             {isAddEventModalOpen && (
                 <div className="fixed inset-0 z-[100001] bg-black/60 flex items-center justify-center p-4">
-                    <div className="bg-white !rounded-2xl !border border-[#E8F0FF] w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden">
+                    <div className="bg-white !rounded-2xl !border border-[#E8F0FF] w-full max-w-2xl max-h-[75vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden p-3">
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between px-4 py-3 border-b border-[#F8FAFF] bg-white">
+                        <div className="flex items-center justify-between px-3 py-4 border-b border-[#F8FAFF] bg-white">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-[#F56D2D]/10 !rounded-xl flex items-center justify-center text-[#F56D2D]">
                                         <PlusIcon className="w-6 h-6" />
@@ -2021,7 +2021,7 @@ const SchedulingCalendar = () => {
                         </div>
 
                         {/* Modal Body */}
-                        <div className="px-5 py-3 space-y-5 overflow-y-auto no-scrollbar bg-white">
+                        <div className="p-3 space-y-5 overflow-y-auto no-scrollbar bg-white">
                             {/* Section: Basic Details */}
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2 mb-1.5">
@@ -2240,11 +2240,18 @@ const SchedulingCalendar = () => {
                                     <button
                                         type="button"
                                         onClick={addTimeSlot}
-                                        className="flex items-center gap-2 px-4 py-2 text-[9px] font-black text-[#F56D2D] bg-[#F56D2D]/5 hover:bg-[#F56D2D]/10 !rounded-xl transition-all uppercase border-2 border-dashed border-[#F56D2D]/20 hover:border-[#F56D2D]/40"
+                                        className="flex items-center gap-2 px-4 py-2 text-[9px] font-black text-[#F56D2D] bg-[#F56D2D]/5 !rounded-xl transition-all uppercase border-2 border-dashed border-[#F56D2D]/20"
                                     >
                                         <PlusIcon className="w-4 h-4" />
                                         Add Multi-Slot
                                     </button>
+                                </div>
+                            </div>
+
+                            {/* Section: Logistics */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2 mb-1.5">
+                                    <h6 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Logistics & Timing</h6>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

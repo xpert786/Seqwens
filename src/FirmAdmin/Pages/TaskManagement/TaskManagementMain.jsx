@@ -673,7 +673,7 @@ const TaskManagementMain = () => {
             {pagination.total_pages > 1 && (
               <div className="d-flex justify-content-center align-items-center gap-2 mt-4 taskmanage-pagination">
                 <button
-                  className="btn  taskmanage-pagination-button"
+                  className="btn taskmanage-pagination-button"
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
                   style={{
@@ -736,7 +736,7 @@ const TaskManagementMain = () => {
             <p className="text-red-800 font-[BasisGrotesquePro]">{error}</p>
             <button
               onClick={fetchTasks}
-              className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg  font-[BasisGrotesquePro]"
+              className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg font-[BasisGrotesquePro]"
             >
               Retry
             </button>
@@ -785,7 +785,7 @@ const TaskManagementMain = () => {
                 <button
                   onClick={handleDeleteTask}
                   disabled={deleting}
-                  className="px-4 py-2 bg-[#EF4444] text-white !rounded-lg  transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-4 py-2 bg-[#EF4444] text-white !rounded-lg transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {deleting ? (
                     <>

@@ -179,14 +179,14 @@ function SuperDashboardContent() {
             <div className="flex gap-3 justify-end">
               <button
                 onClick={handleCloseRoleModal}
-                className="px-4 py-2 bg-gray-500 text-white rounded-md text-sm font-medium font-[BasisGrotesquePro] hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 bg-gray-500 text-white rounded-md text-sm font-medium font-[BasisGrotesquePro] transition-colors"
                 style={{ borderRadius: '7px' }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveRole}
-                className="px-4 py-2 bg-orange-500 text-white rounded-md text-sm font-medium font-[BasisGrotesquePro] hover:bg-orange-600 transition-colors"
+                className="px-4 py-2 bg-orange-500 text-white rounded-md text-sm font-medium font-[BasisGrotesquePro] transition-colors"
                 style={{ borderRadius: '7px' }}
               >
                 Save Role

@@ -446,14 +446,14 @@ export default function ClientDetails() {
                 <button
                   onClick={handleCancelEdit}
                   disabled={saving}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 border border-gray-300 !rounded-lg hover:bg-gray-300 transition font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50"
+                  className="px-4 py-2 bg-gray-200 text-gray-700 border border-gray-300 !rounded-lg transition font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveChanges}
                   disabled={saving}
-                  className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+                  className="px-4 py-2 bg-[#F56D2D] text-white !rounded-lg transition font-[BasisGrotesquePro] text-sm font-medium flex items-center gap-2 disabled:opacity-50"
                 >
                   {saving ? (
                     <>
@@ -500,17 +500,17 @@ export default function ClientDetails() {
               {showDropdown && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-10 !border border-[#E8F0FF]">
                   <div className="py-1">
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors">
+                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 font-[BasisGrotesquePro] rounded transition-colors">
                       Edit Client
                     </button>
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors">
+                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 font-[BasisGrotesquePro] rounded transition-colors">
                       View Timeline
                     </button>
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors">
+                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 font-[BasisGrotesquePro] rounded transition-colors">
                       Reassign Staff
                     </button>
                     <div className="border-t border-gray-200 my-1"></div>
-                    <button className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-orange-50 font-[BasisGrotesquePro] rounded transition-colors">
+                    <button className="block w-full text-left px-4 py-2 text-sm text-red-600 font-[BasisGrotesquePro] rounded transition-colors">
                       Delete Client
                     </button>
                   </div>

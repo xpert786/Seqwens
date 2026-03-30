@@ -280,7 +280,7 @@ export default function Profile() {
                             style={{
                                 borderRadius: '8px'
                             }}
-                            className="px-6 py-2 bg-[#3AD6F2] text-white hover:bg-[#2BC5E0] transition font-[BasisGrotesquePro] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-6 py-2 bg-[#3AD6F2] text-white transition font-[BasisGrotesquePro] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {saving ? 'Saving...' : 'Save Changes'}
                         </button>

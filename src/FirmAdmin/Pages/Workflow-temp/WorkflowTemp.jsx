@@ -218,7 +218,7 @@ const WorkflowTemp = () => {
 
                                     {/* Actions Column */}
                                     <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 ml-3">
-                                        <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                                        <button className="text-gray-400 transition-colors">
                                             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#F3F7FF" />
                                                 <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#E8F0FF" stroke-width="0.5" />
@@ -227,7 +227,7 @@ const WorkflowTemp = () => {
                                             </svg>
 
                                         </button>
-                                        <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                                        <button className="text-gray-400 transition-colors">
                                             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" fill="#F3F7FF" />
                                                 <rect x="0.25" y="0.25" width="17.5" height="17.5" rx="3.75" stroke="#E8F0FF" stroke-width="0.5" />

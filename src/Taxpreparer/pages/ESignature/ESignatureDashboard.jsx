@@ -1083,14 +1083,14 @@ export default function ESignatureDashboard() {
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           <button
             onClick={handleRefresh}
-            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-900 font-black !text-xs uppercase tracking-[0.2em] hover:bg-gray-50 transition-all !rounded-xl shadow-sm border border-gray-200 active:scale-95"
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-900 font-black !text-xs uppercase tracking-[0.2em] transition-all !rounded-xl shadow-sm border border-gray-200 active:scale-95"
           >
             <FiRefreshCw size={18} className={loading ? "animate-spin" : ""} />
             <span>Refresh</span>
           </button>
           <button
             onClick={handleOpenCreateModal}
-            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all !rounded-xl shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] transition-all !rounded-xl shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
           >
             <FiPlus size={18} />
             <span>Create Request</span>

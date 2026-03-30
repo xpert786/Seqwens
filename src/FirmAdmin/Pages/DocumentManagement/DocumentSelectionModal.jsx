@@ -155,14 +155,14 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-5 pb-1 border-b border-slate-100 flex-shrink-0">
           <div>
             <h3 className="text-xl font-bold text-[#1E293B]">Select Documents</h3>
             <p className="text-sm text-slate-500 mt-0.5">Choose files to share or attach</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all"
+            className="p-2 text-slate-400 rounded-full transition-all"
           >
             <IoMdClose size={24} />
           </button>
@@ -208,8 +208,7 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
               </span>
               <button
                 onClick={handleSelectAll}
-                className="text-xs font-semibold text-[#00C0C6] hover:underline"
-              >
+                className="text-xs font-semibold text-[#00C0C6] ">
                 {selectedDocumentIds.length === filteredDocuments.length ? 'Deselect All' : 'Select All'}
               </button>
             </div>
@@ -217,7 +216,7 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
         </div>
 
         {/* Scrollable Document List */}
-        <div className="flex-grow overflow-y-auto px-6 py-4 custom-scrollbar">
+       <div className="flex-grow overflow-y-auto px-6 py-4 custom-scrollbar">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="w-10 h-10 border-4 border-slate-100 border-t-[#00C0C6] rounded-full animate-spin"></div>
@@ -316,7 +315,7 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <button
                 onClick={onClose}
-                className="flex-1 sm:flex-none px-6 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
+                className="flex-1 sm:flex-none px-6 py-2.5 text-sm font-bold text-slate-600 rounded-xl transition-all rounded-xl"
               >
                 Cancel
               </button>
@@ -326,8 +325,8 @@ export default function DocumentSelectionModal({ show, onClose, onSelectDocument
                 className={`flex-1 sm:flex-none px-8 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg shadow-[#00C0C6]/20 transition-all transform active:scale-95 ${
                   selectedDocumentIds.length === 0
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
-                    : 'bg-gradient-to-r from-[#00C0C6] to-[#01AFB5] hover:brightness-105 select-none'
-                }`}
+                    : 'bg-gradient-to-r from-[#00C0C6] to-[#01AFB5] select-none'
+               }`} style={{borderRadius: '10px'}}
               >
                 Continue {selectedDocumentIds.length > 0 ? `(${selectedDocumentIds.length})` : ''}
               </button>

@@ -424,7 +424,7 @@ export default function SeqwensTraining({ onAddTrainingModalToggle, showAddTrain
                                 <h3 className="text-xl font-semibold text-gray-800">Add Resources</h3>
                                 <button
                                     onClick={handleCloseModal}
-                                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                                    className="text-gray-400 transition-colors"
                                 >
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <rect width="24" height="24" rx="12" fill="#E8F0FF" />
@@ -575,7 +575,7 @@ export default function SeqwensTraining({ onAddTrainingModalToggle, showAddTrain
                                         type="button"
                                         onClick={handleCloseModal}
                                         disabled={submitting}
-                                        className="px-3 py-1 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                        className="px-3 py-1 border border-gray-300 text-gray-700 rounded-lg transition-colors disabled:opacity-50"
                                         style={{ borderRadius: '7px' }}
                                     >
                                         Cancel
@@ -583,7 +583,7 @@ export default function SeqwensTraining({ onAddTrainingModalToggle, showAddTrain
                                     <button
                                         type="submit"
                                         disabled={submitting}
-                                        className="px-3 py-1 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
+                                        className="px-3 py-1 bg-orange-500 text-white rounded-lg transition-colors disabled:opacity-50"
                                         style={{ borderRadius: '7px' }}
                                     >
                                         {submitting ? 'Adding...' : 'Add'}

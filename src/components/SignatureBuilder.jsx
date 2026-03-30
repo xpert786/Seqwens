@@ -358,7 +358,7 @@ export default function SignatureBuilder({
           <div className="mt-auto pt-6 border-t border-gray-100 flex flex-col gap-3">
             <button
               onClick={onCancel}
-              className="w-full px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" style={{ borderRadius: '10px' }}
+              className="w-full px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg transition-colors" style={{ borderRadius: '10px' }}
             >
               Cancel
             </button>
@@ -377,13 +377,13 @@ export default function SignatureBuilder({
         <div className="flex-1 flex flex-col overflow-hidden relative">
           {/* Zoom Controls */}
           <div className="absolute top-4 right-8 z-40 flex items-center bg-white rounded-lg shadow-xl border border-gray-100 p-1">
-            <button onClick={zoomOut} className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600" title="Zoom Out">
+            <button onClick={zoomOut} className="p-2 rounded-md transition-colors text-gray-600" title="Zoom Out">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="8" y1="11" x2="14" y2="11" /></svg>
             </button>
             <div className="w-px h-6 bg-gray-200 mx-1"></div>
             <span className="px-3 text-sm font-bold text-gray-700 w-16 text-center">{Math.round(scale * 100)}%</span>
             <div className="w-px h-6 bg-gray-200 mx-1"></div>
-            <button onClick={zoomIn} className="p-2 hover:bg-gray-100 rounded-md transition-colors text-gray-600" title="Zoom In">
+            <button onClick={zoomIn} className="p-2 rounded-md transition-colors text-gray-600" title="Zoom In">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" /></svg>
             </button>
           </div>

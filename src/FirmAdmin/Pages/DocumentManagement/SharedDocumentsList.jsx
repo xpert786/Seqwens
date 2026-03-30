@@ -138,9 +138,8 @@ export default function SharedDocumentsList() {
         <div className="d-flex gap-2 shareddocs-header-buttons">
           <button
             className="btn d-flex align-items-center gap-2 shareddocs-header-button
-             hover:!bg-[var(--firm-primary-color)] hover:!text-white
-             focus:!bg-[var(--firm-primary-color)] focus:!text-white
-             active:!bg-[var(--firm-primary-color)] active:!text-white"
+              focus:!bg-[var(--firm-primary-color)] focus:!text-white
+            active:!bg-[var(--firm-primary-color)] active:!text-white"
             onClick={() => setShowDocumentSelectionModal(true)}
             style={{
               backgroundColor: 'var(--firm-primary-color)',
@@ -326,7 +325,7 @@ export default function SharedDocumentsList() {
                     </td>
                     <td>
                       <button
-                        className="btn  shareddocs-actions-button"
+                        className="btn shareddocs-actions-button"
                         onClick={() => handleUnshareClick(share)}
                         style={{
                           backgroundColor: '#FEE2E2',

@@ -379,6 +379,8 @@ export default function SecurityCompliance() {
         complianceDetails: []
     });
     const [isLoadingCompliance, setIsLoadingCompliance] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [selectedRestrictionId, setSelectedRestrictionId] = useState(null);
 
     useEffect(() => {
         if (activeTab === 'Compliance Readiness') {
@@ -831,7 +833,7 @@ export default function SecurityCompliance() {
                             <button
                                 onClick={fetchSecurityAlerts}
                                 disabled={securityAlertsLoading}
-                                className="inline-flex items-center rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#4B5563] bg-white hover:bg-white transition-none disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="inline-flex items-center rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#4B5563] bg-white transition-none disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{ borderRadius: '8px' }}
                             >
                                 <span style={{ pointerEvents: 'none' }}>
@@ -1007,7 +1009,7 @@ export default function SecurityCompliance() {
                             <span className="text-xs text-red-500">{sessionsError}</span>
                         )}
                         <button
-                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors"
                             style={{ borderRadius: '8px' }}
                             type="button"
                             onClick={fetchActiveSessions}
@@ -1080,7 +1082,7 @@ export default function SecurityCompliance() {
                                         <td className="px-2 py-3 text-[11px] text-gray-600 whitespace-nowrap">{session.duration}</td>
                                         <td className="px-2 py-3 text-right whitespace-nowrap">
                                             <button
-                                                className="text-[11px] font-semibold text-red-500 transition-colors hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="text-[11px] font-semibold text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                 style={{ borderRadius: '8px' }}
                                                 type="button"
                                                 onClick={() => handleTerminateSession(session.sessionKey)}
@@ -1214,7 +1216,7 @@ export default function SecurityCompliance() {
                             }
                         </select>
                         <button
-                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF] disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#4B5563] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             style={{ borderRadius: '8px' }}
                             type="button"
                             onClick={fetchAuditLogs}
@@ -1299,7 +1301,7 @@ export default function SecurityCompliance() {
             <div className="flex justify-end mb-4">
                 {!advancedReportingEnabled && (
                     <button
-                        className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#4B5563] transition-colors hover:bg-[#F3F7FF]"
+                        className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#4B5563] transition-colors"
                         style={{ borderRadius: '8px' }}
                         type="button"
                     >
@@ -2128,7 +2130,7 @@ export default function SecurityCompliance() {
                     </div>
                     <button
                         type="submit"
-                        className="px-6 py-2 bg-[#3AD6F2] text-white rounded-lg hover:bg-[#2BC4E0] transition-colors font-medium"
+                        className="px-6 py-2 bg-[#3AD6F2] text-white rounded-lg transition-colors font-medium"
                         style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
                     >
                         Search
@@ -2466,31 +2468,43 @@ export default function SecurityCompliance() {
     };
 
     // Handle deleting geo restriction
-    const handleDeleteGeoRestriction = async (restrictionId) => {
-        if (!window.confirm('Are you sure you want to delete this geo restriction?')) {
-            return;
-        }
+    const handleDeleteGeoRestriction = async () => {
+        if (!selectedRestrictionId) return;
 
         try {
-            setDeletingGeoRestrictionId(restrictionId);
-            const response = await firmAdminGeoRestrictionsAPI.deleteGeoRestriction(restrictionId);
+            setDeletingGeoRestrictionId(selectedRestrictionId);
+
+            const response =
+                await firmAdminGeoRestrictionsAPI.deleteGeoRestriction(
+                    selectedRestrictionId
+                );
 
             if (response.success) {
-                toast.success(response.message || 'Geo restriction deleted successfully!', {
-                    position: "top-right",
-                    autoClose: 3000,
-                });
+                toast.success(
+                    response.message || 'Geo restriction deleted successfully!',
+                    {
+                        position: "top-right",
+                        autoClose: 3000,
+                    }
+                );
+
                 await fetchGeoData();
             } else {
-                throw new Error(response.message || 'Failed to delete geo restriction');
+                throw new Error(
+                    response.message || 'Failed to delete geo restriction'
+                );
             }
+
         } catch (err) {
             toast.error(handleAPIError(err), {
                 position: "top-right",
                 autoClose: 3000,
             });
+
         } finally {
             setDeletingGeoRestrictionId(null);
+            setShowDeleteModal(false);
+            setSelectedRestrictionId(null);
         }
     };
 
@@ -2616,13 +2630,59 @@ export default function SecurityCompliance() {
                                         </button>
                                         {restriction && (
                                             <button
-                                                onClick={() => handleDeleteGeoRestriction(restriction.id)}
+                                                onClick={() => {
+                                                    setSelectedRestrictionId(restriction.id);
+                                                    setShowDeleteModal(true);
+                                                }}
                                                 disabled={deletingGeoRestrictionId === restriction.id}
                                                 className="flex-1 sm:flex-none justify-center inline-flex items-center gap-2 px-5 py-2.5 bg-red-50 text-red-500 text-sm font-bold rounded-lg hover:bg-red-100 transition-all disabled:opacity-50"
                                                 style={{ borderRadius: '8px' }}
                                             >
                                                 {deletingGeoRestrictionId === restriction.id ? '...' : 'Delete'}
                                             </button>
+                                        )}
+
+                                        {showDeleteModal && (
+                                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/5">
+                                                <div
+                                                    className="bg-white rounded-xl w-full max-w-md p-6"
+                                                    style={{ borderRadius: '12px' }}
+                                                >
+                                                    {/* Title */}
+                                                    <h4 className="text-[20px] font-bold text-gray-800 mb-2">
+                                                        Delete Geo Restriction
+                                                    </h4>
+
+                                                    {/* Message */}
+                                                    <p className="text-sm text-gray-600 mb-6">
+                                                        Are you sure you want to delete this geo restriction?
+                                                        This action cannot be undone.
+                                                    </p>
+
+                                                    {/* Actions */}
+                                                    <div className="flex justify-end gap-3">
+                                                        <button
+                                                            onClick={() => {
+                                                                setShowDeleteModal(false);
+                                                                setSelectedRestrictionId(null);
+                                                            }}
+                                                            className="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
+                                                        >
+                                                            Cancel
+                                                        </button>
+
+                                                        <button
+                                                            onClick={handleDeleteGeoRestriction}
+                                                            disabled={deletingGeoRestrictionId !== null}
+                                                            className="px-4 py-2 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 disabled:opacity-50"
+                                                        >
+                                                            {deletingGeoRestrictionId
+                                                                ? 'Deleting...'
+                                                                : 'Delete'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
@@ -2649,7 +2709,7 @@ export default function SecurityCompliance() {
                                 <h3 className="text-[18px] sm:text-[20px] font-bold text-[#3B4A66] font-[BasisGrotesquePro] leading-tight">
                                     {selectedGeoRegion ? `${selectedGeoRegion.region_name || selectedGeoRegion.region_code}` : 'Add Geo Restriction'}
                                 </h3>
-                                <p className="text-[11px] sm:text-xs text-[#6B7280] font-[BasisGrotesquePro] mt-1">
+                                <p className="text-[11px] sm:text-xs text-[#6B7280] font-[BasisGrotesquePro] m-0">
                                     Configure regional session security settings
                                 </p>
                             </div>
@@ -2736,7 +2796,7 @@ export default function SecurityCompliance() {
                             )}
 
                             {/* Region Selection */}
-                            <div>
+                            {/* <div>
                                 <label className="block text-sm font-medium text-[#3B4A66] mb-2" style={{ fontFamily: 'BasisGrotesquePro' }}>
                                     Region <span className="text-red-500">*</span>
                                 </label>
@@ -2750,6 +2810,39 @@ export default function SecurityCompliance() {
                                     <option value="">Select a region</option>
                                     {geoLocationsList.map((region) => (
                                         <option key={region.region_code} value={region.region_code}>
+                                            {region.region_name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div> */}
+
+                            <div>
+                                <label
+                                    className="block text-sm font-medium text-[#3B4A66] mb-2"
+                                    style={{ fontFamily: 'BasisGrotesquePro' }}
+                                >
+                                    Region <span className="text-red-500">*</span>
+                                </label>
+
+                                <select
+                                    value={geoRestrictionForm.region}
+                                    disabled={true}
+                                    className="w-full border border-[#E5E7EB] px-3 py-2 text-sm text-[#4B5563] bg-[#F9FAFB] cursor-not-allowed"
+                                    style={{
+                                        fontFamily: 'BasisGrotesquePro',
+                                        borderRadius: '8px',
+                                        appearance: 'none',        // removes arrow
+                                        WebkitAppearance: 'none',  // Safari
+                                        MozAppearance: 'none'      // Firefox
+                                    }}
+                                >
+                                    <option value="">Select a region</option>
+
+                                    {geoLocationsList.map((region) => (
+                                        <option
+                                            key={region.region_code}
+                                            value={region.region_code}
+                                        >
                                             {region.region_name}
                                         </option>
                                     ))}
@@ -2813,7 +2906,7 @@ export default function SecurityCompliance() {
                                         type="button"
                                         onClick={handleAddCountryCode}
                                         disabled={savingGeoRestriction || !countryCodeInput.trim()}
-                                        className="px-4 py-2 bg-[#3AD6F2] text-white text-sm font-medium rounded-lg hover:bg-[#2BC4E0] transition-colors disabled:opacity-50"
+                                        className="px-4 py-2 bg-[#3AD6F2] text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
                                         style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
                                     >
                                         Add
@@ -2871,7 +2964,7 @@ export default function SecurityCompliance() {
                             <button
                                 onClick={handleSaveGeoRestriction}
                                 disabled={savingGeoRestriction || !geoRestrictionForm.region}
-                                className="px-4 py-2 bg-[#3AD6F2] text-white text-sm font-medium rounded-lg hover:bg-[#2BC4E0] transition-colors disabled:opacity-50"
+                                className="px-4 py-2 bg-[#3AD6F2] text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
                                 style={{ fontFamily: 'BasisGrotesquePro', borderRadius: '8px' }}
                             >
                                 {savingGeoRestriction ? 'Saving...' : 'Save'}

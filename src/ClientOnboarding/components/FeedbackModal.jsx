@@ -76,7 +76,7 @@ export default function FeedbackModal({ isOpen, onClose, onSubmitted }) {
           <button
             onClick={handleClose}
             disabled={submitting}
-            className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+            className="text-gray-400 transition-colors disabled:opacity-50"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect width="24" height="24" rx="12" fill="#E8F0FF" />
@@ -148,14 +148,14 @@ export default function FeedbackModal({ isOpen, onClose, onSubmitted }) {
               type="button"
               onClick={handleClose}
               disabled={submitting}
-              className="px-4 py-2 bg-white border border-[#E8F0FF] text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-white border border-[#E8F0FF] text-gray-700 rounded-lg transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Skip
             </button>
             <button
               type="submit"
               disabled={submitting || stars === 0}
-              className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 bg-[#F56D2D] text-white rounded-lg transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {submitting ? (
                 <>

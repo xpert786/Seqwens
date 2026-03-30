@@ -320,7 +320,7 @@ export default function IntegrationsTab() {
               <div className="flex flex-col xs:flex-row gap-3 pt-4 border-t border-gray-50">
                 <button
                   onClick={handleExport}
-                  className="flex-1 px-4 py-2.5 text-xs font-bold text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-all font-[BasisGrotesquePro] flex items-center justify-center gap-2 shadow-sm"
+                  className="flex-1 px-4 py-2.5 text-xs font-bold text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg transition-all font-[BasisGrotesquePro] flex items-center justify-center gap-2 shadow-sm"
                 >
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25M5.25 7.5L9 11.25M9 11.25L12.75 7.5M9 11.25V2.25" stroke="#4B5563" strokeLinecap="round" strokeLinejoin="round" />
@@ -329,7 +329,7 @@ export default function IntegrationsTab() {
                 </button>
                 <button
                   onClick={handleImport}
-                  className="flex-1 px-4 py-2.5 text-xs font-bold text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg hover:bg-gray-50 transition-all font-[BasisGrotesquePro] flex items-center justify-center gap-2 shadow-sm"
+                  className="flex-1 px-4 py-2.5 text-xs font-bold text-[#1F2A55] bg-white !border border-[#E8F0FF] !rounded-lg transition-all font-[BasisGrotesquePro] flex items-center justify-center gap-2 shadow-sm"
                 >
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M15.75 11.25V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V11.25" stroke="#3B4A66" strokeLinecap="round" strokeLinejoin="round" />
@@ -349,11 +349,10 @@ export default function IntegrationsTab() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full sm:w-auto px-8 py-3 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-all duration-200 font-bold font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
-        >
+          className="w-full sm:w-auto px-8 py-3 bg-[#F56D2D] text-white !rounded-lg  transition-all duration-200 font-bold font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md" >
           {saving ? (
             <>
-              <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+             <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               <span>Saving...</span>
             </>
           ) : (

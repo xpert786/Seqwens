@@ -572,7 +572,7 @@ export default function OfficeOverview() {
                             <button
                                 onClick={handleSetPrimaryOffice}
                                 disabled={settingPrimary}
-                                className="px-3 py-2 text-xs font-semibold text-white bg-[#00C0C6] !rounded-[10px] hover:shadow-md transition-all duration-200 flex items-center gap-2 disabled:opacity-50 whitespace-nowrap"
+                                className="px-3 py-2 text-xs font-semibold text-white bg-[#00C0C6] !rounded-[10px] transition-all duration-200 flex items-center gap-2 disabled:opacity-50 whitespace-nowrap"
                             >
                                 <FaStar className="w-3.5 h-3.5" />
                                 {settingPrimary ? 'Setting...' : 'Set as Primary Office'}
@@ -1171,7 +1171,7 @@ export default function OfficeOverview() {
                                         <button
                                             onClick={handleRemoveManager}
                                             disabled={removingManager}
-                                            className="mt-2 text-xs text-red-600 hover:text-red-700 font-medium disabled:opacity-50"
+                                            className="mt-2 text-xs text-red-600 font-medium disabled:opacity-50"
                                         >
                                             {removingManager ? 'Removing...' : 'Remove Manager'}
                                         </button>
@@ -1217,10 +1217,9 @@ export default function OfficeOverview() {
                                 <button
                                     type="button"
                                     onClick={handleTestTaxPrep}
-                                    className="inline-flex items-center justify-center rounded-lg border border-[#E4ECFF] bg-white px-4 py-2 text-sm gap-2 font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]"
-                                    style={{ borderRadius: '8px' }}
+                                    className="inline-flex items-center justify-center rounded-lg border border-[#E4ECFF] bg-white px-4 py-2 text-sm gap-2 font-semibold text-[#475569] transition-colors"
                                 >
-                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M11.25 2.25H15.75V6.75" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
                                         <path d="M7.5 10.5L15.75 2.25" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
                                         <path d="M13.5 9.75V14.25C13.5 14.6478 13.342 15.0294 13.0607 15.3107C12.7794 15.592 12.3978 15.75 12 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V6C2.25 5.60218 2.40804 5.22064 2.68934 4.93934C2.97064 4.65804 3.35218 4.5 3.75 4.5H8.25" stroke="#3B4A66" stroke-linecap="round" stroke-linejoin="round" />
@@ -1232,11 +1231,10 @@ export default function OfficeOverview() {
                                 <button
                                     type="button"
                                     onClick={handleSaveTaxPrep}
-                                    className="inline-flex items-center justify-center rounded-lg bg-[#F56D2D] px-5 py-2 text-sm gap-2 font-semibold text-white transition-colors hover:bg-orange-600"
-                                    style={{ borderRadius: '8px' }}
+                                    className="inline-flex items-center justify-center rounded-lg bg-[#F56D2D] px-5 py-2 text-sm gap-2 font-semibold text-white transition-colors"
                                 >
                                     <svg
-                                        xmlns="http://www.w3.org/2000/svg"
+                                       xmlns="http://www.w3.org/2000/svg"
                                         className="h-4 w-4 mr-2"
                                         fill="none"
                                         viewBox="0 0 24 24"
@@ -1359,16 +1357,16 @@ export default function OfficeOverview() {
                             <button
                                 type="button"
                                 onClick={handleResetBranding}
-                                className="inline-flex items-center justify-center rounded-lg border border-[#E4ECFF] bg-white px-4 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-[#F8FAFC]"
+                                className="inline-flex items-center justify-center rounded-lg border border-[#E4ECFF] bg-white px-4 py-2 text-sm font-medium text-gray-500 transition-colors"
                                 style={{ borderRadius: '8px' }}
                             >
                                 Reset
                             </button>
                             <button
-                                type="button"
+                               type="button"
                                 onClick={handleSaveBranding}
                                 disabled={savingBranding}
-                                className="inline-flex items-center justify-center rounded-lg bg-[#F56D2D] px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="inline-flex items-center justify-center rounded-lg bg-[#F56D2D] px-5 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{ borderRadius: '8px' }}
                             >
                                 {savingBranding ? 'Saving...' : 'Save Branding'}

@@ -193,7 +193,7 @@ export default function ArchivedMonitoring() {
                         <button
                             onClick={handleExportCSV}
                             disabled={exporting || firmsData.length === 0}
-                            className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium font-[BasisGrotesquePro] hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium font-[BasisGrotesquePro] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             style={{ borderRadius: "7px" }}
                         >
                             {exporting ? (
@@ -461,7 +461,7 @@ export default function ArchivedMonitoring() {
                                 onClick={handleSaveRetentionRule}
                                 disabled={submittingRetention}
                                 style={{ borderRadius: "10px" }}
-                                className="w-full bg-[#F56D2D] hover:bg-[#E45C1C] text-white px-6 py-3 rounded-xl text-sm font-bold font-[BasisGrotesquePro] transition-all transform hover:translate-y-[-1px] active:translate-y-[0] shadow-md hover:shadow-lg disabled:opacity-50 disabled:transform-none flex justify-center items-center gap-2"
+                                className="w-full bg-[#F56D2D] text-white px-6 py-3 rounded-xl text-sm font-bold font-[BasisGrotesquePro] transition-all transform active:translate-y-[0] shadow-md disabled:opacity-50 disabled:transform-none flex justify-center items-center gap-2"
                             >
                                 {submittingRetention ? (
                                     <>

@@ -1003,7 +1003,7 @@ export default function BulkImportModal({ isOpen, onClose, onOpenDownloadModal, 
             </div>
             <button
               onClick={onClose}
-              className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-50 hover:bg-blue-100 text-gray-600 text-xl leading-none transition-colors shadow-sm"
+              className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-50 text-gray-600 text-xl leading-none transition-colors shadow-sm"
             >
               <CrossesIcon className="w-4 h-4 text-blue-500" />
             </button>

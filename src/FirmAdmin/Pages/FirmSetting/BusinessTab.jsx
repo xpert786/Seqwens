@@ -320,11 +320,10 @@ export default function BusinessTab() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full sm:w-auto px-8 py-3 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-all duration-200 font-bold font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
-        >
+          className="w-full sm:w-auto px-8 py-3 bg-[#F56D2D] text-white !rounded-lg  transition-all duration-200 font-bold font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md" >
           {saving ? (
             <>
-              <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+             <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               <span>Saving...</span>
             </>
           ) : (

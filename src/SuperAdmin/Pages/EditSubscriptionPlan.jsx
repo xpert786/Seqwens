@@ -581,7 +581,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center gap-2 text-sm text-[var(--sa-text-primary)] hover:underline focus:outline-none edit-plan-back"
+            className="inline-flex items-center gap-2 text-sm text-[var(--sa-text-primary)] focus:outline-none edit-plan-back"
           >
             ← Back to Subscription Plans
           </button>
@@ -897,7 +897,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                       ? 'text-white shadow-sm'
                       : 'text-[var(--sa-text-secondary)] border border-[var(--sa-border-color)]'
                       }`}
-                    style={{ 
+                    style={{
                       borderRadius: "10px",
                       backgroundColor: selectedAddonCategory === cat ? '#F56D2D' : 'var(--sa-bg-card)'
                     }}
@@ -1196,7 +1196,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                     <button
                       type="button"
                       onClick={autoFillFeatures}
-                      className="text-[10px] font-bold px-2 py-1 rounded bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 uppercase tracking-tighter"
+                      className="text-[10px] font-bold px-2 py-1 rounded bg-blue-50 text-blue-600 border border-blue-200 uppercase tracking-tighter"
                     >
                       Auto-fill from limits
                     </button>
@@ -1228,7 +1228,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                     <button
                       type="button"
                       onClick={addFeatureBullet}
-                      className="w-full py-2 border border-dashed border-[var(--sa-border-color)] rounded-lg text-sm font-medium text-[var(--sa-text-secondary)] hover:bg-[var(--sa-bg-secondary)] flex items-center justify-center gap-2"
+                      className="w-full py-2 border border-dashed border-[var(--sa-border-color)] rounded-lg text-sm font-medium text-[var(--sa-text-secondary)] flex items-center justify-center gap-2"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
@@ -1432,176 +1432,189 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
             <div className="px-6 overflow-y-auto" style={{ maxHeight: '50vh' }}>
               <div className="space-y-4 pb-2">
 
-              {/* Name */}
-              <div>
-                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Add-on Name *</label>
-                <input
-                  type="text"
-                  value={newAddonForm.name}
-                  onChange={e => setNewAddonForm(f => ({ ...f, name: e.target.value }))}
-                  placeholder="e.g. Priority E-Sign Pack"
-                  className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
-                />
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Description</label>
-                <textarea
-                  value={newAddonForm.description}
-                  onChange={e => setNewAddonForm(f => ({ ...f, description: e.target.value }))}
-                  placeholder="Brief description of what this add-on provides..."
-                  rows={2}
-                  className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                  style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
-                />
-              </div>
-
-              {/* Category + Billing */}
-              <div className="grid grid-cols-2 gap-4">
+                {/* Name */}
                 <div>
-                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Category</label>
-                  <select
-                    value={(newAddonForm.category === 'other' ? '' : newAddonForm.category) || ''}
-                    onChange={e => {
-                      const val = e.target.value;
-                      setNewAddonForm(f => ({ 
-                        ...f, 
-                        category: val || null,
-                        addon_type: (val || 'other') + `_${Date.now()}` 
-                      }));
-                    }}
-                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
-                    style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
-                  >
-                    <option value="">— Select Category —</option>
-                    <option value="esign">E-Sign</option>
-                    <option value="storage">Storage</option>
-                    <option value="workflow">Workflow</option>
-                    <option value="office">Office</option>
-                    <option value="staff">Staff</option>
-                    <option value="clients">Clients</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Billing</label>
-                  <select
-                    value={newAddonForm.billing_frequency}
-                    onChange={e => setNewAddonForm(f => ({ ...f, billing_frequency: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
-                    style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
-                  >
-                    <option value="monthly">Monthly</option>
-                    <option value="yearly">Yearly</option>
-                    <option value="one_time">One-Time</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Price + Scope */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Price ($)</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm opacity-40" style={{ color: 'var(--sa-text-primary)' }}>$</span>
-                    <input
-                      type="number" step="0.01" min="0"
-                      value={newAddonForm.price}
-                      onChange={e => setNewAddonForm(f => ({ ...f, price: e.target.value }))}
-                      placeholder="0.00"
-                      className="w-full pl-7 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Scope</label>
-                  <select
-                    value={newAddonForm.scope}
-                    onChange={e => setNewAddonForm(f => ({ ...f, scope: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
-                    style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
-                  >
-                    <option value="firm">Firm-wide</option>
-                    <option value="office">Per Office</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Unit Label + Quantity */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-2">
-                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Unit Label <span className="text-[var(--sa-text-secondary)] font-normal">(e.g. signatures, GB)</span></label>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Add-on Name *</label>
                   <input
                     type="text"
-                    value={newAddonForm.unit_type}
-                    onChange={e => setNewAddonForm(f => ({ ...f, unit_type: e.target.value }))}
-                    placeholder="e.g. signatures, GB, users"
+                    value={newAddonForm.name}
+                    onChange={e => setNewAddonForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder="e.g. Priority E-Sign Pack"
                     className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                   />
                 </div>
+
+                {/* Description */}
                 <div>
-                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Quantity</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[var(--sa-text-secondary)]">Qty</span>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Description</label>
+                  <textarea
+                    value={newAddonForm.description}
+                    onChange={e => setNewAddonForm(f => ({ ...f, description: e.target.value }))}
+                    placeholder="Brief description of what this add-on provides..."
+                    rows={2}
+                    className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
+                  />
+                </div>
+
+                {/* Category + Billing */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Category</label>
+                    <select
+                      value={(newAddonForm.category === 'other' ? '' : newAddonForm.category) || ''}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setNewAddonForm(f => ({
+                          ...f,
+                          category: val || null,
+                          addon_type: (val || 'other') + `_${Date.now()}`
+                        }));
+                      }}
+                      className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
+                      style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
+                    >
+                      <option value="">— Select Category —</option>
+                      <option value="esign">E-Sign</option>
+                      <option value="storage">Storage</option>
+                      <option value="workflow">Workflow</option>
+                      <option value="office">Office</option>
+                      <option value="staff">Staff</option>
+                      <option value="clients">Clients</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Billing</label>
+                    <select
+                      value={newAddonForm.billing_frequency}
+                      onChange={e => setNewAddonForm(f => ({ ...f, billing_frequency: e.target.value }))}
+                      className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
+                      style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
+                    >
+                      <option value="monthly">Monthly</option>
+                      <option value="yearly">Yearly</option>
+                      <option value="one_time">One-Time</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Price + Scope */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Price ($)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm opacity-40" style={{ color: 'var(--sa-text-primary)' }}>$</span>
+                      <input
+                        type="number" step="0.01" min="0"
+                        value={newAddonForm.price}
+                        onChange={e => setNewAddonForm(f => ({ ...f, price: e.target.value }))}
+                        placeholder="0.00"
+                        className="w-full pl-7 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Scope</label>
+                    <select
+                      value={newAddonForm.scope}
+                      onChange={e => setNewAddonForm(f => ({ ...f, scope: e.target.value }))}
+                      className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--sa-bg-card)]"
+                      style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
+                    >
+                      <option value="firm">Firm-wide</option>
+                      <option value="office">Per Office</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Unit Label + Quantity */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-2">
+                    <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Unit Label <span className="text-[var(--sa-text-secondary)] font-normal">(e.g. signatures, GB)</span></label>
                     <input
-                      type="number" min="1"
-                      value={newAddonForm.unit_quantity}
-                      onChange={e => setNewAddonForm(f => ({ ...f, unit_quantity: e.target.value }))}
-                      className="w-full pl-9 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      type="text"
+                      value={newAddonForm.unit_type}
+                      onChange={e => setNewAddonForm(f => ({ ...f, unit_type: e.target.value }))}
+                      placeholder="e.g. signatures, GB, users"
+                      className="w-full px-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                     />
                   </div>
+                  <div>
+                    <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--sa-text-primary)' }}>Quantity</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[var(--sa-text-secondary)]">Qty</span>
+                      <input
+                        type="number" min="1"
+                        value={newAddonForm.unit_quantity}
+                        onChange={e => setNewAddonForm(f => ({ ...f, unit_quantity: e.target.value }))}
+                        className="w-full pl-9 pr-3 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Info note */}
-              <div className="flex items-start gap-2 p-3 rounded-xl" style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE' }}>
-                <svg className="flex-shrink-0 mt-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 8v4M12 16h.01" />
-                </svg>
-                <p className="text-xs" style={{ color: '#1E40AF' }}>
-                  This add-on will be created exclusively for the <strong>{activeTab}</strong> plan. Only firms subscribed to this plan will see it.
-                </p>
-              </div>
+                {/* Info note */}
+                <div className="flex items-start gap-2 p-3 rounded-xl" style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+                  <svg className="flex-shrink-0 mt-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v4M12 16h.01" />
+                  </svg>
+                  <p className="text-xs" style={{ color: '#1E40AF' }}>
+                    This add-on will be created exclusively for the <strong>{activeTab}</strong> plan. Only firms subscribed to this plan will see it.
+                  </p>
+                </div>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end gap-3 px-6 pb-6 pt-4">
-              <button
-                onClick={() => setShowNewAddonModal(false)}
-                className="px-5 py-2.5 text-sm font-semibold rounded-lg border transition-colors"
-                style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)', borderRadius: '10px' }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddNewAddonForPlan}
-                disabled={creatingAddon || !newAddonForm.name.trim()}
-                className="px-6 py-2.5 text-sm font-bold text-white rounded-lg transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                style={{ backgroundColor: '#F56D2D', borderRadius: '10px' }}
-              >
-                {creatingAddon ? (
-                  <>
-                    <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 12a9 9 0 11-6.219-8.56" />
-                    </svg>
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
-                    </svg>
-                    Create &amp; Add to {activeTab}
-                  </>
-                )}
-              </button>
-            </div>
+            <button
+              onClick={handleAddNewAddonForPlan}
+              disabled={
+                creatingAddon ||
+                !(newAddonForm?.name || "").trim()
+              }
+              className="px-6 py-2.5 text-sm font-bold text-white rounded-lg transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              style={{ backgroundColor: '#F56D2D', borderRadius: '10px' }}
+            >
+              {creatingAddon ? (
+                <>
+                  <svg
+                    className="animate-spin"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M21 12a9 9 0 11-6.219-8.56" />
+                  </svg>
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 5v14M5 12h14"
+                    />
+                  </svg>
+                  Create &amp; Add to {activeTab}
+                </>
+              )}
+            </button>
           </div>
         </div>
       )}
@@ -1618,11 +1631,11 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <path d="M3 15h6"/>
-                    <path d="M3 18h6"/>
-                    <path d="M3 12h6"/>
+                    <path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <path d="M3 15h6" />
+                    <path d="M3 18h6" />
+                    <path d="M3 12h6" />
                   </svg>
                 </div>
                 <h4 className="text-lg font-bold" style={{ color: 'var(--sa-text-primary)' }}>Auto-fill Features?</h4>

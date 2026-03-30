@@ -531,7 +531,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                     </h4>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        className="text-gray-400 transition-colors"
                     >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -651,7 +651,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                                                 <button
                                                     onClick={handleAddNewCard}
                                                     disabled={processing}
-                                                    className="px-6 py-2 bg-white border border-gray-300 !rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 font-[BasisGrotesquePro]"
+                                                    className="px-6 py-2 bg-white border border-gray-300 !rounded-lg text-sm font-medium text-gray-700 transition disabled:opacity-50 font-[BasisGrotesquePro]"
                                                 >
                                                     Add New Card
                                                 </button>
@@ -905,7 +905,7 @@ const UpgradePlanModal = ({ isOpen, onClose, currentPlanName }) => {
                         <button
                             onClick={onClose}
                             disabled={processing}
-                            className="w-full sm:w-auto px-10 py-2.5 bg-gray-100 text-gray-700 !rounded-lg text-sm font-bold hover:bg-gray-200 transition-all duration-200 font-[BasisGrotesquePro]"
+                            className="w-full sm:w-auto px-10 py-2.5 bg-gray-100 text-gray-700 !rounded-lg text-sm font-bold transition-all duration-200 font-[BasisGrotesquePro]"
                         >
                             Close
                         </button>

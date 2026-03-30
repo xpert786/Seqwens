@@ -495,7 +495,7 @@ export default function UserManagement() {
               </div>
               <button
                 onClick={closeAddAdminModal}
-                className="text-[var(--sa-text-secondary)] hover:text-[var(--sa-text-secondary)] transition-colors"
+                className="text-[var(--sa-text-secondary)] transition-colors"
                 aria-label="Close"
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -620,7 +620,7 @@ export default function UserManagement() {
                   <div className="flex justify-end gap-3">
                     <button
                       onClick={closeAddAdminModal}
-                      className="px-4 py-2 text-sm font-medium text-[var(--sa-text-primary)] dark:text-gray-200 border border-[var(--sa-border-color)] dark:border-gray-600 hover:bg-[var(--sa-bg-secondary)] dark:hover:bg-gray-700 transition-colors rounded-lg"
+                      className="px-4 py-2 text-sm font-medium text-[var(--sa-text-primary)] dark:text-gray-200 border border-[var(--sa-border-color)] dark:border-gray-600 dark:transition-colors rounded-lg"
                       disabled={creatingAdmin}
                       style={{ borderRadius: '8px' }}
                     >
@@ -629,7 +629,7 @@ export default function UserManagement() {
                     <button
                       onClick={handleCreateSuperAdmin}
                       disabled={creatingAdmin}
-                      className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] hover:bg-[#e45622] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{ borderRadius: '8px' }}
                     >
                       {creatingAdmin ? 'Creating...' : 'Create User'}

@@ -254,14 +254,14 @@ const SecurityTab = ({ client }) => {
                 <button
                   onClick={cancelPasswordReset}
                   disabled={resettingPassword}
-                  className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium font-[BasisGrotesquePro] text-sm"
+                  className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg transition font-medium font-[BasisGrotesquePro] text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handlePasswordReset}
                   disabled={resettingPassword}
-                  className="flex-1 px-4 py-2.5 bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition font-medium font-[BasisGrotesquePro] text-sm flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2.5 bg-[#F56D2D] text-white rounded-lg transition font-medium font-[BasisGrotesquePro] text-sm flex items-center justify-center gap-2"
                 >
                   {resettingPassword ? (
                     <>

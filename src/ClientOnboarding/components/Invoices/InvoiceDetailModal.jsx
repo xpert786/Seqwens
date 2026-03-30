@@ -129,8 +129,7 @@ const InvoiceDetailModal = ({ isOpen, onClose, invoice, isPayment = false }) => 
                 <div className="relative p-8 pr-16 md:pr-20 bg-gradient-to-br from-slate-50 to-white border-b border-slate-100">
                     <button
                         onClick={onClose}
-                        className="absolute top-6 right-4 p-2 rounded-full hover:bg-white hover:shadow-md transition-all text-slate-400 hover:text-slate-600"
-                        style={{ borderRadius: "50%" }}
+                        className="absolute top-6 right-4 p-2 rounded-full transition-all text-slate-400"
                     >
                         <FiX size={20} />
                     </button>
@@ -276,7 +275,7 @@ const InvoiceDetailModal = ({ isOpen, onClose, invoice, isPayment = false }) => 
                     <button
                         onClick={handleDownloadPDF}
                         disabled={loading}
-                        className="w-full sm:w-auto px-8 py-3 rounded-lg bg-slate-800 text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-900 transition-all active:scale-95 shadow-xl shadow-slate-200 disabled:opacity-50"
+                        className="w-full sm:w-auto px-8 py-3 rounded-lg bg-slate-800 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 shadow-xl shadow-slate-200 disabled:opacity-50"
                         style={{ borderRadius: "12px" }}
                     >
                         {loading ? (

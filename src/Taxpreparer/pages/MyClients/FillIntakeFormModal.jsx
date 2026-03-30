@@ -452,7 +452,7 @@ const FillIntakeFormModal = ({ isOpen, onClose, clientId, clientData, onSuccess 
                 {/* Modal Header */}
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 rounded-t-xl z-20">
                     <h5 className="font-semibold text-xl text-gray-800">Fill Client Intake Form</h5>
-                    <button onClick={onClose} className="text-gray-400 hover:text-red-500 transition-colors" aria-label="Close">
+                    <button onClick={onClose} className="text-gray-400 transition-colors" aria-label="Close">
                         <IoMdClose size={28} />
                     </button>
                 </div>
@@ -917,7 +917,7 @@ const FillIntakeFormModal = ({ isOpen, onClose, clientId, clientData, onSuccess 
                 <div className="p-4 border-t border-gray-100 bg-white rounded-b-xl flex justify-end gap-3 z-20">
                     <button
                         onClick={onClose}
-                        className="px-5 py-2.5 border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition"
+                        className="px-5 py-2.5 border border-gray-300 text-gray-700 font-medium transition"
                         style={{ borderRadius: '12px' }}
                     >
                         Cancel
@@ -925,7 +925,7 @@ const FillIntakeFormModal = ({ isOpen, onClose, clientId, clientData, onSuccess 
                     <button
                         onClick={handleSubmit}
                         disabled={loading}
-                        className="px-5 py-2.5 bg-[#3B4A66] text-white font-medium hover:bg-[#2c374d] transition flex items-center gap-2"
+                        className="px-5 py-2.5 bg-[#3B4A66] text-white font-medium transition flex items-center gap-2"
                         style={{ borderRadius: '12px' }}
                     >
                         {loading ? 'Submitting...' : 'Submit Form'}

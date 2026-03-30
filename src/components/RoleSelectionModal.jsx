@@ -451,11 +451,11 @@ export default function RoleSelectionModal({ roles, allFirms, onSelect, onClose 
                                 ${!selectedRole || loading
                                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
                                     : loginType === 'firm'
-                                        ? 'bg-gradient-to-r from-[#3AD6F2] to-[#2BB1CC] text-white hover:shadow-xl hover:shadow-[#3AD6F2]/30 hover:-translate-y-0.5 border border-[#3AD6F2]/20'
+                                        ? 'bg-gradient-to-r from-[#3AD6F2] to-[#2BB1CC] text-white border border-[#3AD6F2]/20'
                                         : loginType === 'platform_admin'
-                                            ? 'bg-gradient-to-r from-purple-500 to-purple-700 text-white hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 border border-purple-400/20'
-                                            : 'bg-gradient-to-r from-[#F56D2D] to-[#E05A20] text-white hover:shadow-xl hover:shadow-[#F56D2D]/30 hover:-translate-y-0.5 border border-[#F56D2D]/20'
-                                }`}
+                                            ? 'bg-gradient-to-r from-purple-500 to-purple-700 text-white border border-purple-400/20'
+                                            : 'bg-gradient-to-r from-[#F56D2D] to-[#E05A20] text-white border border-[#F56D2D]/20'
+                               }`}
                         >
                             {loading ? (
                                 <>

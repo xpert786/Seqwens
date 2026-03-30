@@ -901,7 +901,7 @@ export default function Appointments() {
         <div className="alert alert-danger mb-4" role="alert">
           <strong>Error:</strong> {error}
           <button
-            className="btn  btn-outline-danger ms-2"
+            className="btn btn-outline-danger ms-2"
             onClick={fetchAppointments}
           >
             Retry
@@ -1071,7 +1071,7 @@ export default function Appointments() {
                             </button>
 
                             <button
-                              className="btn  ms-2"
+                              className="btn ms-2"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 cancelAppointment(appt.id);

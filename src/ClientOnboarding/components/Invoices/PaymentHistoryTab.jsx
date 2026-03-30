@@ -189,7 +189,7 @@ const InvoicePopupWithPDF = ({ payments = [] }) => {
                 <div className="d-flex align-items-end flex-column">
                   <div className="d-flex mt-auto">
                     <button
-                      className="btn  me-2 d-flex align-items-center justify-content-center"
+                      className="btn me-2 d-flex align-items-center justify-content-center"
                       style={{
                         backgroundColor: '#ffffff',
                         borderRadius: '4px',

@@ -162,13 +162,12 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-red-700 font-[BasisGrotesquePro]">Failed to load invoice</p>
                 <p className="text-xs text-red-600 font-[BasisGrotesquePro] mt-0.5">{error}</p>
-                <button onClick={fetchInvoiceDetails} className="mt-2 text-xs font-bold text-red-700 underline underline-offset-2 hover:text-red-800">
-                  Try again
+                <button onClick={fetchInvoiceDetails} className="mt-2 text-xs font-bold text-red-700 underline underline-offset-2 Try again
                 </button>
               </div>
             </div>
-            <div className="mt-5 flex justify-end">
-              <button onClick={onClose} className="px-5 py-2.5 bg-gray-100 text-gray-700 !rounded-xl text-sm font-semibold hover:bg-gray-200 transition-all font-[BasisGrotesquePro]">
+           <div className="mt-5 flex justify-end">
+              <button onClick={onClose} className="px-5 py-2.5 bg-gray-100 text-gray-700 !rounded-xl text-sm font-semibold transition-all font-[BasisGrotesquePro]">
                 Close
               </button>
             </div>
@@ -203,7 +202,7 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
               </div>
               <button
                 onClick={onClose}
-                className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 !rounded-xl transition-all ml-2 flex-shrink-0"
+                className="w-9 h-9 flex items-center justify-center text-gray-400 !rounded-xl transition-all ml-2 flex-shrink-0"
               >
                 <FiX size={18} />
               </button>
@@ -434,7 +433,7 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
               <div className="flex items-center gap-3 ml-auto">
                 <button
                   onClick={onClose}
-                  className="px-5 py-2.5 bg-white border border-[#E8F0FF] !rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all font-[BasisGrotesquePro] active:scale-95"
+                  className="px-5 py-2.5 bg-white border border-[#E8F0FF] !rounded-xl text-sm font-semibold text-gray-600 transition-all font-[BasisGrotesquePro] active:scale-95"
                 >
                   Close
                 </button>

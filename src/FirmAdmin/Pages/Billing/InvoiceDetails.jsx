@@ -443,7 +443,7 @@ export default function InvoiceDetails() {
           <p className="text-red-600 font-[BasisGrotesquePro]">{error}</p>
           <button
             onClick={fetchInvoiceDetails}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-[BasisGrotesquePro]"
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg font-[BasisGrotesquePro]"
           >
             Retry
           </button>
@@ -502,7 +502,7 @@ export default function InvoiceDetails() {
             </button>
             <button
               onClick={handleDownloadPDF}
-              className="flex-1 sm:flex-none px-4 py-2.5 !rounded-xl !border border-gray-200 bg-white flex items-center justify-center gap-2 hover:bg-gray-50 transition shadow-sm text-sm font-bold font-[BasisGrotesquePro]"
+              className="flex-1 sm:flex-none px-4 py-2.5 !rounded-xl !border border-gray-200 bg-white flex items-center justify-center gap-2 transition shadow-sm text-sm font-bold font-[BasisGrotesquePro]"
             >
               {getIcon('download')}
               <span>PDF</span>

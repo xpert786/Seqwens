@@ -501,7 +501,7 @@ export default function DocumentsTab({ client }) {
               <button
                 onClick={handleViewPDF}
                 disabled={viewingPDF || downloadingPDF}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#3AD6F2] bg-white border border-[#3AD6F2] rounded-lg hover:bg-blue-50 transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#3AD6F2] bg-white border border-[#3AD6F2] rounded-lg transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ borderRadius: '12px' }}
               >
                 {viewingPDF ? (
@@ -523,7 +523,7 @@ export default function DocumentsTab({ client }) {
             <button
               onClick={handleDownloadPDF}
               disabled={downloadingPDF || viewingPDF}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-lg transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ borderRadius: '12px' }}
             >
               {downloadingPDF ? (
@@ -756,7 +756,7 @@ export default function DocumentsTab({ client }) {
                               onClick={(e) => e.stopPropagation()}
                             >
                               <button
-                                className="btn  w-100 text-start d-flex align-items-center gap-2"
+                                className="btn w-100 text-start d-flex align-items-center gap-2"
                                 style={{ border: 'none', borderRadius: 0 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -766,7 +766,7 @@ export default function DocumentsTab({ client }) {
                                 <FaEdit /> Rename
                               </button>
                               <button
-                                className="btn  w-100 text-start d-flex align-items-center gap-2 text-danger"
+                                className="btn w-100 text-start d-flex align-items-center gap-2 text-danger"
                                 style={{ border: 'none', borderRadius: 0 }}
                                 onClick={(e) => {
                                   e.stopPropagation();

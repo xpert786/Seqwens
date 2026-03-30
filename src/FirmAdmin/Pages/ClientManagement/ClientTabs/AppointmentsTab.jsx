@@ -679,7 +679,7 @@ export default function AppointmentsTab({ client }) {
               <button
                 onClick={handleScheduleAppointment}
                 disabled={submitting}
-                className="px-4 py-2 text-sm font-medium text-white !rounded-lg hover:opacity-90 transition font-[BasisGrotesquePro] disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-white !rounded-lg transition font-[BasisGrotesquePro] disabled:opacity-50"
                 style={{ backgroundColor: '#178109' }}
               >
                 {submitting ? 'Creating...' : 'Create Appointment'}

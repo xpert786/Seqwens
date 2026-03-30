@@ -20,13 +20,12 @@ const DuplicateModal = ({ template, onClose, onSubmit }) => {
                 <div className="flex justify-end gap-3">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] !rounded-[10px] hover:bg-gray-50"
-                    >
+                        className="px-4 py-2 text-sm text-[#1F2A55] border border-[#E8F0FF] !rounded-[10px]" >
                         Cancel
                     </button>
                     <button
                         onClick={() => onSubmit(newName)}
-                        className="px-4 py-2 text-sm bg-[#F56D2D] text-white !rounded-[10px] hover:bg-[#E55A1D]"
+                       className="px-4 py-2 text-sm bg-[#F56D2D] text-white !rounded-[10px] hover:bg-[#E55A1D]"
                     >
                         Duplicate
                     </button>

@@ -28,13 +28,13 @@ export default function DownloadModal({ isOpen, onClose }) {
         <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-[BasisGrotesquePro]"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg font-[BasisGrotesquePro]"
           >
             Cancel
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-orange-500 rounded-lg hover:bg-orange-600 font-[BasisGrotesquePro]"
+            className="px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-orange-500 rounded-lg font-[BasisGrotesquePro]"
           >
             Download
           </button>

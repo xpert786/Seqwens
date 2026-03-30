@@ -415,7 +415,7 @@ export default function SubdomainTab() {
             <button
               onClick={handleApplyColors}
               disabled={savingColors}
-              className="w-full px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full px-6 py-2 bg-[#F56D2D] text-white !rounded-lg transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {savingColors ? (
                 <>
@@ -548,7 +548,7 @@ export default function SubdomainTab() {
               <button
                 onClick={handleApplyAssets}
                 disabled={savingAssets || (!logoFile && !faviconFile)}
-                className="w-full mt-4 px-6 py-2 bg-[#F56D2D] text-white !rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full mt-4 px-6 py-2 bg-[#F56D2D] text-white !rounded-lg transition-colors font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {savingAssets ? (
                   <>

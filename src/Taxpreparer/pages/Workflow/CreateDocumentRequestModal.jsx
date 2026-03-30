@@ -152,7 +152,7 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
           </div>
           <button
             onClick={handleClose}
-            className="flex items-center justify-center bg-blue-50 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors shadow-sm ml-4"
+            className="flex items-center justify-center bg-blue-50 text-gray-400 transition-colors shadow-sm ml-4"
             disabled={loading}
             style={{
               width: '32px',
@@ -241,7 +241,7 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 text-sm bg-white border border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition font-[BasisGrotesquePro]"
+              className="px-4 py-2 text-sm bg-white border border-gray-300 text-gray-700 font-bold transition font-[BasisGrotesquePro]"
               style={{ borderRadius: '8px' }}
               disabled={loading}
             >
@@ -250,7 +250,7 @@ const CreateDocumentRequestModal = ({ workflow, onClose, onSuccess }) => {
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 text-sm bg-blue-600 text-white font-bold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
+              className="px-4 py-2 text-sm bg-blue-600 text-white font-bold transition disabled:opacity-50 disabled:cursor-not-allowed font-[BasisGrotesquePro]"
               style={{ borderRadius: '8px' }}
             >
               {loading ? 'Creating...' : 'Create Request'}

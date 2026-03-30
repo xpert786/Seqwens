@@ -185,7 +185,7 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
           <p className="text-gray-500">Workflow instance not found</p>
           <button
             onClick={handleBack}
-            className="mt-4 px-4 py-2 text-sm font-medium text-white bg-[#3AD6F2] rounded-lg hover:bg-[#00C0C6] transition-colors"
+            className="mt-4 px-4 py-2 text-sm font-medium text-white bg-[#3AD6F2] rounded-lg transition-colors"
             style={{ borderRadius: '8px' }}
           >
             Back to Workflows
@@ -212,7 +212,7 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
             <div className="flex-1 min-w-0">
               <button
                 onClick={handleBack}
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-2 font-[BasisGrotesquePro]"
+                className="flex items-center gap-2 text-sm text-gray-600 mb-2 font-[BasisGrotesquePro]"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -245,7 +245,7 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
               <div className="flex-shrink-0 lg:ml-4">
                 <button
                   onClick={handleDeleteClick}
-                  className="w-full lg:w-auto px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors font-[BasisGrotesquePro]"
+                  className="w-full lg:w-auto px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg transition-colors font-[BasisGrotesquePro]"
                   style={{ borderRadius: '8px' }}
                 >
                   Delete

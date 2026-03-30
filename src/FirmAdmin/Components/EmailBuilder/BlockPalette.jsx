@@ -87,7 +87,7 @@ const BlockPalette = ({ onAddBlock }) => {
                 {BLOCK_TYPES.map((blockType) => (
                     <button
                         key={blockType.type}
-                        className="flex lg:flex-row flex-col items-center gap-3 p-3 bg-white border-2 border-[#e8f0ff] !rounded-[12px] cursor-pointer transition-all duration-200 text-left w-full hover:bg-[#f3f6fd] hover:border-[#3ad6f2] hover:-translate-y-px hover:shadow-[0_2px_8px_rgba(58,214,242,0.2)] active:translate-y-0"
+                        className="flex lg:flex-row flex-col items-center gap-3 p-3 bg-white border-2 border-[#e8f0ff] !rounded-[12px] cursor-pointer transition-all duration-200 text-left w-full active:translate-y-0"
                         onClick={() => onAddBlock(blockType.type)}
                         title={blockType.description}
                     >

@@ -459,7 +459,7 @@ export default function BillingManagement() {
           {!advancedReportingEnabled && activeTab === "invoices" && (
             <button
               onClick={exportInvoicesToPDF}
-              className="flex-1 sm:flex-none px-4 py-2 !rounded-lg !border border-gray-300 bg-white flex items-center justify-center gap-2 hover:bg-gray-50 transition text-sm sm:text-base font-[BasisGrotesquePro]"
+              className="flex-1 sm:flex-none px-4 py-2 !rounded-lg !border border-gray-300 bg-white flex items-center justify-center gap-2 transition text-sm sm:text-base font-[BasisGrotesquePro]"
             >
               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -680,7 +680,7 @@ export default function BillingManagement() {
                             </td>
                             <td className="py-4 px-4 text-sm text-gray-500 font-[BasisGrotesquePro]">{dueDate}</td>
                             <td className="py-4 px-4 text-right">
-                              <button className="p-2 hover:bg-white !rounded-lg text-[#3AD6F2] transition-colors shadow-sm">
+                              <button className="p-2 !rounded-lg text-[#3AD6F2] transition-colors shadow-sm">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                               </button>
                             </td>

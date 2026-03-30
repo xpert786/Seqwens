@@ -256,7 +256,7 @@ export default function RoleRequests() {
             <p className="text-sm mt-1">{error}</p>
             <button
               onClick={fetchRoleRequests}
-              className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+              className="mt-3 px-4 py-2 bg-red-600 text-white rounded transition-colors"
             >
               Retry
             </button>

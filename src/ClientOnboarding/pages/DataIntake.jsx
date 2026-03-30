@@ -2991,7 +2991,7 @@ export default function DataIntakeForm({ targetClientId }) {
                         Dependent #{index + 1}
                       </h3>
                       <button
-                        className="btn  p-0"
+                        className="btn p-0"
                         onClick={() => handleRemoveDependent(index)}
                         title="Remove"
                         style={{
