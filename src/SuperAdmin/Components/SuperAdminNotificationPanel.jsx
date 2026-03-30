@@ -358,13 +358,13 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
         right: "20px",
         width: "400px",
         maxHeight: "calc(100vh - 80px)",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: "var(--sa-bg-card)",
         borderRadius: "12px",
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
         zIndex: 1050,
         display: "flex",
         flexDirection: "column",
-        border: "1px solid #E5E7EB",
+        border: "1px solid var(--sa-border-color)",
         paddingBottom: "16px",
       }}
     >
@@ -372,14 +372,14 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
       <div
         className="d-flex justify-content-between align-items-center p-3"
         style={{
-          borderBottom: "1px solid #E5E7EB",
+          borderBottom: "1px solid var(--sa-border-color)",
         }}
       >
         <div>
           <h6
             className="mb-0"
             style={{
-              color: "#3B4A66",
+              color: "var(--sa-text-primary)",
               fontSize: "18px",
               fontWeight: "600",
               fontFamily: "BasisGrotesquePro",
@@ -391,7 +391,7 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
             <p
               className="mb-0 mt-1"
               style={{
-                color: "#6B7280",
+                color: "var(--sa-text-secondary)",
                 fontSize: "12px",
                 fontFamily: "BasisGrotesquePro",
               }}
@@ -424,7 +424,7 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
             style={{
               backgroundColor: "transparent",
               border: "none",
-              color: "#6B7280",
+              color: "var(--sa-text-secondary)",
               padding: "4px",
             }}
           >
@@ -457,7 +457,7 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
           </div>
         ) : filteredNotifications.length === 0 ? (
           <div className="text-center py-5">
-            <p style={{ color: "#4B5563", fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
+            <p style={{ color: "var(--sa-text-secondary)", fontSize: "14px", fontFamily: "BasisGrotesquePro" }}>
               No notifications found
             </p>
           </div>
@@ -468,10 +468,8 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
                 key={notification.id}
                 className="d-flex align-items-start gap-2 p-2 rounded mb-2"
                 style={{
-                  backgroundColor: notification.is_read ? "#FFFFFF" : "#FFF4E6",
-                  border: notification.is_read
-                    ? "1px solid #E5E7EB"
-                    : "1px solid #F56D2D",
+                  backgroundColor: notification.is_read ? "var(--sa-bg-card)" : "var(--sa-bg-secondary)",
+                  border: notification.is_read ? "1px solid var(--sa-border-color)" : "1px solid #F56D2D",
                   cursor: "pointer",
                   transition: "all 0.2s",
                 }}
@@ -499,7 +497,7 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
                       <h6
                         className="mb-1"
                         style={{
-                          color: "#3B4A66",
+                          color: "var(--sa-text-primary)",
                           fontSize: "14px",
                           fontWeight: "500",
                           fontFamily: "BasisGrotesquePro",
@@ -510,7 +508,7 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
                       <p
                         className="mb-0"
                         style={{
-                          color: "#4B5563",
+                          color: "var(--sa-text-secondary)",
                           fontSize: "12px",
                           fontFamily: "BasisGrotesquePro",
                           lineHeight: "1.4",
@@ -535,7 +533,7 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
                   <div className="d-flex justify-content-between align-items-center mt-1">
                     <span
                       style={{
-                        color: "#6B7280",
+                        color: "var(--sa-text-secondary)",
                         fontSize: "11px",
                         fontFamily: "BasisGrotesquePro",
                       }}
@@ -569,7 +567,7 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
         <div
           className="text-center p-2"
           style={{
-            borderTop: "1px solid #E5E7EB",
+            borderTop: "1px solid var(--sa-border-color)",
           }}
         >
           <button
@@ -599,7 +597,7 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
         <div
           className="text-center p-2"
           style={{
-            borderTop: "1px solid #E5E7EB",
+            borderTop: "1px solid var(--sa-border-color)",
           }}
         >
           <button
@@ -629,7 +627,7 @@ const SuperAdminNotificationPanel = ({ onClose, onChange }) => {
         <div
           className="text-center p-2"
           style={{
-            borderTop: "1px solid #E5E7EB",
+            borderTop: "1px solid var(--sa-border-color)",
           }}
         >
           <button

@@ -410,15 +410,15 @@ export default function StaffDetails() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="bg-white rounded-xl border border-gray-200 p-2 mb-6 overflow-x-auto custom-scrollbar">
-        <div className="flex items-center gap-2 min-w-max">
+      <div className="inline-block bg-white rounded-xl border border-gray-200 p-2 mb-6 overflow-x-auto custom-scrollbar">
+        <div className="flex items-center gap-2 w-fit">
           {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 !rounded-lg text-sm font-medium transition font-[BasisGrotesquePro] whitespace-nowrap ${activeTab === tab
-                ? 'bg-[#3AD6F2] text-white'
-                : 'text-gray-700 hover:bg-gray-50'
+                  ? 'bg-[#3AD6F2] text-white'
+                  : 'text-gray-700 hover:bg-gray-50'
                 }`}
             >
               {tab}

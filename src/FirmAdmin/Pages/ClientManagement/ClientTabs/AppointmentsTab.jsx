@@ -535,7 +535,7 @@ export default function AppointmentsTab({ client }) {
             }
           }}
         >
-          <div className="bg-white rounded-lg !border border-[#E8F0FF] w-full max-w-xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg !border border-[#E8F0FF] w-full max-w-xl max-h-[75vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-start justify-between p-6 border-b border-[#E8F0FF]">
               <div>

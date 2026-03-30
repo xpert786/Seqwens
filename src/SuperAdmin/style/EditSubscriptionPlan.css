@@ -1,3 +1,27 @@
+/* CSS Variables for Super Admin Theme */
+:root {
+  --sa-bg-primary: #ffffff;
+  --sa-bg-card: #ffffff;
+  --sa-bg-secondary: #f3f4f6;
+  --sa-bg-active: #e5e7eb;
+  --sa-bg-sidebar: #f9fafb;
+  --sa-text-primary: #111827;
+  --sa-text-secondary: #6b7280;
+  --sa-border-color: #e5e7eb;
+}
+
+/* Dark mode CSS variables */
+.dark-mode {
+  --sa-bg-primary: #111827;
+  --sa-bg-card: #1f2937;
+  --sa-bg-secondary: #374151;
+  --sa-bg-active: #4b5563;
+  --sa-bg-sidebar: #1f2937;
+  --sa-text-primary: #f9fafb;
+  --sa-text-secondary: #d1d5db;
+  --sa-border-color: #4b5563;
+}
+
 @media (max-width: 767px) {
 
 

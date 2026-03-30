@@ -31,6 +31,8 @@ export default function LogsAndBackups() {
     const [selectedLog, setSelectedLog] = useState(null);
     const [showLogModal, setShowLogModal] = useState(false);
     const [submittingBackup, setSubmittingBackup] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [backupToDelete, setBackupToDelete] = useState(null);
 
     // Fetch audit logs from API
     useEffect(() => {
@@ -212,16 +214,24 @@ export default function LogsAndBackups() {
     };
 
     const handleDeleteBackup = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this backup?')) return;
+        setBackupToDelete(id);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDeleteBackup = async () => {
+        if (!backupToDelete) return;
 
         try {
-            const response = await superAdminAPI.deleteBackup(id);
+            const response = await superAdminAPI.deleteBackup(backupToDelete);
             if (response.success) {
                 toast.success('Backup deleted successfully', superToastOptions);
                 fetchBackups();
             }
         } catch (err) {
             toast.error(handleAPIError(err), superToastOptions);
+        } finally {
+            setShowDeleteModal(false);
+            setBackupToDelete(null);
         }
     };
 
@@ -324,7 +334,7 @@ export default function LogsAndBackups() {
     return (
         <div className="logs-backups-container min-h-screen">
             {/* System Logs Section */}
-            <div className="bg-white border border-[#E8F0FF] rounded-lg p-6 mb-6">
+            <div className="bg-[var(--sa-bg-card)] border border-[var(--sa-border-color)] rounded-lg p-6 mb-6">
                 <div className="mb-6">
                     <h3 className="text-gray-800 text-xl font-semibold font-[BasisGrotesquePro] mb-2">
                         System Logs
@@ -391,11 +401,11 @@ export default function LogsAndBackups() {
                 <div className="space-y-3">
                     {/* Header */}
                     <div className="grid gap-4 py-3 px-4 bg-gray-50 rounded-lg items-center" style={{ gridTemplateColumns: '2fr 1fr 1.5fr 2.5fr 60px' }}>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Timestamp</div>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Level</div>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Service</div>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Message</div>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Actions</div>
+                        <div className="text-sm font-medium text-[var(--sa-text-primary)] font-[BasisGrotesquePro]">Timestamp</div>
+                        <div className="text-sm font-medium text-[var(--sa-text-primary)] font-[BasisGrotesquePro]">Level</div>
+                        <div className="text-sm font-medium text-[var(--sa-text-primary)] font-[BasisGrotesquePro]">Service</div>
+                        <div className="text-sm font-medium text-[var(--sa-text-primary)] font-[BasisGrotesquePro]">Message</div>
+                        <div className="text-sm font-medium text-[var(--sa-text-primary)] font-[BasisGrotesquePro]">Actions</div>
                     </div>
 
                     {/* Loading State */}
@@ -415,8 +425,8 @@ export default function LogsAndBackups() {
 
                     {/* Rows */}
                     {!loading && systemLogs.map((log, index) => (
-                        <div key={index} className="grid gap-4 py-3 px-4 border border-[#E8F0FF] hover:bg-gray-50 rounded-lg items-center" style={{ gridTemplateColumns: '2fr 1fr 1.5fr 2.5fr 60px' }}>
-                            <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro]">{log.timestamp}</div>
+                        <div key={index} className="grid gap-4 py-3 px-4 border border-[var(--sa-border-color)] hover:bg-[var(--sa-bg-secondary)] rounded-lg items-center" style={{ gridTemplateColumns: '2fr 1fr 1.5fr 2.5fr 60px' }}>
+                            <div className="text-sm text-[var(--sa-text-primary)] font-[BasisGrotesquePro]">{log.timestamp}</div>
                             <div>
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border-2 ${log.borderColor} ${log.textColor}`}>
                                     {log.level}
@@ -472,7 +482,7 @@ export default function LogsAndBackups() {
             </div>
 
             {/* Backup Management Section */}
-            <div className="bg-white border border-[#E8F0FF] rounded-lg p-6">
+            <div className="bg-[var(--sa-bg-card)] border border-[var(--sa-border-color)] rounded-lg p-6">
                 <div className="mb-6">
                     <h3 className="text-gray-800 text-xl font-semibold font-[BasisGrotesquePro] mb-2">
                         Backup Management
@@ -544,11 +554,11 @@ export default function LogsAndBackups() {
 
                     {/* Header */}
                     <div className="grid gap-4 py-3 px-4 bg-gray-50 rounded-lg backup-header items-center" style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr 80px' }}>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Date</div>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Size</div>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Status</div>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Duration</div>
-                        <div className="text-sm font-medium text-[#3B4A66] font-[BasisGrotesquePro]">Actions</div>
+                        <div className="text-sm font-medium text-[var(--sa-text-primary)] font-[BasisGrotesquePro]">Date</div>
+                        <div className="text-sm font-medium text-[var(--sa-text-primary)] font-[BasisGrotesquePro]">Size</div>
+                        <div className="text-sm font-medium text-[var(--sa-text-primary)] font-[BasisGrotesquePro]">Status</div>
+                        <div className="text-sm font-medium text-[var(--sa-text-primary)] font-[BasisGrotesquePro]">Duration</div>
+                        <div className="text-sm font-medium text-[var(--sa-text-primary)] font-[BasisGrotesquePro]">Actions</div>
                     </div>
 
                     {/* Rows */}
@@ -563,14 +573,14 @@ export default function LogsAndBackups() {
                     ) : backups.map((backup, index) => (
                         <div
                             key={index}
-                            className="grid gap-4 py-3 px-4 border border-[#E8F0FF] hover:bg-gray-50 rounded-lg backup-row items-center"
+                            className="grid gap-4 py-3 px-4 border border-[var(--sa-border-color)] hover:bg-[var(--sa-bg-secondary)] rounded-lg backup-row items-center"
                             style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr 80px' }}
                         >
-                            <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] backup-cell">
+                            <div className="text-sm text-[var(--sa-text-primary)] font-[BasisGrotesquePro] backup-cell">
                                 {new Date(backup.created_at).toLocaleString()}
                             </div>
 
-                            <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] backup-cell">
+                            <div className="text-sm text-[var(--sa-text-primary)] font-[BasisGrotesquePro] backup-cell">
                                 {backup.file_size_human}
                             </div>
 
@@ -581,7 +591,7 @@ export default function LogsAndBackups() {
                                         border: "2px solid",
                                         borderColor: backup.status === "completed" ? "#10B981" : backup.status === "failed" ? "#EF4444" : "#FBBF24",
                                         color: backup.status === "completed" ? "#10B981" : backup.status === "failed" ? "#EF4444" : "#FBBF24",
-                                        backgroundColor: "white",
+                                        backgroundColor: "var(--sa-bg-card)",
                                         textTransform: "capitalize"
                                     }}
                                 >
@@ -589,7 +599,7 @@ export default function LogsAndBackups() {
                                 </span>
                             </div>
 
-                            <div className="text-sm text-[#3B4A66] font-[BasisGrotesquePro] backup-cell">
+                            <div className="text-sm text-[var(--sa-text-primary)] font-[BasisGrotesquePro] backup-cell">
                                 {backup.duration_human}
                             </div>
 
@@ -629,11 +639,11 @@ export default function LogsAndBackups() {
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-xs text-gray-500 font-semibold uppercase">Timestamp</label>
-                                    <p className="text-sm text-[#3B4A66]">{selectedLog.timestamp}</p>
+                                    <label className="text-xs text-[var(--sa-text-secondary)] font-semibold uppercase">Timestamp</label>
+                                    <p className="text-sm text-[var(--sa-text-primary)]">{selectedLog.timestamp}</p>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-gray-500 font-semibold uppercase">Level</label>
+                                    <label className="text-xs text-[var(--sa-text-secondary)] font-semibold uppercase">Level</label>
                                     <div>
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border-2 ${selectedLog.borderColor} ${selectedLog.textColor}`}>
                                             {selectedLog.level}
@@ -641,32 +651,32 @@ export default function LogsAndBackups() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-gray-500 font-semibold uppercase">Service</label>
-                                    <p className="text-sm text-[#3B4A66]">{selectedLog.service}</p>
+                                    <label className="text-xs text-[var(--sa-text-secondary)] font-semibold uppercase">Service</label>
+                                    <p className="text-sm text-[var(--sa-text-primary)]">{selectedLog.service}</p>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-gray-500 font-semibold uppercase">Status</label>
-                                    <p className="text-sm text-[#3B4A66] capitalize">{selectedLog.status || 'N/A'}</p>
+                                    <label className="text-xs text-[var(--sa-text-secondary)] font-semibold uppercase">Status</label>
+                                    <p className="text-sm text-[var(--sa-text-primary)] capitalize">{selectedLog.status || 'N/A'}</p>
                                 </div>
                             </div>
 
-                            <hr className="border-[#E8F0FF]" />
+                            <hr className="border-[var(--sa-border-color)]" />
 
                             <div>
-                                <label className="text-xs text-gray-500 font-semibold uppercase">Message</label>
-                                <p className="text-sm text-[#3B4A66] bg-gray-50 p-3 rounded-lg border border-[#E8F0FF]">{selectedLog.message}</p>
+                                <label className="text-xs text-[var(--sa-text-secondary)] font-semibold uppercase">Message</label>
+                                <p className="text-sm text-[var(--sa-text-primary)] bg-[var(--sa-bg-secondary)] p-3 rounded-lg border border-[var(--sa-border-color)]">{selectedLog.message}</p>
                             </div>
 
                             {selectedLog.user && (
                                 <div>
-                                    <label className="text-xs text-gray-500 font-semibold uppercase">Triggered By</label>
-                                    <div className="flex items-center gap-3 mt-1 bg-gray-50 p-2 rounded-lg border border-[#E8F0FF]">
-                                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs">
+                                    <label className="text-xs text-[var(--sa-text-secondary)] font-semibold uppercase">Triggered By</label>
+                                    <div className="flex items-center gap-3 mt-1 bg-[var(--sa-bg-secondary)] p-2 rounded-lg border border-[var(--sa-border-color)]">
+                                        <div className="w-8 h-8 bg-[var(--sa-bg-active)] rounded-full flex items-center justify-center text-[var(--sa-text-primary)] font-bold text-xs">
                                             {selectedLog.user.name?.charAt(0) || 'U'}
                                         </div>
                                         <div>
-                                            <p className="text-sm font-semibold text-[#3B4A66] m-0">{selectedLog.user.name}</p>
-                                            <p className="text-xs text-gray-500 m-0">{selectedLog.user.email} · {selectedLog.user.role}</p>
+                                            <p className="text-sm font-semibold text-[var(--sa-text-primary)] m-0">{selectedLog.user.name}</p>
+                                            <p className="text-xs text-[var(--sa-text-secondary)] m-0">{selectedLog.user.email} · {selectedLog.user.role}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -674,8 +684,8 @@ export default function LogsAndBackups() {
 
                             {(selectedLog.related_object_type || selectedLog.related_object_id) && (
                                 <div>
-                                    <label className="text-xs text-gray-500 font-semibold uppercase">Related Object</label>
-                                    <p className="text-sm text-[#3B4A66]">
+                                    <label className="text-xs text-[var(--sa-text-secondary)] font-semibold uppercase">Related Object</label>
+                                    <p className="text-sm text-[var(--sa-text-primary)]">
                                         {selectedLog.related_object_type} (ID: {selectedLog.related_object_id})
                                     </p>
                                 </div>
@@ -696,6 +706,84 @@ export default function LogsAndBackups() {
                     <Button variant="secondary" onClick={() => setShowLogModal(false)}>
                         Close
                     </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+                <Modal.Header closeButton className="border-0 pb-0">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <Modal.Title className="mb-1" style={{ fontFamily: "BasisGrotesquePro", fontSize: "1.25rem", fontWeight: "600" }}>
+                                Delete Backup
+                            </Modal.Title>
+                            <p className="text-sm text-gray-500 m-0" style={{ fontFamily: "BasisGrotesquePro" }}>
+                                This action is permanent
+                            </p>
+                        </div>
+                    </div>
+                </Modal.Header>
+                <Modal.Body className="font-[BasisGrotesquePro] pt-4">
+                    <div className="space-y-4">
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                            <div className="flex items-start gap-3">
+                                <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <div>
+                                    <p className="text-sm text-amber-800 font-medium mb-1">Important Warning</p>
+                                    <p className="text-sm text-amber-700">
+                                        Deleting this backup will permanently remove all data and cannot be recovered. 
+                                        Make sure you have alternative backups before proceeding.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="text-center py-6">
+                            <p className="text-lg text-[var(--sa-text-primary)] mb-2" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>
+                                Are you sure you want to delete this backup?
+                            </p>
+                            <p className="text-sm text-gray-500">
+                                This action cannot be undone
+                            </p>
+                        </div>
+                    </div>
+                </Modal.Body>
+                <Modal.Footer className="border-0 pt-0">
+                    <div className="flex gap-3 w-full">
+                        <Button 
+                            variant="secondary" 
+                            onClick={() => setShowDeleteModal(false)}
+                            className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 border-0 rounded-lg hover:bg-gray-200 transition-colors"
+                            style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}
+                        >
+                            <div className="flex items-center justify-center gap-2">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Cancel
+                            </div>
+                        </Button>
+                        <Button 
+                            variant="danger" 
+                            onClick={confirmDeleteBackup}
+                            className="flex-1 px-4 py-2.5 bg-red-600 text-white border-0 rounded-lg hover:bg-red-700 transition-colors"
+                            style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}
+                        >
+                            <div className="flex items-center justify-center gap-2">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Delete Backup
+                            </div>
+                        </Button>
+                    </div>
                 </Modal.Footer>
             </Modal>
         </div>

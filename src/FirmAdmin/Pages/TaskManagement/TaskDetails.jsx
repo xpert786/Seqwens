@@ -414,7 +414,7 @@ const TaskDetails = () => {
 
     return (
         <div className="min-h-screen bg-[#F6F7FF] p-3 sm:p-6 taskdetails-main-container">
-            <div className="max-w-7xl mx-auto">
+            <div className="px-4">
                 {/* Back Button */}
                 <div className="mb-6 taskdetails-back-button">
                     <button
@@ -503,7 +503,7 @@ const TaskDetails = () => {
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <div>
+                                    <div className='flex items-center gap-3'>
                                         <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Category</label>
                                         <span className="inline-flex px-4 py-2 text-xs font-bold bg-[#F0F7FF] text-[#007AFF] rounded-xl border border-[#E8F0FF]">
                                             {transformedTaskData.category}

@@ -655,7 +655,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                         style={{
                           border: '1px solid var(--sa-border-color)',
                           color: 'var(--sa-text-primary)',
-                          backgroundColor: '#F3F4F6',
+                          backgroundColor: 'var(--sa-bg-secondary)',
                           cursor: 'not-allowed'
                         }}
                       />
@@ -1061,7 +1061,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                                   <p className="text-xs mt-1" style={{ color: 'var(--sa-text-secondary)' }}>{addon.description}</p>
                                 )}
                                 {(addon.unit_quantity > 0 || addon.unit_type) && (
-                                  <p className="text-[10px] font-semibold mt-1" style={{ color: '#4B5563' }}>
+                                  <p className="text-[10px] font-semibold mt-1" style={{ color: 'var(--sa-text-secondary)' }}>
                                     Includes: {addon.unit_quantity || 1} {addon.unit_type === 'unit' ? 'Units' : addon.unit_type}
                                   </p>
                                 )}
@@ -1072,7 +1072,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                                   type="button" title="Edit"
                                   onClick={() => handleStartEdit(addon)}
                                   className="flex items-center justify-center w-7 h-7 rounded-md hover:bg-blue-50 transition-colors"
-                                  style={{ border: '1px solid #BFDBFE', color: '#3B82F6' }}
+                                  style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                                 >
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -1083,7 +1083,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                                   type="button" title="Delete"
                                   onClick={() => handleDeleteAddon(addon.id, addon.name)}
                                   className="flex items-center justify-center w-7 h-7 rounded-md hover:bg-red-50 transition-colors"
-                                  style={{ border: '1px solid #FCA5A5', color: '#EF4444' }}
+                                  style={{ border: '1px solid var(--sa-border-color)', color: 'var(--sa-text-primary)' }}
                                 >
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <polyline points="3 6 5 6 21 6" />
@@ -1100,14 +1100,14 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                                 <span className="text-[10px] font-medium opacity-60" style={{ color: 'var(--sa-text-primary)' }}>{addon.billing_frequency === 'one_time' ? 'one-time' : addon.billing_frequency === 'yearly' ? 'per year' : 'per month'}</span>
                               </div>
                               <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full" style={{
-                                backgroundColor: addon.scope === 'office' ? 'var(--sa-bg-secondary)' : '#DBEAFE',
-                                color: addon.scope === 'office' ? 'var(--sa-text-primary)' : '#1E40AF',
-                                border: `1px solid ${addon.scope === 'office' ? 'var(--sa-border-color)' : '#93C5FD'}`
+                                backgroundColor: addon.scope === 'office' ? 'var(--sa-bg-secondary)' : 'var(--sa-bg-active)',
+                                color: addon.scope === 'office' ? 'var(--sa-text-primary)' : 'var(--sa-text-primary)',
+                                border: `1px solid ${addon.scope === 'office' ? 'var(--sa-border-color)' : 'var(--sa-border-color)'}`
                               }}>
                                 {addon.scope === 'office' ? 'Per Office' : 'Firm-wide'}
                               </span>
                               {addon.billing_frequency && (
-                                <span className="text-[10px] font-medium" style={{ color: '#9CA3AF' }}>
+                                <span className="text-[10px] font-medium" style={{ color: 'var(--sa-text-secondary)' }}>
                                   {addon.billing_frequency === 'monthly' ? 'Billed Monthly' : addon.billing_frequency === 'yearly' ? 'Billed Yearly' : 'One-Time'}
                                 </span>
                               )}
@@ -1118,7 +1118,7 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                     ))
                 ) : (
                   <div className="md:col-span-2 py-12 text-center bg-[var(--sa-bg-secondary)] rounded-xl border border-dashed border-[var(--sa-border-color)]">
-                    <p className="text-sm font-medium italic" style={{ color: '#9CA3AF' }}>
+                    <p className="text-sm font-medium italic" style={{ color: 'var(--sa-text-secondary)' }}>
                       {selectedAddonCategory === 'all'
                         ? 'No add-ons for this plan yet. Click "New Add-on" to create one.'
                         : selectedAddonCategory === 'none'
@@ -1558,12 +1558,12 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
                 </div>
 
                 {/* Info note */}
-                <div className="flex items-start gap-2 p-3 rounded-xl" style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE' }}>
-                  <svg className="flex-shrink-0 mt-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2">
+                <div className="flex items-start gap-2 p-3 rounded-xl" style={{ backgroundColor: 'var(--sa-bg-secondary)', border: '1px solid var(--sa-border-color)' }}>
+                  <svg className="flex-shrink-0 mt-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--sa-text-primary)" strokeWidth="2">
                     <circle cx="12" cy="12" r="10" />
                     <path d="M12 8v4M12 16h.01" />
                   </svg>
-                  <p className="text-xs" style={{ color: '#1E40AF' }}>
+                  <p className="text-xs" style={{ color: 'var(--sa-text-primary)' }}>
                     This add-on will be created exclusively for the <strong>{activeTab}</strong> plan. Only firms subscribed to this plan will see it.
                   </p>
                 </div>

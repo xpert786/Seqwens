@@ -9,7 +9,7 @@ export default function FirmAdminDataIntakePage() {
 
     return (
         <div className="min-h-screen bg-[#F6F7FF]">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="px-4 sm:px-6 lg:px-8 py-6">
                 <div className="mb-6">
                     <button
                         onClick={() => navigate(-1)}

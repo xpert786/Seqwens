@@ -2198,7 +2198,7 @@ export default function DataIntakeForm({ targetClientId }) {
   };
 
   return (
-    <div className="data-intake-page row g-0 px-3 px-md-4">
+    <div className="data-intake-page row g-0">
       <div className="align-items-center mb-3">
         <h5 className="mb-0 me-3" style={{
           color: "#3B4A66",

@@ -322,7 +322,7 @@ const Notifications = () => {
       <div className="card">
         <div className="card-body" style={{
           padding: "28px",
-          backgroundColor: "white",
+          backgroundColor: "var(--sa-bg-card)",
           borderRadius: "12px",
         }}>
           {/* Header */}
@@ -331,7 +331,7 @@ const Notifications = () => {
               <h5
                 className="mb-1"
                 style={{
-                  color: "#3B4A66",
+                  color: "var(--sa-text-primary)",
                   fontSize: "24px",
                   fontWeight: "500",
                   fontFamily: "BasisGrotesquePro",
@@ -342,7 +342,7 @@ const Notifications = () => {
               <p
                 className="mb-0"
                 style={{
-                  color: "#4B5563",
+                  color: "var(--sa-text-secondary)",
                   fontSize: "14px",
                   fontWeight: "400",
                   fontFamily: "BasisGrotesquePro",
@@ -371,7 +371,7 @@ const Notifications = () => {
           </div>
 
           {/* Tabs */}
-          <div className="d-flex gap-2 mb-4" style={{ borderBottom: "2px solid #E5E7EB" }}>
+          <div className="d-flex gap-2 mb-4" style={{ borderBottom: "2px solid var(--sa-border-color)" }}>
             {TABS.map((tab) => (
               <button
                 key={tab.key}
@@ -381,7 +381,7 @@ const Notifications = () => {
                   backgroundColor: "transparent",
                   border: "none",
                   borderBottom: selectedTab === tab.key ? "2px solid #F56D2D" : "2px solid transparent",
-                  color: selectedTab === tab.key ? "#F56D2D" : "#4B5563",
+                  color: selectedTab === tab.key ? "#F56D2D" : "var(--sa-text-secondary)",
                   fontWeight: selectedTab === tab.key ? "500" : "400",
                   fontSize: "14px",
                   fontFamily: "BasisGrotesquePro",
@@ -416,7 +416,7 @@ const Notifications = () => {
             <>
               {filteredNotifications.length === 0 ? (
                 <div className="text-center py-5">
-                  <p style={{ color: "#4B5563", fontSize: "16px" }}>No notifications found</p>
+                  <p style={{ color: "var(--sa-text-secondary)", fontSize: "16px" }}>No notifications found</p>
                 </div>
               ) : (
                 <div className="d-flex flex-column gap-3">
@@ -424,7 +424,7 @@ const Notifications = () => {
                     <div key={dateGroup}>
                       <h6
                         style={{
-                          color: "#6B7280",
+                          color: "var(--sa-text-secondary)",
                           fontSize: "12px",
                           fontWeight: "600",
                           textTransform: "uppercase",
@@ -439,8 +439,8 @@ const Notifications = () => {
                           key={notification.id}
                           className="d-flex align-items-start gap-3 p-3 rounded-3 mb-2"
                           style={{
-                            backgroundColor: notification.is_read ? "#FFFFFF" : "#FFF4E6",
-                            border: notification.is_read ? "1px solid #E5E7EB" : "1px solid #F56D2D",
+                            backgroundColor: notification.is_read ? "var(--sa-bg-card)" : "var(--sa-bg-secondary)",
+                            border: notification.is_read ? "1px solid var(--sa-border-color)" : "1px solid #F56D2D",
                             cursor: "pointer",
                             transition: "all 0.2s",
                           }}
@@ -467,7 +467,7 @@ const Notifications = () => {
                                 <h6
                                   className="mb-1"
                                   style={{
-                                    color: "#3B4A66",
+                                    color: "var(--sa-text-primary)",
                                     fontSize: "16px",
                                     fontWeight: "500",
                                     fontFamily: "BasisGrotesquePro",
@@ -478,7 +478,7 @@ const Notifications = () => {
                                 <p
                                   className="mb-0"
                                   style={{
-                                    color: "#4B5563",
+                                    color: "var(--sa-text-secondary)",
                                     fontSize: "14px",
                                     fontFamily: "BasisGrotesquePro",
                                   }}
@@ -529,7 +529,7 @@ const Notifications = () => {
                             <div className="d-flex justify-content-between align-items-center mt-2">
                               <span
                                 style={{
-                                  color: "#6B7280",
+                                  color: "var(--sa-text-secondary)",
                                   fontSize: "12px",
                                   fontFamily: "BasisGrotesquePro",
                                 }}
@@ -573,8 +573,8 @@ const Notifications = () => {
                     onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                     disabled={page === 1}
                     style={{
-                      backgroundColor: page === 1 ? "#E5E7EB" : "#F56D2D",
-                      color: page === 1 ? "#9CA3AF" : "#FFFFFF",
+                      backgroundColor: page === 1 ? "var(--sa-bg-secondary)" : "#F56D2D",
+                      color: page === 1 ? "var(--sa-text-secondary)" : "#FFFFFF",
                       border: "none",
                       borderRadius: "6px",
                       padding: "6px 12px",
@@ -583,7 +583,7 @@ const Notifications = () => {
                   >
                     Previous
                   </button>
-                  <span style={{ fontSize: "14px", color: "#4B5563", minWidth: "100px", textAlign: "center" }}>
+                  <span style={{ fontSize: "14px", color: "var(--sa-text-secondary)", minWidth: "100px", textAlign: "center" }}>
                     Page {page} of {totalPages}
                   </span>
                   <button
@@ -591,8 +591,8 @@ const Notifications = () => {
                     onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
                     disabled={page === totalPages}
                     style={{
-                      backgroundColor: page === totalPages ? "#E5E7EB" : "#F56D2D",
-                      color: page === totalPages ? "#9CA3AF" : "#FFFFFF",
+                      backgroundColor: page === totalPages ? "var(--sa-bg-secondary)" : "#F56D2D",
+                      color: page === totalPages ? "var(--sa-text-secondary)" : "#FFFFFF",
                       border: "none",
                       borderRadius: "6px",
                       padding: "6px 12px",
@@ -615,13 +615,13 @@ const Notifications = () => {
             onClick={() => setShowDetailsModal(false)}
           >
             <div
-              className="bg-white rounded-4 p-4"
-              style={{ width: '90%', maxWidth: '600px', maxHeight: '75vh', overflowY: 'auto' }}
+              className="rounded-4 p-4"
+              style={{ width: '90%', maxWidth: '600px', maxHeight: '75vh', overflowY: 'auto', backgroundColor: 'var(--sa-bg-card)' }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
               <div className="d-flex justify-content-between align-items-center mb-4">
-                <h5 className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 600, color: '#3B4A66' }}>
+                <h5 className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 600, color: 'var(--sa-text-primary)' }}>
                   Notification Details
                 </h5>
                 <button
@@ -658,7 +658,7 @@ const Notifications = () => {
                       {getNotificationIcon(selectedNotification.notification_type)}
                     </div>
                     <div>
-                      <h6 className="mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 600, color: '#3B4A66' }}>
+                      <h6 className="mb-1" style={{ fontFamily: 'BasisGrotesquePro', fontWeight: 600, color: 'var(--sa-text-primary)' }}>
                         {selectedNotification.title || "Notification"}
                       </h6>
                       {selectedNotification.priority && (
@@ -680,10 +680,10 @@ const Notifications = () => {
                   {/* Notification Type */}
                   {selectedNotification.notification_type_display && (
                     <div className="mb-3">
-                      <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
+                      <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: 'var(--sa-text-secondary)', fontWeight: 600 }}>
                         TYPE
                       </label>
-                      <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#3B4A66' }}>
+                      <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: 'var(--sa-text-primary)' }}>
                         {selectedNotification.notification_type_display}
                       </p>
                     </div>
@@ -691,10 +691,10 @@ const Notifications = () => {
 
                   {/* Message */}
                   <div className="mb-3">
-                    <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
+                    <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: 'var(--sa-text-secondary)', fontWeight: 600 }}>
                       MESSAGE
                     </label>
-                    <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#3B4A66', lineHeight: '1.6' }}>
+                    <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: 'var(--sa-text-primary)', lineHeight: '1.6' }}>
                       {selectedNotification.message}
                     </p>
                   </div>
@@ -702,16 +702,16 @@ const Notifications = () => {
                   {/* Extra Data */}
                   {selectedNotification.extra_data && Object.keys(selectedNotification.extra_data).length > 0 && (
                     <div className="mb-3">
-                      <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
+                      <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: 'var(--sa-text-secondary)', fontWeight: 600 }}>
                         DETAILS
                       </label>
                       <div className="bg-light rounded p-3" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px' }}>
                         {Object.entries(selectedNotification.extra_data).map(([key, value]) => (
                           <div key={key} className="d-flex justify-content-between mb-2">
-                            <span style={{ color: '#6B7280', textTransform: 'capitalize' }}>
+                            <span style={{ color: 'var(--sa-text-secondary)', textTransform: 'capitalize' }}>
                               {key.replace(/_/g, ' ')}:
                             </span>
-                            <span style={{ color: '#3B4A66', fontWeight: 500 }}>
+                            <span style={{ color: 'var(--sa-text-primary)', fontWeight: 500 }}>
                               {typeof value === 'object' ? JSON.stringify(value) : String(value)}
                             </span>
                           </div>
@@ -723,10 +723,10 @@ const Notifications = () => {
                   {/* Related Object */}
                   {selectedNotification.related_object_type && (
                     <div className="mb-3">
-                      <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
+                      <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: 'var(--sa-text-secondary)', fontWeight: 600 }}>
                         RELATED OBJECT
                       </label>
-                      <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#3B4A66' }}>
+                      <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: 'var(--sa-text-primary)' }}>
                         {selectedNotification.related_object_type}
                         {selectedNotification.related_object_id && ` (ID: ${selectedNotification.related_object_id})`}
                       </p>
@@ -735,20 +735,20 @@ const Notifications = () => {
 
                   {/* Timestamps */}
                   <div className="mb-3">
-                    <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
+                    <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: 'var(--sa-text-secondary)', fontWeight: 600 }}>
                       TIMESTAMP
                     </label>
                     <div className="d-flex flex-column gap-1">
-                      <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#3B4A66' }}>
+                      <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: 'var(--sa-text-primary)' }}>
                         Created: {selectedNotification.created_at ? new Date(selectedNotification.created_at).toLocaleString() : 'N/A'}
                       </p>
                       {selectedNotification.read_at && (
-                        <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: '#3B4A66' }}>
+                        <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '14px', color: 'var(--sa-text-primary)' }}>
                           Read: {new Date(selectedNotification.read_at).toLocaleString()}
                         </p>
                       )}
                       {selectedNotification.time_ago && (
-                        <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280' }}>
+                        <p className="mb-0" style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: 'var(--sa-text-secondary)' }}>
                           {selectedNotification.time_ago}
                         </p>
                       )}
@@ -757,7 +757,7 @@ const Notifications = () => {
 
                   {/* Status */}
                   <div className="mb-4">
-                    <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>
+                    <label style={{ fontFamily: 'BasisGrotesquePro', fontSize: '12px', color: 'var(--sa-text-secondary)', fontWeight: 600 }}>
                       STATUS
                     </label>
                     <div>
@@ -818,9 +818,9 @@ const Notifications = () => {
                       className="btn "
                       onClick={() => setShowDetailsModal(false)}
                       style={{
-                        backgroundColor: "#FFFFFF",
-                        color: "#3B4A66",
-                        border: "1px solid #E5E7EB",
+                        backgroundColor: "var(--sa-bg-primary)",
+                        color: "var(--sa-text-primary)",
+                        border: "1px solid var(--sa-border-color)",
                         borderRadius: "6px",
                         padding: "8px 16px",
                         fontSize: "14px",
