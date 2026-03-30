@@ -720,7 +720,6 @@ const TaskManagementMain = () => {
             )}
           </>
         )}
-
         {/* Loading State */}
         {loading && (
           <div className="flex justify-center items-center py-12 taskmanage-loading">

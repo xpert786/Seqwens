@@ -534,7 +534,8 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                                     {['Configure', 'Preview'].map((tab) => (
                                         <button
                                             key={tab}
-                                            className={`flex-1 py-3 text-sm font-bold transition-all relative ${(!previewMode && tab === 'Configure') || (previewMode && tab === 'Preview') ? 'text-primary' : 'text-gray-400 onClick={() => setPreviewMode(tab === 'Preview')}
+                                            className={`flex-1 py-3 text-sm font-bold transition-all relative ${(!previewMode && tab === 'Configure') || (previewMode && tab === 'Preview') ? 'text-primary' : 'text-gray-400'}`}
+                                            onClick={() => setPreviewMode(tab === 'Preview')}
                                         >
                                             {tab}
                                             {((!previewMode && tab === 'Configure') || (previewMode && tab === 'Preview')) && (
@@ -714,7 +715,8 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
                     {step === 2 && (
                         <button
                             type="button"
-                            className={`px-10 py-3 text-sm font-bold text-white rounded-xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 whitespace-nowrap ${uploading ? 'bg-gray-400 cursor-not-allowed shadow-none' : 'bg-[#F56D2D]  shadow-[#F56D2D]/20 onClick={performUpload}
+                            className={`px-10 py-3 text-sm font-bold text-white rounded-xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 whitespace-nowrap ${uploading ? 'bg-gray-400 cursor-not-allowed shadow-none' : 'bg-[#F56D2D] shadow-[#F56D2D]/20'}`}
+                            onClick={performUpload}
                             disabled={uploading}
                             style={{ fontFamily: 'BasisGrotesquePro' }}
                         >

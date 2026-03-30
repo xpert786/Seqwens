@@ -162,7 +162,8 @@ export default function TaxPreparerInvoiceDetailsModal({ isOpen, onClose, invoic
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-red-700 font-[BasisGrotesquePro]">Failed to load invoice</p>
                 <p className="text-xs text-red-600 font-[BasisGrotesquePro] mt-0.5">{error}</p>
-                <button onClick={fetchInvoiceDetails} className="mt-2 text-xs font-bold text-red-700 underline underline-offset-2 Try again
+                <button onClick={fetchInvoiceDetails} className="mt-2 text-xs font-bold text-red-700 underline underline-offset-2">
+                  Try again
                 </button>
               </div>
             </div>
