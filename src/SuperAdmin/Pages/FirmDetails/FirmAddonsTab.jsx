@@ -366,6 +366,7 @@ export default function FirmAddonsTab({ firmId, firmName }) {
                         onClick={() => handleAddAddon(addon.id)}
                         disabled={addingAddon === addon.id}
                         className="ml-4 px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50"
+                        style={{borderRadius: '10px'}}
                       >
                         {addingAddon === addon.id ? 'Adding...' : 'Add'}
                       </button>
@@ -414,3 +415,4 @@ export default function FirmAddonsTab({ firmId, firmName }) {
     </div>
   );
 }
+
