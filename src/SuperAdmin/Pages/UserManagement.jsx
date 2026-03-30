@@ -217,19 +217,23 @@ export default function UserManagement() {
                 setStatusFilter('All Status');
                 setRoleFilter('All Roles');
               }}
-              className="bg-[var(--sa-bg-card)] border border-[var(--sa-border-color)] rounded-lg px-3 py-1.5 transition-all cursor-pointer hover:shadow-md hover:border-[var(--sa-text-primary)] group"
+              className="rounded-lg px-3 py-1.5 transition-all cursor-pointer hover:shadow-md group"
+              style={{ 
+                backgroundColor: 'var(--sa-bg-card)', 
+                border: '1px solid var(--sa-border-color)'
+              }}
               title="Click to view all"
             >
               <div className="flex justify-between items-center mb-0.5">
-                <p className="text-[10px] text-[var(--sa-text-secondary)] font-medium uppercase tracking-wider">Internal Staff</p>
-                <FiUsers className="text-gray-300" size={14} />
+                <p className="text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--sa-text-secondary) !important' }}>Internal Staff</p>
+                <FiUsers className={`transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-300'}`} size={14} />
               </div>
               <div className="flex items-baseline gap-2">
-                <p className="text-lg font-bold text-[var(--sa-text-primary)] leading-none">{summary.total_internal_staff ?? 0}</p>
-                <span className="text-[10px] text-[var(--sa-text-secondary)] font-normal">Active staff</span>
+                <p className="text-lg font-bold leading-none" style={{ color: 'var(--sa-text-primary) !important' }}>{summary.total_internal_staff ?? 0}</p>
+                <span className="text-[10px] font-normal" style={{ color: 'var(--sa-text-secondary) !important' }}>Active staff</span>
               </div>
               <div className="flex justify-between items-center mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-[9px] font-bold text-[var(--sa-text-primary)]">VIEW ALL</span>
+                <span className="text-[9px] font-bold" style={{ color: 'var(--sa-text-primary)' }}>VIEW ALL</span>
                 {isSuperAdmin && (
                   <button onClick={(e) => { e.stopPropagation(); setShowAddAdminModal(true); }} className="text-[9px] font-bold text-[#F56D2D]">+ ADD</button>
                 )}
@@ -238,15 +242,20 @@ export default function UserManagement() {
 
             <div
               onClick={() => setStatusFilter('Active')}
-              className={`bg-[var(--sa-bg-card)] border ${statusFilter === 'Active' ? 'border-[var(--sa-text-primary)] ring-1 ring-[var(--sa-text-primary)]' : 'border-[var(--sa-border-color)]'} rounded-lg px-3 py-1.5 transition-all cursor-pointer hover:shadow-md hover:border-[var(--sa-text-primary)] group`}
+              className={`border rounded-lg px-3 py-1.5 transition-all cursor-pointer hover:shadow-md group`}
+              style={{ 
+                backgroundColor: 'var(--sa-bg-card)', 
+                border: statusFilter === 'Active' ? '1px solid var(--sa-text-primary)' : '1px solid var(--sa-border-color)',
+                boxShadow: statusFilter === 'Active' ? '0 0 0 1px var(--sa-text-primary)' : 'none'
+              }}
             >
               <div className="flex justify-between items-center mb-0.5">
-                <p className="text-[10px] text-[var(--sa-text-secondary)] font-medium uppercase tracking-wider">Active</p>
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                <p className="text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--sa-text-secondary) !important' }}>Active</p>
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-sm shadow-green-500/50"></div>
               </div>
               <div className="flex items-baseline gap-2">
-                <p className="text-lg font-bold text-[var(--sa-text-primary)] leading-none">{summary.active ?? 0}</p>
-                <span className="text-[10px] text-[var(--sa-text-secondary)] font-normal">Online users</span>
+                <p className="text-lg font-bold leading-none" style={{ color: 'var(--sa-text-primary) !important' }}>{summary.active ?? 0}</p>
+                <span className="text-[10px] font-normal" style={{ color: 'var(--sa-text-secondary) !important' }}>Online users</span>
               </div>
               <div className="mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <span className="text-[9px] font-bold text-[var(--sa-text-primary)]">VIEW ACTIVE</span>
@@ -255,15 +264,20 @@ export default function UserManagement() {
 
             <div
               onClick={() => setStatusFilter('Suspended')}
-              className={`bg-[var(--sa-bg-card)] border ${statusFilter === 'Suspended' ? 'border-[var(--sa-text-primary)] ring-1 ring-[var(--sa-text-primary)]' : 'border-[var(--sa-border-color)]'} rounded-lg px-3 py-1.5 transition-all cursor-pointer hover:shadow-md hover:border-[var(--sa-text-primary)] group`}
+              className={`border rounded-lg px-3 py-1.5 transition-all cursor-pointer hover:shadow-md group`}
+              style={{ 
+                backgroundColor: 'var(--sa-bg-card)', 
+                border: statusFilter === 'Suspended' ? '1px solid var(--sa-text-primary)' : '1px solid var(--sa-border-color)',
+                boxShadow: statusFilter === 'Suspended' ? '0 0 0 1px var(--sa-text-primary)' : 'none'
+              }}
             >
               <div className="flex justify-between items-center mb-0.5">
-                <p className="text-[10px] text-[var(--sa-text-secondary)] font-medium uppercase tracking-wider">Suspended</p>
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                <p className="text-[10px] font-medium uppercase tracking-wider" style={{ color: 'var(--sa-text-secondary) !important' }}>Suspended</p>
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-sm shadow-red-500/50"></div>
               </div>
               <div className="flex items-baseline gap-2">
-                <p className="text-lg font-bold text-[var(--sa-text-primary)] leading-none">{summary.suspended ?? 0}</p>
-                <span className="text-[10px] text-[var(--sa-text-secondary)] font-normal">Awaiting review</span>
+                <p className="text-lg font-bold leading-none" style={{ color: 'var(--sa-text-primary) !important' }}>{summary.suspended ?? 0}</p>
+                <span className="text-[10px] font-normal" style={{ color: 'var(--sa-text-secondary) !important' }}>Awaiting review</span>
               </div>
               <div className="mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <span className="text-[9px] font-bold text-[var(--sa-text-primary)]">REVIEW LIST</span>
@@ -557,16 +571,16 @@ export default function UserManagement() {
                       fontSize: '14px',
                       border: '1px solid var(--sa-border-color)',
                       borderRadius: '8px',
-                      backgroundColor: 'white',
-                      color: '#374151'
+                      backgroundColor: 'var(--sa-bg-card)',
+                      color: 'var(--sa-text-primary)'
                     }}
                     buttonStyle={{
                       border: '1px solid var(--sa-border-color)',
                       borderRadius: '8px 0 0 8px',
-                      backgroundColor: 'white'
+                      backgroundColor: 'var(--sa-bg-card)'
                     }}
-                    inputClass="dark:!bg-gray-700 dark:!border-gray-600 dark:!text-white"
-                    buttonClass="dark:!bg-gray-700 dark:!border-gray-600"
+                    inputClass="!bg-[var(--sa-bg-card)] !text-[var(--sa-text-primary)] !border-[var(--sa-border-color)]"
+                    buttonClass="!bg-[var(--sa-bg-card)] !border-[var(--sa-border-color)]"
                     containerClass="w-full"
                     enableSearch={true}
                     countryCodeEditable={false}

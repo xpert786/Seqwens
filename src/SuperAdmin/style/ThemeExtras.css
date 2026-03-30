@@ -24,7 +24,15 @@
 .dark-mode .bg-gray-50,
 .dark-mode .bg-slate-50,
 .dark-mode .bg-neutral-50,
-.dark-mode .bg-zinc-50 {
+.dark-mode .bg-zinc-50,
+.dark-mode .bg-light,
+.dark-mode [style*="background-color: #ffffff"],
+.dark-mode [style*="background-color: white"],
+.dark-mode [style*="background-color: rgb(255, 255, 255)"],
+.dark-mode .rounded-lg.bg-white,
+.dark-mode .rounded-xl.bg-white,
+.dark-mode .bg-white.rounded-lg,
+.dark-mode .bg-white.rounded-xl {
     background-color: var(--sa-bg-card) !important;
 }
 
@@ -77,7 +85,11 @@
 .dark-mode [style*="color: #3B4A66"],
 .dark-mode [style*="color:#3B4A66"],
 .dark-mode [style*="color: #374151"],
-.dark-mode [style*="color:#374151"] {
+.dark-mode [style*="color:#374151"],
+.dark-mode [style*="color: rgb(55, 65, 81)"],
+.dark-mode [style*="color: rgb(59, 74, 102)"],
+.dark-mode [style*="color:#111827"],
+.dark-mode [style*="color: #111827"] {
     color: var(--sa-text-primary) !important;
 }
 
@@ -100,12 +112,20 @@
     color: var(--sa-text-secondary) !important;
 }
 
-/* Light mode text specific - Black as requested */
-.light-mode .text-\[\#3B4A66\],
-.light-mode [style*="color: #3B4A66"],
-.light-mode [style*="color:#3B4A66"],
-.light-mode .taxdashboardr-titler {
-    color: var(--sa-text-primary) !important;
+.light-mode .text-gray-400,
+.light-mode .text-gray-500,
+.light-mode .text-gray-600,
+.light-mode .text-gray-700,
+.light-mode .text-slate-400,
+.light-mode .text-slate-500,
+.light-mode .text-slate-600,
+.light-mode .text-slate-700 {
+    color: #1a1a1a !important;
+}
+
+.light-mode .text-xs,
+.light-mode .text-sm {
+    color: #1a1a1a !important;
 }
 
 /* Border overrides */
@@ -202,14 +222,15 @@
 }
 
 /* Stats specific overrides */
-.dark-mode .bg-green-50,
+/* Removed aggressive background overrides that were breaking themed cards */
+/* .dark-mode .bg-green-50,
 .dark-mode .bg-blue-50,
 .dark-mode .bg-yellow-50,
 .dark-mode .bg-orange-50,
 .dark-mode .bg-indigo-50 {
     background-color: var(--sa-bg-active) !important;
     opacity: 0.9;
-}
+} */
 
 /* Badge Contrast in Dark Mode */
 .dark-mode .bg-green-100 { background-color: rgba(16, 185, 129, 0.2) !important; color: #34d399 !important; }

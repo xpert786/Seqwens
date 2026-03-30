@@ -625,7 +625,7 @@ export default function Subscriptions() {
     );
   }
   return (
-    <div className="w-full h-full p-6 pb-12 subscriptions-page">
+    <div className="w-full h-full p-6 pb-24 subscriptions-page">
       {/* Hidden PDF Content */}
       <div ref={pdfRef} style={{ position: 'absolute', left: '-9999px', top: 0, width: '210mm', padding: '20mm', backgroundColor: 'white' }}>
         <div style={{ marginBottom: '20px' }}>

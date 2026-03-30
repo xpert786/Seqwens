@@ -53,7 +53,7 @@ export const ThemeProvider = ({ children }) => {
             root.style.setProperty('--sa-bg-sidebar', '#ffffff');
             root.style.setProperty('--sa-bg-active', '#f1f5f9');
             root.style.setProperty('--sa-text-primary', '#000000');
-            root.style.setProperty('--sa-text-secondary', '#4b5563'); // Slate-600 for secondary
+            root.style.setProperty('--sa-text-secondary', '#1a1a1a'); // Darker for light mode
             root.style.setProperty('--sa-border-color', '#e5e7eb'); // Standard border
             root.style.setProperty('--sa-accent', '#f56d2d');
         }
