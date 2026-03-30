@@ -344,7 +344,7 @@ export default function NotificationTemplates() {
   };
 
   return (
-    <div className="dark">
+    <div>
       {/* CSS Variables for theming */}
       <style>{`
         :root {
@@ -364,6 +364,7 @@ export default function NotificationTemplates() {
           --toggle-off: #D1D5DB;
           --item-active-bg: #EEF2FF;
           --item-active-border: #C7D2FE;
+          --item-hover-bg: rgba(156, 163, 175, 0.2);
           --badge-active-bg: #D1FAE5;
           --badge-active-text: #065F46;
           --badge-inactive-bg: #FEE2E2;
@@ -390,6 +391,7 @@ export default function NotificationTemplates() {
           --toggle-off: #4B5563;
           --item-active-bg: #312E81;
           --item-active-border: #4F46E5;
+          --item-hover-bg: rgba(255, 255, 255, 0.1);
           --badge-active-bg: #065F46;
           --badge-active-text: #D1FAE5;
           --badge-inactive-bg: #7F1D1D;
@@ -433,7 +435,7 @@ export default function NotificationTemplates() {
                   style={styles.templateItem(selectedTemplate?.id === t.id)}
                   onClick={() => handleSelectTemplate(t)}
                   onMouseEnter={(e) => {
-                    if (selectedTemplate?.id !== t.id) e.currentTarget.style.background = "rgba(156, 163, 175, 0.2)";
+                    if (selectedTemplate?.id !== t.id) e.currentTarget.style.background = "var(--item-hover-bg, rgba(156, 163, 175, 0.2))";
                   }}
                   onMouseLeave={(e) => {
                     if (selectedTemplate?.id !== t.id) e.currentTarget.style.background = "transparent";
@@ -455,10 +457,10 @@ export default function NotificationTemplates() {
           {!selectedTemplate ? (
             <div style={styles.emptyState}>
               <div style={{ fontSize: "48px", marginBottom: "16px" }}>📋</div>
-              <p style={{ fontWeight: "500", color: "#6B7280", marginBottom: "4px" }}>
+              <p style={{ fontWeight: "500", color: "var(--text-secondary, #6B7280)", marginBottom: "4px" }}>
                 Select a template to view or edit
               </p>
-              <p style={{ color: "#9CA3AF", fontSize: "13px" }}>
+              <p style={{ color: "var(--text-muted, #9CA3AF)", fontSize: "13px" }}>
                 Choose from the list on the left to manage system email templates
               </p>
             </div>
@@ -470,8 +472,8 @@ export default function NotificationTemplates() {
                   <h2 style={styles.mainTitle}>
                     {editMode ? "Edit Template" : selectedTemplate.name}
                   </h2>
-                  <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#6B7280" }}>
-                    Type: <strong>{selectedTemplate.email_type.replace(/_/g, " ")}</strong>
+                  <p style={{ margin: "4px 0 0", fontSize: "13px", color: "var(--text-secondary, #6B7280)" }}>
+                    Type: <strong style={{ color: "var(--text-primary, #1F2937)" }}>{selectedTemplate.email_type.replace(/_/g, " ")}</strong>
                   </p>
                 </div>
                 <div style={styles.btnGroup}>
@@ -510,7 +512,7 @@ export default function NotificationTemplates() {
                         ✏️ Edit
                       </button>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span style={{ fontSize: "12px", color: "#6B7280" }}>
+                        <span style={{ fontSize: "12px", color: "var(--text-secondary, #6B7280)" }}>
                           {selectedTemplate.is_active ? "Active" : "Disabled"}
                         </span>
                         <button
@@ -537,7 +539,7 @@ export default function NotificationTemplates() {
                         alignItems: "center",
                       }}
                     >
-                      <h4 style={{ margin: 0, fontSize: "15px", color: "#374151" }}>Email Preview</h4>
+                      <h4 style={{ margin: 0, fontSize: "15px", color: "var(--text-label, #374151)" }}>Email Preview</h4>
                       <button style={styles.btn("default")} onClick={() => setShowPreview(false)}>
                         Close Preview
                       </button>
@@ -614,13 +616,13 @@ export default function NotificationTemplates() {
                     <div style={styles.row}>
                       <div style={{ ...styles.col, ...styles.fieldGroup }}>
                         <label style={styles.label}>Description</label>
-                        <p style={{ margin: 0, fontSize: "14px", color: "#374151" }}>
+                        <p style={{ margin: 0, fontSize: "14px", color: "var(--text-primary, #374151)" }}>
                           {selectedTemplate.description || "—"}
                         </p>
                       </div>
                       <div style={{ ...styles.col, ...styles.fieldGroup }}>
                         <label style={styles.label}>Tone</label>
-                        <p style={{ margin: 0, fontSize: "14px", color: "#374151", textTransform: "capitalize" }}>
+                        <p style={{ margin: 0, fontSize: "14px", color: "var(--text-primary, #374151)", textTransform: "capitalize" }}>
                           {selectedTemplate.tone || "—"}
                         </p>
                       </div>
@@ -632,10 +634,10 @@ export default function NotificationTemplates() {
                         style={{
                           padding: "10px 14px",
                           borderRadius: "8px",
-                          background: "#F9FAFB",
-                          border: "1px solid #E5E7EB",
+                          background: "var(--input-bg, #F9FAFB)",
+                          border: "1px solid var(--input-border, #E5E7EB)",
                           fontSize: "14px",
-                          color: "#1F2937",
+                          color: "var(--text-primary, #1F2937)",
                         }}
                       >
                         {selectedTemplate.subject}
@@ -648,10 +650,10 @@ export default function NotificationTemplates() {
                         style={{
                           padding: "14px",
                           borderRadius: "8px",
-                          background: "#F9FAFB",
-                          border: "1px solid #E5E7EB",
+                          background: "var(--input-bg, #F9FAFB)",
+                          border: "1px solid var(--input-border, #E5E7EB)",
                           fontSize: "12px",
-                          color: "#374151",
+                          color: "var(--text-primary, #374151)",
                           whiteSpace: "pre-wrap",
                           wordBreak: "break-word",
                           maxHeight: "400px",
@@ -666,7 +668,7 @@ export default function NotificationTemplates() {
                     <div style={styles.row}>
                       <div style={{ ...styles.col, ...styles.fieldGroup }}>
                         <label style={styles.label}>Last Updated</label>
-                        <p style={{ margin: 0, fontSize: "13px", color: "#6B7280" }}>
+                        <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary, #6B7280)" }}>
                           {selectedTemplate.updated_at
                             ? new Date(selectedTemplate.updated_at).toLocaleString()
                             : "—"}

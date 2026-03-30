@@ -402,7 +402,7 @@ export default function SharedDocumentsList() {
             : ''
         }
         confirmText="Unshare"
-        confirmButtonStyle={{ backgroundColor: '#DC2626', border: 'none' }}
+        confirmButtonStyle={{ backgroundColor: '#DC2626', border: 'none', borderRadius: '10px' }}
         isLoading={unsharing}
       />
     </div>

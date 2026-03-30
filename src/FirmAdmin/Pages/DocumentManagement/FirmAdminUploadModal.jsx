@@ -1085,14 +1085,14 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
         };
     }, [folderDropdownOpen]);
 
-    // Fetch root folders from API using Firm Admin endpoint - extracted to be reusable
+    // Fetch root folders from API using the correct endpoint for folders
     const fetchRootFolders = useCallback(async () => {
         if (!show) return;
 
         try {
             setLoadingFolders(true);
-            // Use browseDocuments for consistency with the main page
-            const response = await firmAdminDocumentsAPI.browseDocuments({});
+            // Use browseFoldersSplit for getting all folders (same as main DocumentManagement page)
+            const response = await firmAdminDocumentsAPI.browseFoldersSplit({});
 
             let folders = [];
             if (response.success && response.data && Array.isArray(response.data.folders)) {
@@ -1256,7 +1256,7 @@ export default function FirmAdminUploadModal({ show, handleClose, onUploadSucces
     // Fetch subfolders for a specific folder
     const fetchSubfolders = async (folderId) => {
         try {
-            const response = await firmAdminDocumentsAPI.browseDocuments({ folder_id: folderId });
+            const response = await firmAdminDocumentsAPI.browseFoldersSplit({ folder_id: folderId });
 
             if (response.success && response.data) {
                 const subfolders = response.data.folders || [];

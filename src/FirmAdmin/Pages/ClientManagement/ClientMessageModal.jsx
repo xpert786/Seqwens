@@ -91,6 +91,7 @@ export default function ClientMessageModal({ isOpen, onClose, clientId, clientNa
                         onClick={handleSendMessage}
                         disabled={sending || !message.trim()}
                         className="px-4 py-2 bg-[#F56D2D] text-white text-sm font-bold rounded-lg transition font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        style={{ borderRadius: '10px' }}
                     >
                         {sending ? (
                             <>
@@ -116,4 +117,3 @@ export default function ClientMessageModal({ isOpen, onClose, clientId, clientNa
 }
 
 
-    
