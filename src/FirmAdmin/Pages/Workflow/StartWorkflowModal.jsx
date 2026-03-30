@@ -242,12 +242,12 @@ const StartWorkflowModal = ({
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 !z-[9999] workflow-portal-overlay">
       <div className="bg-white !rounded-xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-[#E8F0FF] flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-5 pb-0 border-b border-[#E8F0FF] flex-shrink-0">
           <div>
             <h3 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro]">
               Start Workflow
             </h3>
-            <p className="text-[10px] text-gray-500 mt-0.5 font-[BasisGrotesquePro]">
+            <p className="text-[16px] text-gray-500 mt-0.5 font-[BasisGrotesquePro]">
               Start a tracking workflow for a client
             </p>
           </div>

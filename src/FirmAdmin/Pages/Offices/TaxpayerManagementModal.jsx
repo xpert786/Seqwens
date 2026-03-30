@@ -198,11 +198,11 @@ export default function TaxpayerManagementModal({ show, onClose, officeId, offic
       `}</style>
 
       {/* Custom Modal Overlay */}
-      <div className="fixed inset-0 bg-black/50 flex items-start justify-center p-2 sm:p-4 overflow-y-auto custom-scrollbar" style={{ zIndex: 9999 }}>
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-2 sm:p-4" style={{ zIndex: 9999 }}>
         {/* Modal Container */}
         <div
-          className="bg-white !rounded-xl shadow-2xl flex flex-col mx-auto my-24"
-          style={{ width: '95%', maxWidth: '900px', minHeight: '400px', maxHeight: 'auto', borderRadius: '12px' }}
+          className="bg-white !rounded-xl shadow-2xl flex flex-col mx-auto"
+          style={{ width: '95%', maxWidth: '900px', maxHeight: '80vh', borderRadius: '12px' }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Modal Header */}
@@ -211,7 +211,7 @@ export default function TaxpayerManagementModal({ show, onClose, officeId, offic
               <h3 className="text-lg sm:text-xl font-bold text-[#3B4A66] font-[BasisGrotesquePro] leading-tight">
                 Manage Taxpayers - {officeName}
               </h3>
-              <p className="text-[10px] sm:text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">
+              <p className="text-[16px] sm:text-xs text-gray-500 mt-1 font-[BasisGrotesquePro]">
                 View and assign clients to this office
               </p>
             </div>
@@ -229,7 +229,7 @@ export default function TaxpayerManagementModal({ show, onClose, officeId, offic
           </div>
 
           {/* Modal Body */}
-          <div className="p-4 sm:p-6">
+          <div className="flex-1 overflow-y-auto taxpayer-modal-body p-4 sm:p-6" style={{ maxHeight: 'calc(90vh - 180px)' }}>
             {/* Search and Filter */}
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4 bg-white pb-4 border-b border-gray-50">
               <div className="flex-1 relative">
