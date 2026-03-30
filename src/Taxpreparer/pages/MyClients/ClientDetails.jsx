@@ -2447,7 +2447,8 @@ export default function ClientDetails() {
                 type="button"
                 onClick={createTask}
                 disabled={loadingTask}
-                className={`px-8 py-2 text-sm font-bold text-white rounded-xl transition-all shadow-md active:scale-95 ${loadingTask ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#F56D2D]  shadow-[#F56D2D]/20 style={{ fontFamily: 'BasisGrotesquePro' }}
+                className={`px-8 py-2 text-sm font-bold text-white rounded-xl transition-all shadow-md active:scale-95 ${loadingTask ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#F56D2D] shadow-[#F56D2D]/20'}`}
+                style={{ fontFamily: 'BasisGrotesquePro' }}
               >
                 {loadingTask ? 'Creating...' : 'Create Task'}
               </button>
