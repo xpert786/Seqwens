@@ -295,7 +295,7 @@ export default function FirmAddonsTab({ firmId, firmName }) {
       {/* Add Addon Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1070] p-4" style={{ zIndex: 9999 }}>
-          <div className="bg-white w-full max-w-2xl rounded-xl shadow-lg p-6 relative max-h-[90vh] overflow-y-auto">
+          <div className="bg-white w-full max-w-2xl rounded-xl shadow-lg p-6 relative max-h-[75vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h4 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">
@@ -414,4 +414,3 @@ export default function FirmAddonsTab({ firmId, firmName }) {
     </div>
   );
 }
-
