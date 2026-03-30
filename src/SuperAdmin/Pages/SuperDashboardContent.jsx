@@ -842,7 +842,6 @@ export default function SuperDashboardContent() {
             <p className="text-sm text-[var(--sa-text-secondary)] dark:text-gray-400 mt-2">Across all firms</p>
           </div>
         </div>
-
         <div className="bg-[var(--sa-bg-card)] dark:bg-black rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-4 relative">
           <div className="absolute top-4 right-4 text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">
             <MonthlyRevenueIcon className="w-4 h-4" />

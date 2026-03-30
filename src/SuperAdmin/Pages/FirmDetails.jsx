@@ -634,7 +634,7 @@ export default function FirmDetails() {
             <div className="mx-auto flex w-full flex-col gap-6 firmdetails-container">
                 <div className="flex flex-col items-start justify-between gap-3 rounded-2xl px-6 py-3 sm:flex-row sm:items-center firmdetails-header">
                     <div className="space-y-1">
-                        <h3 className="text-3xl font-bold text-gray-900 dark:text-white">{firmName || 'Firm Details'}</h3>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">{firmName || 'Firm Details'}</h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Manage all firms registered on the platform</p>
                     </div>
 
@@ -709,7 +709,7 @@ export default function FirmDetails() {
                                                     key={tab.id}
                                                     type="button"
                                                     onClick={() => handleTabChange(tab.id)}
-                                                    className={`px-5 py-2 text-sm font-medium transition-colors ${isActive
+                                                    className={`px-3 py-1.5 text-xs font-semibold transition-colors ${isActive
                                                         ? 'bg-[#3B4A66] text-white'
                                                         : 'bg-white text-black hover:bg-[#DDE5FF] dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
                                                         }`}
@@ -722,13 +722,13 @@ export default function FirmDetails() {
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowActionConfirm(true)}
-                                        className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors border ${getActionType() === 'reactivate'
-                                            ? 'bg-white text-green-600 border-green-200 hover:bg-green-50 dark:bg-gray-800 dark:text-green-400 dark:border-green-900'
-                                            : 'bg-white text-red-600 border-red-200 hover:bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-900'
-                                            }`}
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowActionConfirm(true)}
+                                            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-lg transition-colors border ${getActionType() === 'reactivate'
+                                                ? 'bg-white text-green-600 border-green-200 hover:bg-green-50 dark:bg-gray-800 dark:text-green-400 dark:border-green-900'
+                                                : 'bg-white text-red-600 border-red-200 hover:bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-900'
+                                                }`}
                                         style={{ borderRadius: '8px' }}
                                     >
                                         {getActionType() === 'reactivate' ? (
@@ -753,7 +753,7 @@ export default function FirmDetails() {
                                         type="button"
                                         onClick={handleFirmLogin}
                                         disabled={loggingIn}
-                                        className="flex items-center gap-2 px-3 lg:px-4 py-2 bg-[#F56D2D] text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="flex items-center gap-2 px-3 py-1.5 bg-[#F56D2D] text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                         style={{ borderRadius: '8px' }}
                                     >
                                         {loggingIn ? (
@@ -774,9 +774,10 @@ export default function FirmDetails() {
                             </div>
                         </div>
 
-                        {activeTab === 'Overview' && (
-                            <>
-                                <div className="grid gap-4 md:grid-cols-3 firmdetails-overview-metrics">
+                        <div key={activeTab} className="animate-tab-content">
+                            {activeTab === 'Overview' && (
+                                <>
+                                <div className="grid gap-4 md:grid-cols-3 mb-6 firmdetails-overview-metrics">
                                     {statCards.map(({ id, label, value, subtitle, icon }) => (
                                         <div
                                             key={id}
@@ -790,8 +791,8 @@ export default function FirmDetails() {
                                                     {icon}
                                                 </span>
                                             </div>
-                                            <p className="text-2xl font-semibold text-[#0F172A] dark:text-white">{value}</p>
-                                            <p className="text-xs text-[#94A3B8] dark:text-gray-500">{subtitle}</p>
+                                            <p className="text-xl font-bold text-[#0F172A] dark:text-white">{value}</p>
+                                            <p className="text-[10px] text-[#94A3B8] dark:text-gray-500">{subtitle}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -817,8 +818,8 @@ export default function FirmDetails() {
                                                     key={label}
                                                     className="grid grid-cols-1 gap-1 sm:grid-cols-[140px_1fr] sm:items-center border-b border-gray-100 last:border-0 pb-3 last:pb-0 dark:border-gray-700"
                                                 >
-                                                    <span className="text-sm font-medium text-[#64748B] sm:text-base dark:text-gray-400">{label}</span>
-                                                    <span className="text-sm font-semibold text-[#0F172A] sm:text-left sm:text-base dark:text-white truncate">
+                                                    <span className="text-xs font-semibold text-[#64748B] dark:text-gray-400">{label}</span>
+                                                    <span className="text-sm font-bold text-[#0F172A] dark:text-white truncate">
                                                         {value}
                                                     </span>
                                                 </div>
@@ -1042,9 +1043,9 @@ export default function FirmDetails() {
                                                         <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-blue-600 dark:text-blue-400">
                                                             <path d="M10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2ZM10 16.5C6.41015 16.5 3.5 13.5899 3.5 10C3.5 6.41015 6.41015 3.5 10 3.5C13.5899 3.5 16.5 6.41015 16.5 10C16.5 13.5899 13.5899 16.5 10 16.5ZM9.25 6.5V10.75L12.75 12.75L13.25 11.75L10.25 10.25V6.5H9.25Z" fill="currentColor" />
                                                         </svg>
-                                                        <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">Developer Subscription (QA Mode)</p>
+                                                        <p className="text-sm font-semibold text-blue-900 dark:text-blue-950">Developer Subscription (QA Mode)</p>
                                                     </div>
-                                                    <p className="text-xs text-blue-700 dark:text-blue-300">Grant full access to all features (OCR, AI, etc.) for testing internal workflows. Bypasses all billing limits.</p>
+                                                    <p className="text-xs text-blue-700 dark:text-slate-950">Grant full access to all features (OCR, AI, etc.) for testing internal workflows. Bypasses all billing limits.</p>
                                                 </div>
                                                 <button
                                                     type="button"
@@ -1084,6 +1085,7 @@ export default function FirmDetails() {
                                 )}
                             </div>
                         )}
+                        </div>
                     </>
                 )}
 
@@ -1293,18 +1295,26 @@ const BillingOverviewTab = ({
         <div className="flex flex-col">
             <div className="grid gap-6 ">
                 <div className="rounded-xl p-6" style={{ backgroundColor: 'var(--sa-bg-card, #ffffff)' }}>
-                    <div className="mb-5 flex items-start justify-between gap-3">
+                    <div className="mb-6 flex items-start justify-between gap-3 border-b border-gray-100 dark:border-gray-700 pb-4">
                         <div>
                             <h5 className="text-lg font-semibold text-[#1E293B] dark:text-white">Current Subscription</h5>
                             <p className="text-sm text-[#64748B] dark:text-gray-400">
                                 Manage and monitor the firm&apos;s active subscription plan.
                             </p>
                         </div>
-                        {(overview?.firm?.status_display || fallbackSubscription?.status) && (
-                            <span className="inline-flex items-center rounded-full bg-[#EEF2FF] dark:bg-blue-900/30 px-3 py-1 text-xs font-semibold text-[#312E81] dark:text-blue-300">
-                                {overview?.firm?.status_display || fallbackSubscription.status}
+                        <div className="flex items-center gap-3">
+                            <span className="inline-flex items-center rounded-full bg-[#EFF4FF] dark:bg-blue-900/30 px-3 py-1 text-xs font-semibold text-[#1E3A8A] dark:text-blue-300">
+                                {currentSubscription.plan || currentSubscription.plan_display || '—'}
                             </span>
-                        )}
+                            {(overview?.firm?.status_display || fallbackSubscription?.status) && (
+                                <span className="inline-flex items-center rounded-full bg-[#DCFCE7] dark:bg-green-900/30 px-3 py-1 text-xs font-semibold text-[#166534] dark:text-green-300">
+                                    {overview?.firm?.status_display || fallbackSubscription.status}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
                         {[{
                             label: 'Plan',
                             value: currentSubscription.plan || currentSubscription.plan_display || '—',
@@ -1313,7 +1323,7 @@ const BillingOverviewTab = ({
                             label: 'Monthly Cost',
                             value: currentSubscription.monthly_cost_display || currentSubscription.amount_formatted || formatCurrency(currentSubscription.monthly_cost)
                         }, {
-                            label: 'Next Billing Date',
+                            label: 'Next Billing',
                             value: currentSubscription.next_billing_display || currentSubscription.next_billing_date || '—'
                         }, {
                             label: 'Status',
@@ -1323,23 +1333,27 @@ const BillingOverviewTab = ({
                             label: 'Setup Fee',
                             value: firmDetails?.setup_fee ? formatCurrency(firmDetails.setup_fee) : '$0.00'
                         }, {
-                            label: 'Trial Days Remaining',
+                            label: 'Trial Left',
                             value: currentSubscription.trial_days_remaining != null
                                 ? `${currentSubscription.trial_days_remaining} day${currentSubscription.trial_days_remaining === 1 ? '' : 's'}`
                                 : '—'
                         }].map(({ label, value, badge, status }) => (
-                            <div key={label} className="flex flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-                                <span className="text-sm font-medium text-[#475569] dark:text-gray-300">{label}</span>
+                            <div key={label} className="flex flex-col gap-1.5">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8] dark:text-gray-400">{label}</span>
                                 {badge ? (
-                                    <span className="inline-flex items-center rounded-full bg-[#EFF4FF] dark:bg-blue-900/30 px-3 py-1 text-xs font-semibold text-[#1E3A8A] dark:text-blue-300">
-                                        {value}
-                                    </span>
+                                    <div className="flex">
+                                        <span className="inline-flex items-center rounded-full bg-[#EFF4FF] dark:bg-blue-900/30 px-2.5 py-0.5 text-[10px] font-bold text-[#1E3A8A] dark:text-blue-300 border border-blue-100 dark:border-blue-800">
+                                            {value}
+                                        </span>
+                                    </div>
                                 ) : status ? (
-                                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${getStatusClasses(null, status)}`}>
-                                        {value}
-                                    </span>
+                                    <div className="flex">
+                                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${getStatusClasses(null, status)}`}>
+                                            {value}
+                                        </span>
+                                    </div>
                                 ) : (
-                                    <span className="text-sm font-semibold text-[#0F172A] dark:text-white">{value}</span>
+                                    <span className="text-sm font-bold text-[#0F172A] dark:text-white break-words">{value}</span>
                                 )}
                             </div>
                         ))}
@@ -1449,7 +1463,7 @@ const BillingOverviewTab = ({
 
             </div>
 
-            <div className="rounded-xl p-6" style={{ backgroundColor: 'var(--sa-bg-card, #ffffff)' }}>
+            <div className="rounded-xl p-6 mt-6" style={{ backgroundColor: 'var(--sa-bg-card, #ffffff)' }}>
                 <div className="mb-4">
                     <h5 className="text-lg font-semibold text-[#1E293B] dark:text-white">Subscription History</h5>
                     <p className="text-sm text-[#64748B] dark:text-gray-400">{historyCount} records</p>
