@@ -650,14 +650,14 @@ export default function SuperDashboardContent() {
       const subscribersEntry = payload.find(item => item.dataKey === 'subscribers');
       return (
         <div className="bg-[var(--sa-bg-card)] rounded-lg p-3 border" style={{ minWidth: '140px' }}>
-          <div className="text-sm font-semibold mb-1" style={{ color: '#374151' }}>{label}</div>
+          <div className="text-sm font-semibold mb-1" style={{ color: 'var(--sa-text-primary)' }}>{label}</div>
           {revenueEntry && (
             <div className="text-sm" style={{ color: '#10B981' }}>
               Revenue: {formatCurrency(revenueEntry.value || 0)}
             </div>
           )}
           {subscribersEntry && (
-            <div className="text-sm mt-1" style={{ color: '#374151' }}>
+            <div className="text-sm mt-1" style={{ color: 'var(--sa-text-secondary)' }}>
               Subscribers: {formatNumber(subscribersEntry.value || 0)}
             </div>
           )}
@@ -688,8 +688,8 @@ export default function SuperDashboardContent() {
     if (active && payload && payload.length) {
       return (
         <div className="bg-[var(--sa-bg-card)] rounded-lg shadow-xl p-3 border" style={{ minWidth: '140px' }}>
-          <div className="text-sm font-semibold mb-1" style={{ color: '#374151' }}>{label}</div>
-          <div className="text-sm" style={{ color: '#374151' }}>
+          <div className="text-sm font-semibold mb-1" style={{ color: 'var(--sa-text-primary)' }}>{label}</div>
+          <div className="text-sm" style={{ color: 'var(--sa-text-secondary)' }}>
             Activity: <span style={{ color: '#10B981' }}>{formatNumber(payload[0].value)}</span>
           </div>
         </div>
@@ -736,13 +736,13 @@ export default function SuperDashboardContent() {
   }
 
   return (
-    <div className="w-full px-3 pt-4 pb-0 bg-[var(--sa-bg-primary)] dark:bg-gray-900 transition-colors duration-200">
+    <div className="w-full px-3 pt-4 pb-24 bg-[var(--sa-bg-primary)] dark:bg-gray-900 transition-colors duration-200">
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <div>
-          <h4 className=" font-bold text-[var(--sa-text-primary)] dark:text-white">Platform Overview</h4>
-          <p className="text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mt-1">Monitor and manage the entire tax practice platform</p>
-          <p className="text-xs text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mt-1">Last updated: {lastRefresh.toLocaleString()}</p>
+          <h4 className="font-bold text-[var(--sa-text-primary)] dark:text-white">Platform Overview</h4>
+          <p className="text-[var(--sa-text-secondary)] dark:text-gray-300 mt-1">Monitor and manage the entire tax practice platform</p>
+          <p className="text-xs text-[var(--sa-text-secondary)] dark:text-gray-400 mt-1">Last updated: {lastRefresh.toLocaleString()}</p>
         </div>
         <button
           onClick={handleRefresh}
@@ -758,7 +758,7 @@ export default function SuperDashboardContent() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-8">
         <div
-          className="bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-4 relative cursor-pointer hover:shadow-md transition-all"
+          className="bg-[var(--sa-bg-card)] dark:bg-black rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-4 relative cursor-pointer hover:shadow-md transition-all"
           onClick={async () => {
             setShowAllFirmsModal(true);
             setAllFirmsLoading(true);
@@ -784,16 +784,16 @@ export default function SuperDashboardContent() {
             <TotalFirmsIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mb-1">Total Firms</p>
+            <p className="text-sm font-medium text-[var(--sa-text-secondary)] dark:text-gray-300 mb-1">Total Firms</p>
             <p className="text-2xl font-bold text-[var(--sa-text-primary)] dark:text-white">
               {formatNumber(dashboardData?.summary?.total_firms)}
             </p>
-            <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mt-2">Firms onboarded</p>
+            <p className="text-sm text-[var(--sa-text-secondary)] dark:text-gray-400 mt-2">Firms onboarded</p>
           </div>
         </div>
 
         <div
-          className="bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-4 relative cursor-pointer hover:shadow-md transition-all"
+          className="bg-[var(--sa-bg-card)] dark:bg-black rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-4 relative cursor-pointer hover:shadow-md transition-all"
           onClick={async () => {
             setShowActiveUsersModal(true);
             setActiveUsersLoading(true);
@@ -835,37 +835,37 @@ export default function SuperDashboardContent() {
             <ActiveUsersIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mb-1">Active Users</p>
+            <p className="text-sm font-medium text-[var(--sa-text-secondary)] dark:text-gray-300 mb-1">Active Users</p>
             <p className="text-2xl font-bold text-[var(--sa-text-primary)] dark:text-white">
               {formatNumber(dashboardData?.summary?.active_users)}
             </p>
-            <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mt-2">Across all firms</p>
+            <p className="text-sm text-[var(--sa-text-secondary)] dark:text-gray-400 mt-2">Across all firms</p>
           </div>
         </div>
 
-        <div className="bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-4 relative">
+        <div className="bg-[var(--sa-bg-card)] dark:bg-black rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-4 relative">
           <div className="absolute top-4 right-4 text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">
             <MonthlyRevenueIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mb-1">Monthly Revenue</p>
+            <p className="text-sm font-medium text-[var(--sa-text-secondary)] dark:text-gray-300 mb-1">Monthly Revenue</p>
             <p className="text-2xl font-bold text-[var(--sa-text-primary)] dark:text-white">
               {formatCurrency(dashboardData?.summary?.monthly_revenue)}
             </p>
-            <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mt-2">Recurring revenue</p>
+            <p className="text-sm text-[var(--sa-text-secondary)] dark:text-gray-400 mt-2">Recurring revenue</p>
           </div>
         </div>
 
-        <div className="bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-4 relative">
+        <div className="bg-[var(--sa-bg-card)] dark:bg-black rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-4 relative">
           <div className="absolute top-4 right-4 text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">
             <SystemHealthIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-sm font-medium text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mb-1">System Health</p>
+            <p className="text-sm font-medium text-[var(--sa-text-secondary)] dark:text-gray-300 mb-1">System Health</p>
             <p className="text-2xl font-bold text-[var(--sa-text-primary)] dark:text-white">
               {formatNumber(dashboardData?.summary?.system_health_score)}
             </p>
-            <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] mt-2">Health Score</p>
+            <p className="text-sm text-[var(--sa-text-secondary)] dark:text-gray-400 mt-2">Health Score</p>
           </div>
         </div>
       </div>
@@ -875,8 +875,8 @@ export default function SuperDashboardContent() {
         <div className="bg-[var(--sa-bg-card)] dark:bg-gray-800 rounded-xl border border-[var(--sa-border-color)] dark:border-gray-700 p-6 transition-all">
           <div className="flex flex-col gap-4 mb-4">
             <div>
-              <h3 className="taxdashboardr-titler text-base font-bold text-[var(--sa-text-primary)] dark:text-white mb-1 whitespace-nowrap dark:text-white">Revenue Growth Trend</h3>
-              <p className="text-sm text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)]">Monthly recurring revenue and user growth</p>
+              <h3 className="taxdashboardr-titler text-base font-bold text-[var(--sa-text-primary)] dark:text-white mb-1 whitespace-nowrap">Revenue Growth Trend</h3>
+              <p className="text-sm text-[var(--sa-text-secondary)] dark:text-gray-300">Monthly recurring revenue and user growth</p>
             </div>
             <div className="flex items-center gap-2 justify-end">
               <label htmlFor="revenue-month-select" className="text-sm font-medium text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] whitespace-nowrap">Filter by month:</label>
@@ -1032,11 +1032,9 @@ export default function SuperDashboardContent() {
                       {/* Revenue Growth Card */}
                       {/* ========================= */}
 
-                      <div className="bg-gradient-to-br
-              from-green-50 to-green-100
-              dark:from-green-900/40 dark:to-green-800/30
+                      <div className="bg-white dark:bg-black
               rounded-xl p-4
-              border border-green-200 dark:border-green-700/50
+              border border-green-200 dark:border-emerald-500/30
               shadow-sm transition-all duration-200
               hover:shadow-md">
 
@@ -1072,9 +1070,7 @@ export default function SuperDashboardContent() {
 
                             </div>
 
-                            <span className="text-sm font-semibold 
-                    text-[var(--sa-text-primary)] 
-                    dark:text-gray-100">
+                            <span className="text-sm font-semibold" style={{ color: 'var(--sa-text-primary) !important' }}>
                               Revenue Growth
                             </span>
 
@@ -1087,7 +1083,7 @@ export default function SuperDashboardContent() {
                                 ? "bg-green-500 text-white"
                                 : isRevenueNegative
                                   ? "bg-red-500 text-white"
-                                  : "bg-gray-400 text-white"
+                                  : "bg-gray-500 text-white dark:bg-gray-600 dark:text-white"
                               }`}
                           >
 
@@ -1121,7 +1117,7 @@ export default function SuperDashboardContent() {
                               </svg>
                             ) : null}
 
-                            <span>
+                            <span style={{ color: '#ffffff' }}>
                               {revenueGrowth > 0 ? "+" : ""}
                               {revenueGrowth.toFixed(1)}%
                             </span>
@@ -1130,8 +1126,7 @@ export default function SuperDashboardContent() {
 
                         </div>
 
-                        <p className="text-[10px] font-medium uppercase tracking-wider
-                text-gray-600 dark:text-gray-400">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: (isDarkMode ? '#a7f3d0' : '#047857') + ' !important' }}>
                           Compared to previous month
                         </p>
 
@@ -1141,11 +1136,9 @@ export default function SuperDashboardContent() {
                       {/* Subscriber Growth Card */}
                       {/* ========================= */}
 
-                      <div className="bg-gradient-to-br
-              from-blue-50 to-blue-100
-              dark:from-blue-900/40 dark:to-blue-800/30
+                      <div className="bg-white dark:bg-black
               rounded-xl p-4
-              border border-blue-200 dark:border-blue-700/50
+              border border-blue-200 dark:border-blue-500/30
               shadow-sm transition-all duration-200
               hover:shadow-md">
 
@@ -1179,9 +1172,7 @@ export default function SuperDashboardContent() {
 
                             </div>
 
-                            <span className="text-sm font-semibold 
-                    text-[var(--sa-text-primary)] 
-                    dark:text-gray-100">
+                            <span className="text-sm font-semibold" style={{ color: 'var(--sa-text-primary) !important' }}>
                               Subscriber Growth
                             </span>
 
@@ -1194,7 +1185,7 @@ export default function SuperDashboardContent() {
                                 ? "bg-green-500 text-white"
                                 : isSubscriberNegative
                                   ? "bg-red-500 text-white"
-                                  : "bg-gray-400 text-white"
+                                  : "bg-gray-500 text-white dark:bg-gray-600 dark:text-white"
                               }`}
                           >
 
@@ -1228,7 +1219,7 @@ export default function SuperDashboardContent() {
                               </svg>
                             ) : null}
 
-                            <span>
+                            <span style={{ color: '#ffffff' }}>
                               {subscriberGrowth > 0 ? "+" : ""}
                               {subscriberGrowth.toFixed(1)}%
                             </span>
@@ -1237,8 +1228,7 @@ export default function SuperDashboardContent() {
 
                         </div>
 
-                        <p className="text-[10px] font-medium uppercase tracking-wider
-                text-gray-600 dark:text-gray-400">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: (isDarkMode ? '#bfdbfe' : '#1d4ed8') + ' !important' }}>
                           Compared to previous month
                         </p>
 
@@ -1432,14 +1422,19 @@ export default function SuperDashboardContent() {
                   return (
                     <div
                       key={index}
-                      className={`flex items-center justify-between p-4 rounded-lg ${backgroundClass} transition-all`}
+                      className={`flex items-center justify-between p-4 rounded-lg transition-all`}
+                      style={{
+                        backgroundColor: isDarkMode
+                          ? (itemEnabled ? 'rgba(6, 78, 59, 0.4)' : 'rgba(120, 53, 15, 0.4)')
+                          : (itemEnabled ? '#f0fdf4' : '#fffbeb')
+                      }}
                     >
                       <div className="flex items-center gap-2 flex-1">
                         <StatusIcon className="w-5 h-5 flex-shrink-0" />
                         <div className="flex-1">
-                          <span className="text-sm font-medium text-[var(--sa-text-primary)] dark:text-gray-200 block">{item.name}</span>
+                          <span className="text-sm font-bold text-[var(--sa-text-primary)] dark:text-white block">{item.name}</span>
                           {item.description && (
-                            <span className="text-xs text-[var(--sa-text-secondary)] dark:text-[var(--sa-text-secondary)] block mt-0.5">{item.description}</span>
+                            <span className="text-xs text-[var(--sa-text-secondary)] dark:text-gray-300 block mt-1 leading-relaxed">{item.description}</span>
                           )}
                         </div>
                       </div>
@@ -1454,7 +1449,7 @@ export default function SuperDashboardContent() {
                           disabled={isUpdating || securityLoading}
                         />
                         <div className={`relative inline-flex h-6 w-11 items-center rounded-full px-1 transition-colors ${isUpdating ? 'opacity-50 cursor-wait' : ''
-                          } ${itemEnabled ? 'bg-green-500' : 'bg-gray-300'}`}>
+                          } ${itemEnabled ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
                           <span
                             className={`inline-block h-4 w-4 transform rounded-full bg-[var(--sa-bg-card)] transition-transform ${itemEnabled ? 'translate-x-5' : 'translate-x-0'
                               }`}
