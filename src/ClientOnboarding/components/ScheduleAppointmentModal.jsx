@@ -23,12 +23,12 @@ export default function ScheduleAppointmentModal({ show, handleClose, onSuccess 
   const [selectedTime, setSelectedTime] = useState(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
   const [highlightBox, setHighlightBox] = useState(null);
-  
+
   // API state management
   const [creatingAppointment, setCreatingAppointment] = useState(false);
   const [createError, setCreateError] = useState(null);
   const [createSuccess, setCreateSuccess] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     subject: 'Consultation',
     description: '',
@@ -86,7 +86,7 @@ export default function ScheduleAppointmentModal({ show, handleClose, onSuccess 
   useEffect(() => {
     const hasSelectedDate = Boolean(selectedCalendarDate || selectedDate);
     const hasSelectedTime = Boolean(selectedTimeSlot || selectedTime);
-    
+
     if (hasSelectedDate && hasSelectedTime && step === 1) {
       setStep(2);
       // Scroll to step 2 after a short delay to ensure it's rendered
@@ -295,7 +295,7 @@ export default function ScheduleAppointmentModal({ show, handleClose, onSuccess 
 
     try {
       setCreatingAppointment(true);
-      
+
       const appointmentDate = selectedCalendarDate
         ? `${selectedCalendarDate.getFullYear()}-${String(selectedCalendarDate.getMonth() + 1).padStart(2, '0')}-${String(selectedCalendarDate.getDate()).padStart(2, '0')}`
         : `${currentYear}-06-${selectedDate.toString().padStart(2, '0')}`;
@@ -303,9 +303,9 @@ export default function ScheduleAppointmentModal({ show, handleClose, onSuccess 
       let appointmentTime;
       if (selectedTimeSlot?.start_time) {
         const timeStr = selectedTimeSlot.start_time;
-        appointmentTime = timeStr.match(/^\d{2}:\d{2}:\d{2}$/) ? timeStr 
-                        : timeStr.match(/^\d{2}:\d{2}$/) ? `${timeStr}:00` 
-                        : timeStr.slice(0, 5) + ':00';
+        appointmentTime = timeStr.match(/^\d{2}:\d{2}:\d{2}$/) ? timeStr
+          : timeStr.match(/^\d{2}:\d{2}$/) ? `${timeStr}:00`
+            : timeStr.slice(0, 5) + ':00';
       } else if (selectedTime) {
         const [time, period] = selectedTime.split(' ');
         const [hours, minutes] = time.split(':');
@@ -326,7 +326,7 @@ export default function ScheduleAppointmentModal({ show, handleClose, onSuccess 
         return;
       }
 
-      let appointmentDuration = 30; 
+      let appointmentDuration = 30;
       if (selectedTimeSlot && selectedTimeSlot.start_time && selectedTimeSlot.end_time) {
         const start = new Date(`2000-01-01 ${selectedTimeSlot.start_time}`);
         const end = new Date(`2000-01-01 ${selectedTimeSlot.end_time}`);
@@ -379,28 +379,41 @@ export default function ScheduleAppointmentModal({ show, handleClose, onSuccess 
   if (!show) return null;
 
   return (
-    <div
-      className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-      style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, padding: '10px' }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          resetAppointmentForm();
-          handleClose();
+    <div>
+      <style>{`
+        .appointment-modal-overlay > div {
+          max-height: none !important;
+          overflow: visible !important;
+          animation: none !important;
+          transition: none !important;
         }
-      }}
-    >
-      <div 
-        className="rounded-4 overflow-hidden d-flex flex-column"
-        style={{ 
-          width: '100%',
-          maxWidth: '600px',
-          maxHeight: 'calc(100vh - 20px)',
-          backgroundColor: '#fff'
-        }} 
-        onClick={(e) => e.stopPropagation()}
+      `}</style>
+      <div
+        className="appointment-modal-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-start justify-content-center overflow-y-auto"
+        style={{
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          zIndex: 9999,
+          padding: '20px'
+        }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            resetAppointmentForm();
+            handleClose();
+          }
+        }}
       >
+        <div
+          className="rounded-4"
+          style={{
+            width: '100%',
+            maxWidth: '600px',
+            backgroundColor: '#fff',
+            margin: '20px 0'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header */}
-        <div className="p-3 border-bottom" style={{ flexShrink: 0 }}>
+        <div className="p-3 border-bottom">
           <div className="d-flex justify-content-between align-items-center">
             <h5 className="mb-0" style={{ color: '#3B4A66', fontSize: '18px', fontWeight: '500', fontFamily: 'BasisGrotesquePro' }}>Schedule New Appointment</h5>
             <button onClick={() => {
@@ -415,8 +428,8 @@ export default function ScheduleAppointmentModal({ show, handleClose, onSuccess 
           </p>
         </div>
 
-        {/* Scrollable Body */}
-        <div className="p-3 overflow-auto" style={{ flex: 1 }}>
+        {/* Body */}
+        <div className="p-3">
           {staffError && staffError.includes('associated with a firm') && (
             <div className="alert alert-warning mb-3" role="alert" style={{
               backgroundColor: "#FEF3C7", border: "1px solid #F59E0B", color: "#92400E",
@@ -545,7 +558,7 @@ export default function ScheduleAppointmentModal({ show, handleClose, onSuccess 
                                 const isCurrentMonth = date.getMonth() === currentMonth;
                                 const isSelected = selectedCalendarDate && date.toDateString() === selectedCalendarDate.toDateString();
                                 const isAvailable = isDateAvailable(date);
-                                const isPast = new Date(date).setHours(0,0,0,0) < new Date().setHours(0,0,0,0);
+                                const isPast = new Date(date).setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0);
                                 const canSelect = isAvailable && !isPast;
                                 return (
                                   <button
@@ -579,18 +592,18 @@ export default function ScheduleAppointmentModal({ show, handleClose, onSuccess 
                               <option value="mountain">Mountain Time</option>
                               <option value="pacific">Pacific Time</option>
                             </select>
-                            <div className="time-list" style={{ maxHeight: '150px', overflowY: 'auto' }}>
-                              {loadingTimeSlots ? <small>Loading...</small> : 
-                               availableTimeSlots.length > 0 ? availableTimeSlots.map((slot, i) => (
-                                <button
-                                  key={i}
-                                  onClick={(e) => { e.stopPropagation(); setSelectedTime(slot.start_time_display); setSelectedTimeSlot(slot); }}
-                                  className={`btn btn-sm w-100 mb-1 border ${selectedTime === slot.start_time_display ? 'btn-primary' : 'btn-light'}`}
-                                  style={{ fontSize: "11px" }}
-                                >
-                                  {slot.start_time_display}
-                                </button>
-                              )) : <small className="text-muted">Select a date first</small>}
+                            <div className="time-list">
+                              {loadingTimeSlots ? <small>Loading...</small> :
+                                availableTimeSlots.length > 0 ? availableTimeSlots.map((slot, i) => (
+                                  <button
+                                    key={i}
+                                    onClick={(e) => { e.stopPropagation(); setSelectedTime(slot.start_time_display); setSelectedTimeSlot(slot); }}
+                                    className={`btn btn-sm w-100 mb-1 border ${selectedTime === slot.start_time_display ? 'btn-primary' : 'btn-light'}`}
+                                    style={{ fontSize: "11px" }}
+                                  >
+                                    {slot.start_time_display}
+                                  </button>
+                                )) : <small className="text-muted">Select a date first</small>}
                             </div>
                           </div>
                         </div>
@@ -609,18 +622,18 @@ export default function ScheduleAppointmentModal({ show, handleClose, onSuccess 
                 <div className="col-12">
                   <div className="p-3 border rounded bg-light">
                     <div className="d-flex align-items-center gap-2 mb-2">
-                       <ZoomIcon />
-                       <strong className="small">Schedule {formData.meeting_type} with {staffMembers.find(s => s.id === selectedAdminId)?.name}</strong>
+                      <ZoomIcon />
+                      <strong className="small">Schedule {formData.meeting_type} with {staffMembers.find(s => s.id === selectedAdminId)?.name}</strong>
                     </div>
                     <div className="small text-muted">
-                       <div className="d-flex align-items-center gap-2"><DateIcon /> {selectedTime}, {selectedCalendarDate?.toLocaleDateString()}</div>
-                       <div className="d-flex align-items-center gap-2"><EsternTimeIcon /> {getCurrentTimezone()}</div>
+                      <div className="d-flex align-items-center gap-2"><DateIcon /> {selectedTime}, {selectedCalendarDate?.toLocaleDateString()}</div>
+                      <div className="d-flex align-items-center gap-2"><EsternTimeIcon /> {getCurrentTimezone()}</div>
                     </div>
                   </div>
                 </div>
                 <div className="col-12">
                   <label className="small fw-bold mb-1">Subject</label>
-                  <textarea 
+                  <textarea
                     className="form-control form-control-sm"
                     rows="2"
                     value={formData.subject}
@@ -629,7 +642,7 @@ export default function ScheduleAppointmentModal({ show, handleClose, onSuccess 
                 </div>
                 <div className="col-12">
                   <label className="small fw-bold mb-1">Description</label>
-                  <textarea 
+                  <textarea
                     className="form-control form-control-sm"
                     rows="3"
                     value={formData.description}
@@ -650,8 +663,8 @@ export default function ScheduleAppointmentModal({ show, handleClose, onSuccess 
                 {formData.meeting_type === 'in_person' && (
                   <div className="col-12">
                     <label className="small fw-bold mb-1">Meeting Location *</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       className="form-control form-control-sm"
                       value={formData.meeting_location}
                       onChange={(e) => setFormData(prev => ({ ...prev, meeting_location: e.target.value }))}
@@ -659,7 +672,7 @@ export default function ScheduleAppointmentModal({ show, handleClose, onSuccess 
                   </div>
                 )}
                 <div className="col-12 text-end">
-                  <button 
+                  <button
                     className="btn btn-primary"
                     disabled={creatingAppointment}
                     onClick={createAppointment}
@@ -674,5 +687,6 @@ export default function ScheduleAppointmentModal({ show, handleClose, onSuccess 
         </div>
       </div>
     </div>
+  </div>
   );
 }

@@ -1053,11 +1053,11 @@ export default function Appointments() {
                         </span>
                       </div>
 
-                      <div className="d-flex align-items-center gap-2 ms-auto mt-2 mt-md-0">
+                      <div className="d-flex align-items-center ms-auto mt-2 mt-md-0">
                         {appt.status !== "Cancelled" && (
                           <>
                             <button
-                              className="btn "
+                              className=""
                               onClick={(e) => {
                                 e.stopPropagation();
                                 openEditModal(appt);
@@ -1071,7 +1071,7 @@ export default function Appointments() {
                             </button>
 
                             <button
-                              className="btn ms-2"
+                              className=""
                               onClick={(e) => {
                                 e.stopPropagation();
                                 cancelAppointment(appt.id);
@@ -2288,10 +2288,10 @@ export default function Appointments() {
               </div>
 
               {/* Edit Form */}
-              <div style={{ padding: "20px" }}>
+              <div style={{ padding: "20px", paddingTop: '0px' }}>
 
                 <div className="mb-3">
-                  <label className="form-label" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>
+                  <label className="form-label" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500", color: "#000" }}>
                     Subject
                   </label>
                   <input
@@ -2305,7 +2305,7 @@ export default function Appointments() {
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>
+                  <label className="form-label" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500", color: "#000" }}>
                     Meeting Type
                   </label>
                   <select
@@ -2322,7 +2322,7 @@ export default function Appointments() {
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>
+                  <label className="form-label" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500", color: "#000" }}>
                     Date (Optional)
                   </label>
                   <input
@@ -2340,7 +2340,7 @@ export default function Appointments() {
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500" }}>
+                  <label className="form-label" style={{ fontFamily: "BasisGrotesquePro", fontWeight: "500", color: "#000" }}>
                     Time (Optional)
                   </label>
                   {loadingEditTimeSlots ? (

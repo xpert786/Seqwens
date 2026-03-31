@@ -304,7 +304,7 @@ export default function DashboardFirst() {
                 try {
                   // 1. Inform the user
                   toast.info("Preparing your dashboard context...", {
-                    position: "top-center",
+                    position: "top-right",
                     autoClose: 1500,
                     style: { borderRadius: '12px', fontWeight: '600' }
                   });
@@ -329,7 +329,7 @@ export default function DashboardFirst() {
                   // 4. Final toast and navigate
                   clearTimeout(safetyTimeout);
                   toast.success("Ready! Redirecting...", {
-                    position: "top-center",
+                    position: "top-right",
                     autoClose: 1000,
                     style: { borderRadius: '12px', fontWeight: 'bold' }
                   });

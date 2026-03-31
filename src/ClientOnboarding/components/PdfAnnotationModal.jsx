@@ -152,26 +152,57 @@ export default function PdfAnnotationModal({
       setLoading(true);
 
       let pdfBlobUrl = url;
+      let contentType = '';
 
       // Try to fetch PDF as blob to avoid CORS issues, with fallback to direct URL
       try {
         const response = await fetch(url, {
-          mode: 'cors',
-          headers: {
-            'Access-Control-Allow-Origin': '*'
-          }
+          method: 'GET',
+          // Don't set custom headers that trigger preflight
+          // Let the browser handle CORS naturally
         });
 
         if (response.ok) {
+          contentType = response.headers.get('content-type') || '';
+          console.log('Response content-type:', contentType);
+          
+          // Check if the response is actually a PDF
+          if (!contentType.includes('pdf') && !contentType.includes('application/octet-stream')) {
+            // Try to get a sample of the response to check if it's HTML
+            const textPreview = await response.clone().text().then(t => t.substring(0, 100));
+            console.log('Response preview:', textPreview);
+            
+            if (textPreview.trim().toLowerCase().startsWith('<!doctype') || 
+                textPreview.trim().toLowerCase().startsWith('<html')) {
+              throw new Error('The URL returned HTML instead of a PDF file. The document may not be accessible.');
+            }
+          }
+          
           const blob = await response.blob();
           pdfBlobUrl = URL.createObjectURL(blob);
-          console.log('PDF loaded as blob successfully');
+          console.log('PDF loaded as blob successfully, blob URL:', pdfBlobUrl, 'size:', blob.size);
+          
+          if (blob.size === 0) {
+            throw new Error('The PDF file is empty (0 bytes).');
+          }
         } else {
-          console.warn('Failed to fetch PDF as blob, using direct URL:', response.status, response.statusText);
+          console.warn('Failed to fetch PDF as blob, using direct URL. Status:', response.status);
+          if (response.status === 404) {
+            throw new Error('PDF file not found (404). The document may have been deleted.');
+          } else if (response.status === 403) {
+            throw new Error('Access denied (403). You may not have permission to view this document.');
+          }
         }
       } catch (fetchError) {
+        if (fetchError.message.includes('HTML instead of a PDF') || 
+            fetchError.message.includes('empty') ||
+            fetchError.message.includes('not found') ||
+            fetchError.message.includes('Access denied')) {
+          // Re-throw our custom errors
+          throw fetchError;
+        }
         console.warn('Could not fetch PDF as blob, using direct URL:', fetchError.message);
-        // Fall back to direct URL
+        // Fall back to direct URL - blob conversion failed but we can still try direct URL
       }
 
       // Load PDF document with error handling
@@ -179,7 +210,9 @@ export default function PdfAnnotationModal({
         url: pdfBlobUrl,
         cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
         cMapPacked: true,
-        standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/'
+        standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/',
+        // Increase timeout for slow connections
+        timeout: 30000
       });
 
       loadingTask.onProgress = (progress) => {
@@ -211,14 +244,22 @@ export default function PdfAnnotationModal({
       if (error.name === 'UnexpectedResponseException') {
         errorMessage = 'PDF file not found or access denied';
       } else if (error.name === 'InvalidPDFException') {
-        errorMessage = 'The file is not a valid PDF';
+        errorMessage = 'The file is not a valid PDF. Please check if the document URL is correct and accessible.';
       } else if (error.name === 'MissingPDFException') {
         errorMessage = 'PDF file is missing or corrupted';
       } else if (error.message && error.message.includes('fetch')) {
         errorMessage = 'Network error: Could not download PDF. Please check your internet connection.';
+      } else if (error.message && error.message.includes('CORS')) {
+        errorMessage = 'CORS error: Cannot access PDF from this domain. Please try again or contact support.';
+      } else if (error.message) {
+        // Use the custom error message we threw
+        errorMessage = error.message;
       }
 
-      toast.error(errorMessage);
+      toast.error(errorMessage, {
+        position: 'top-right',
+        autoClose: 5000
+      });
       setLoading(false);
     }
   };
