@@ -283,7 +283,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
 
     return (
         <Modal show={show} onHide={resetModal} centered backdrop="static" size={step === 1 ? "md" : "xl"} className="upload-modal">
-            <Modal.Body className="p-4" ref={modalBodyRef}>
+            <Modal.Body className="" ref={modalBodyRef}>
 
                 <h5 className="upload-heading">Upload Documents</h5>
                 <p className="upload-subheading ">Upload your tax documents securely</p>
@@ -313,20 +313,42 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                 </div>
 
                 {step === 1 && (
-                    <div className="d-flex justify-content-end gap-2">
-                        <Button className="btn-cancel-custom" onClick={resetModal}>
-                            Cancel
-                        </Button>
+                    <>
+                        {files.length > 0 && (
+                            <div className="mb-4">
+                                <h6 className="mb-2 text-muted">Selected Files ({files.length})</h6>
+                                <div className="border rounded p-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                    {files.map((file, idx) => (
+                                        <div key={idx} className="d-flex justify-content-between align-items-center p-2 border-bottom last:border-0">
+                                            <div className="d-flex align-items-center gap-2">
+                                                <FaRegFileAlt className="text-muted" />
+                                                <div>
+                                                    <div className="small fw-semibold">{file.name}</div>
+                                                    <small className="text-muted">{file.size}</small>
+                                                </div>
+                                            </div>
+                                            <span className="remove-icon" onClick={(e) => removeFile(idx)}>
+                                                <CrossIcon />
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        <div className="d-flex justify-content-end gap-2">
+                            <Button className="btn-cancel-custom" onClick={resetModal}>
+                                Cancel
+                            </Button>
 
-                        <Button
-                            className="btn-upload-custom"
-                            onClick={proceedToConfigure}
-                            disabled={files.length === 0}
-                        >
-                            Upload Documents
-                        </Button>
-                    </div>
-
+                            <Button
+                                className="btn-upload-custom"
+                                onClick={proceedToConfigure}
+                                disabled={files.length === 0}
+                            >
+                                Upload Documents
+                            </Button>
+                        </div>
+                    </>
                 )}
                 {step === 2 && (
                     <>

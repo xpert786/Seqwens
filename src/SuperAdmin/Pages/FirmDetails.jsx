@@ -1040,22 +1040,52 @@ export default function FirmDetails() {
                                             <div className="flex items-center justify-between p-4 rounded-xl bg-blue-50 dark:bg-blue-900/40 border border-blue-100 dark:border-blue-800">
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-blue-600 dark:text-blue-400">
-                                                            <path d="M10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2ZM10 16.5C6.41015 16.5 3.5 13.5899 3.5 10C3.5 6.41015 6.41015 3.5 10 3.5C13.5899 3.5 16.5 6.41015 16.5 10C16.5 13.5899 13.5899 16.5 10 16.5ZM9.25 6.5V10.75L12.75 12.75L13.25 11.75L10.25 10.25V6.5H9.25Z" fill="currentColor" />
+                                                        <svg
+                                                            width="18"
+                                                            height="18"
+                                                            viewBox="0 0 20 20"
+                                                            fill="none"
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            className="text-blue-600 dark:text-blue-400"
+                                                        >
+                                                            <path
+                                                                d="M10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2ZM10 16.5C6.41015 16.5 3.5 13.5899 3.5 10C3.5 6.41015 6.41015 3.5 10 3.5C13.5899 3.5 16.5 6.41015 16.5 10C16.5 13.5899 13.5899 16.5 10 16.5ZM9.25 6.5V10.75L12.75 12.75L13.25 11.75L10.25 10.25V6.5H9.25Z"
+                                                                fill="currentColor"
+                                                            />
                                                         </svg>
                                                         <p className="text-sm font-semibold text-blue-900 dark:text-white">Developer Subscription (QA Mode)</p>
                                                     </div>
                                                     <p className="text-xs text-blue-700 dark:text-blue-200">Grant full access to all features (OCR, AI, etc.) for testing internal workflows. Bypasses all billing limits.</p>
                                                 </div>
+
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowDevModeConfirm(true)}
                                                     disabled={enablingDevMode}
-                                                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${firmDetails.is_billing_bypass ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`}
+                                                    className={`
+        relative inline-flex h-6 w-11 flex-shrink-0
+        cursor-pointer rounded-full border-2 border-transparent
+        transition-colors duration-200 ease-in-out
+        focus:outline-none focus:ring-2 focus:ring-blue-500
+        dark:focus:ring-offset-gray-900
+        ${firmDetails.is_billing_bypass
+                                                            ? "bg-blue-600"
+                                                            : "bg-gray-200 dark:bg-gray-600"
+                                                        }
+      `}
                                                     style={{ borderRadius: "20px" }}
                                                 >
                                                     <span
-                                                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${firmDetails.is_billing_bypass ? 'translate-x-5' : 'translate-x-0'}`}
+                                                        className={`
+          pointer-events-none inline-block h-5 w-5
+          transform rounded-full
+          bg-white dark:bg-gray-200
+          shadow transition duration-200 ease-in-out
+          ${firmDetails.is_billing_bypass
+                                                                ? "translate-x-5"
+                                                                : "translate-x-0"
+                                                            }
+        `}
                                                     />
                                                 </button>
                                             </div>
@@ -1231,7 +1261,7 @@ const BillingOverviewTab = ({
         if (typeof icon === 'string') {
             const mapped = iconMap[icon.toLowerCase?.() || icon];
             if (mapped) {
-               return <span className="text-base leading-none">{mapped}</span>;
+                return <span className="text-base leading-none">{mapped}</span>;
             }
         }
         return <span className="text-base leading-none">•</span>;

@@ -173,6 +173,26 @@
   transition: none !important;
 }
 
+/* Ensure filename wraps on small screens */
+.doc-item .small.fw-semibold {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  line-height: 1.3;
+}
+
+/* Ensure the file info container doesn't overflow */
+.doc-item .d-flex.flex-column.w-100 {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Allow the left content to shrink properly */
+.doc-item .d-flex.align-items-start.gap-2 {
+  min-width: 0;
+  flex: 1;
+}
+
 .doc-item.active {
   border: none;
   background-color: #F3F7FF;
@@ -417,6 +437,8 @@
   font-size: 10px;
   padding: 0.2em 0.6em;
   display: inline-block;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .custom-doc-header {

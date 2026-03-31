@@ -4,18 +4,18 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { firmAdminCalendarAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 import { toast } from 'react-toastify';
 import { createPortal } from 'react-dom';
-import { 
-    CalendarIcon, 
-    TimeIcon as ClockIcon, 
-    UsersIcon, 
-    VideoIcon, 
-    PlusIcon, 
-    ChevronLeftIcon, 
-    ChevronRightIcon, 
-    CloseModalIcon as CloseIcon, 
-    CalendarInputIcon as CalendarAltIcon, 
-    ClockInputIcon as ClockAltIcon, 
-    ChevronDownIcon 
+import {
+    CalendarIcon,
+    TimeIcon as ClockIcon,
+    UsersIcon,
+    VideoIcon,
+    PlusIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    CloseModalIcon as CloseIcon,
+    CalendarInputIcon as CalendarAltIcon,
+    ClockInputIcon as ClockAltIcon,
+    ChevronDownIcon
 } from '../../FirmAdminIcons/Icons';
 
 /**
@@ -666,15 +666,11 @@ const Appointments = () => {
                                     <label className="block text-[16px] font-medium text-gray-900 mb-0.5 font-[BasisGrotesquePro]">Date</label>
                                     <div className="relative">
                                         <input
-                                            type="text"
+                                            type="date"
                                             value={eventDate}
                                             onChange={(e) => setEventDate(e.target.value)}
-                                            placeholder="mm/dd/yyyy"
-                                            className="w-full px-3 py-1.5 text-sm !border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro] bg-white pr-10"
+                                            className="w-full px-3 py-1.5 text-sm !border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro] bg-white"
                                         />
-                                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                            <CalendarAltIcon className="w-4 h-4 text-gray-400" />
-                                        </div>
                                     </div>
                                 </div>
                                 <div>
@@ -753,6 +749,7 @@ const Appointments = () => {
                             <button
                                 onClick={() => setIsAddEventModalOpen(false)}
                                 className="px-4 py-1.5 text-sm bg-white !border border-[#E8F0FF] rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-gray-700"
+                                style={{ borderRadius: '10px' }}
                             >
                                 Cancel
                             </button>
@@ -761,6 +758,7 @@ const Appointments = () => {
                                     setIsAddEventModalOpen(false);
                                 }}
                                 className="px-4 py-1.5 text-sm bg-[#F56D2D] text-white rounded-lg hover:bg-[#E55A1D] transition-colors font-[BasisGrotesquePro]"
+                                style={{ borderRadius: '10px' }}
                             >
                                 Add Event
                             </button>
