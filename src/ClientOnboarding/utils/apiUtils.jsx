@@ -3997,7 +3997,9 @@ export const firmAdminClientsAPI = {
       .then(async (response) => {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+          const error = new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+          error.responseData = errorData; // Attach full response for contextual handling
+          throw error;
         }
         return response.json();
       });

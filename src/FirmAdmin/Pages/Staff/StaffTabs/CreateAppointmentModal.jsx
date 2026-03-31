@@ -196,8 +196,8 @@ export default function CreateAppointmentModal({ isOpen, onClose, onSuccess, sta
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4">
-            <div className="bg-white rounded-lg border border-[#E8F0FF] w-full max-w-xl max-h-[90vh] flex flex-col shadow-xl">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000001] p-4 overflow-y-auto">
+            <div className="bg-white rounded-lg border border-[#E8F0FF] w-full max-w-xl max-h-[90vh] flex flex-col shadow-xl my-auto relative">
                 {/* Header */}
                 <div className="flex items-start justify-between p-4 border-b border-[#E8F0FF] flex-shrink-0">
                     <div>

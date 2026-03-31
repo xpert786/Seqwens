@@ -474,6 +474,8 @@ export default function ClientManage() {
                 clientStatus: client.is_active !== undefined
                   ? (client.is_active ? 'Active' : 'Inactive')
                   : (client.status || profile.account_status?.toLowerCase() || 'new') === 'active' ? 'Active' : 'Inactive',
+                client_status: client.client_status || client.status || 'ACTIVE',
+                auto_assigned: client.auto_assigned || false,
                 pendingTasks: client.pending_tasks_count || 0,
                 documentsCount: client.documents_count || 0,
                 assignedStaff: client.assigned_staff || [],
@@ -2232,18 +2234,40 @@ export default function ClientManage() {
                                     </div>
                                     {/* Link Status Badge */}
                                     {client.is_linked === true || client.link_status === 'linked' ? (
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-300">
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800 border border-green-300">
                                         <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                         </svg>
                                         Linked
                                       </span>
                                     ) : (
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-300">
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-orange-100 text-orange-800 border border-orange-300">
                                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
                                         Unlinked
+                                      </span>
+                                    )}
+
+                                    {/* Client Status Badge */}
+                                    {client.client_status && (
+                                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${(() => {
+                                        switch (client.client_status.toUpperCase()) {
+                                          case 'ACTIVE': return 'bg-cyan-100 text-cyan-700 border border-cyan-200';
+                                          case 'FORMER': return 'bg-gray-100 text-gray-700 border border-gray-200';
+                                          case 'SHARED': return 'bg-indigo-100 text-indigo-700 border border-indigo-200';
+                                          case 'MULTI_FIRM': return 'bg-fuchsia-100 text-fuchsia-700 border border-fuchsia-200';
+                                          default: return 'bg-slate-100 text-slate-700 border border-slate-200';
+                                        }
+                                      })()}`}>
+                                        {client.client_status}
+                                      </span>
+                                    )}
+
+                                    {/* Auto-Assigned Badge */}
+                                    {client.auto_assigned && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200" title="Automatically assigned based on criteria">
+                                        Auto-Assigned
                                       </span>
                                     )}
                                   </div>

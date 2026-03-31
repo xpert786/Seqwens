@@ -528,16 +528,20 @@ export default function AppointmentsTab({ client }) {
       {/* Schedule Appointment Modal */}
       {showScheduleModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1070] p-4"
+          className="fixed inset-0 bg-black/50 z-[1000001] flex items-center justify-center p-4 overflow-y-auto"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowScheduleModal(false);
             }
           }}
         >
-          <div className="bg-white rounded-lg !border border-[#E8F0FF] w-full max-w-xl max-h-[75vh] overflow-y-auto">
+          <div 
+            className="bg-white rounded-xl border border-[#E8F0FF] w-full max-w-xl shadow-2xl flex flex-col my-auto relative" 
+            style={{ maxHeight: '90vh' }}
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
-            <div className="flex items-start justify-between p-6 border-b border-[#E8F0FF]">
+            <div className="flex items-start justify-between p-6 border-b border-[#E8F0FF] flex-shrink-0">
               <div>
                 <h5 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">
                   Create Appointment
@@ -549,16 +553,17 @@ export default function AppointmentsTab({ client }) {
               <button
                 onClick={() => setShowScheduleModal(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
+                type="button"
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="24" height="24" rx="12" fill="#E8F0FF" />
-                  <path d="M16.066 8.99502C16.1377 8.92587 16.1948 8.84314 16.2342 8.75165C16.2735 8.66017 16.2943 8.56176 16.2952 8.46218C16.2961 8.3626 16.2772 8.26383 16.2395 8.17164C16.2018 8.07945 16.1462 7.99568 16.0758 7.92523C16.0054 7.85478 15.9217 7.79905 15.8295 7.7613C15.7374 7.72354 15.6386 7.70452 15.5391 7.70534C15.4395 7.70616 15.341 7.7268 15.2495 7.76606C15.158 7.80532 15.0752 7.86242 15.006 7.93402L12 10.939L8.995 7.93402C8.92634 7.86033 8.84354 7.80123 8.75154 7.76024C8.65954 7.71925 8.56022 7.69721 8.45952 7.69543C8.35882 7.69365 8.25879 7.71218 8.1654 7.7499C8.07201 7.78762 7.98718 7.84376 7.91596 7.91498C7.84474 7.9862 7.7886 8.07103 7.75087 8.16442C7.71315 8.25781 7.69463 8.35784 7.69641 8.45854C7.69818 8.55925 7.72022 8.65856 7.76122 8.75056C7.80221 8.84256 7.86131 8.92536 7.935 8.99402L10.938 12L7.933 15.005C7.80052 15.1472 7.72839 15.3352 7.73182 15.5295C7.73525 15.7238 7.81396 15.9092 7.95138 16.0466C8.08879 16.1841 8.27417 16.2628 8.46847 16.2662C8.66278 16.2696 8.85082 16.1975 8.993 16.065L12 13.06L15.005 16.066C15.1472 16.1985 15.3352 16.2706 15.5295 16.2672C15.7238 16.2638 15.9092 16.1851 16.0466 16.0476C16.184 15.9102 16.2627 15.7248 16.2662 15.5305C16.2696 15.3362 16.1975 15.1482 16.065 15.006L13.062 12L16.066 8.99502Z" fill="#3B4A66" />
+                  <path d="M16.066 8.99502C16.1377 8.92587 16.1948 8.84314 16.2342 8.75165C16.2735 8.66017 16.2943 8.56176 16.2952 8.46218C16.2961 8.3626 16.2972 8.26383 16.2395 8.17164C16.2018 8.07945 16.1462 7.99568 16.0758 7.92523C16.0054 7.85478 15.9217 7.79905 15.8295 7.7613C15.7374 7.72354 15.6386 7.70452 15.5391 7.70534C15.4395 7.70616 15.341 7.7268 15.2495 7.76606C15.158 7.80532 15.0752 7.86242 15.006 7.93402L12 10.939L8.995 7.93402C8.92634 7.86033 8.84354 7.80123 8.75154 7.76024C8.65954 7.71925 8.56022 7.69721 8.45952 7.69543C8.35882 7.69365 8.25879 7.71218 8.1654 7.7499C8.07201 7.78762 7.98718 7.84376 7.91596 7.91498C7.84474 7.9862 7.7886 8.07103 7.75087 8.16442C7.71315 8.25781 7.69463 8.35784 7.69641 8.45854C7.69818 8.55925 7.72022 8.65856 7.76122 8.75056C7.80221 8.84256 7.86131 8.92536 7.935 8.99402L10.938 12L7.933 15.005C7.80052 15.1472 7.72839 15.3352 7.73182 15.5295C7.73525 15.7238 7.81396 15.9092 7.95138 16.0466C8.08879 16.1841 8.27417 16.2628 8.46847 16.2662C8.66278 16.2696 8.85082 16.1975 8.993 16.065L12 13.06L15.005 16.066C15.1472 16.1985 15.3352 16.2706 15.5295 16.2672C15.7238 16.2638 15.9092 16.1851 16.0466 16.0476C16.184 15.9102 16.2627 15.7248 16.2662 15.5305C16.2696 15.3362 16.1975 15.1482 16.065 15.006L13.062 12L16.066 8.99502Z" fill="#3B4A66" />
                 </svg>
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
               {/* Event Title */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 font-[BasisGrotesquePro]" style={{ color: '#3B4A66' }}>
@@ -668,7 +673,7 @@ export default function AppointmentsTab({ client }) {
             </div>
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-[#E8F0FF]">
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-[#E8F0FF] flex-shrink-0">
               <button
                 onClick={() => setShowScheduleModal(false)}
                 disabled={submitting}

@@ -22,6 +22,12 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
   const [showBuilder, setShowBuilder] = useState(false);
   const [esignFields, setEsignFields] = useState([]);
   const [fileToSign, setFileToSign] = useState(null);
+  const [clientInfo, setClientInfo] = useState({
+    status: null,
+    permissions: { can_upload: true, can_esign: true },
+    autoAssigned: false
+  });
+  const [loadingInfo, setLoadingInfo] = useState(false);
   const API_BASE_URL = getApiBaseUrl();
 
   // Fetch folders for the client
@@ -57,6 +63,42 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
 
     fetchFolders();
   }, [show, clientId, API_BASE_URL]);
+
+  // Fetch client status and permissions
+  useEffect(() => {
+    const fetchClientInfo = async () => {
+      if (!show || !clientId) return;
+
+      try {
+        setLoadingInfo(true);
+        const result = await firmAdminClientsAPI.getClientDetails(clientId);
+        if (result.success && result.data) {
+          setClientInfo({
+            status: result.data.client_status || result.data.status || 'ACTIVE',
+            permissions: result.data.permissions || { can_upload: true, can_esign: true },
+            autoAssigned: result.data.auto_assigned || false
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching client info:', error);
+      } finally {
+        setLoadingInfo(false);
+      }
+    };
+
+    fetchClientInfo();
+  }, [show, clientId]);
+
+  // Helper to get status badge style
+  const getStatusBadge = (status) => {
+    switch (status?.toUpperCase()) {
+      case 'ACTIVE': return { bg: 'bg-green-100', text: 'text-green-700', label: 'Active' };
+      case 'FORMER': return { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Former' };
+      case 'SHARED': return { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Shared' };
+      case 'MULTI_FIRM': return { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Multi-Firm' };
+      default: return { bg: 'bg-slate-100', text: 'text-slate-700', label: status || 'Unknown' };
+    }
+  };
 
   // Set current folder as default if provided
   useEffect(() => {
@@ -253,10 +295,27 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
 
       if (response.success) {
         const uploadedCount = response.data?.uploaded_count || files.length;
-        toast.success(`Successfully uploaded ${uploadedCount} document(s)`, {
-          position: 'top-right',
-          autoClose: 3000
-        });
+        const wasAutoAssigned = response.data?.auto_assigned || false;
+
+        if (wasAutoAssigned) {
+          toast.success(
+            <div className="flex flex-col gap-1">
+              <span className="font-bold text-sm">Upload Successful & Client Assigned</span>
+              <span className="text-[11px] leading-tight">This client has been automatically assigned to your portfolio during the upload process.</span>
+            </div>,
+            { 
+              position: 'top-right', 
+              autoClose: 6000, 
+              icon: '🏷️',
+              style: { backgroundColor: '#F0FDFF', border: '1px solid #3AD6F2' }
+            }
+          );
+        } else {
+          toast.success(`Successfully uploaded ${uploadedCount} document(s)`, {
+            position: 'top-right',
+            autoClose: 3000
+          });
+        }
 
         resetModal();
         if (onUploadSuccess) {
@@ -267,11 +326,39 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
       }
     } catch (error) {
       console.error('Error uploading documents:', error);
-      const errorMsg = handleAPIError(error);
-      toast.error(errorMsg || 'Failed to upload documents. Please try again.', {
-        position: 'top-right',
-        autoClose: 5000
-      });
+      
+      // Get contextual error information from the response data if available
+      const errorData = error.responseData || error.response?.data;
+      const errorType = errorData?.error_type || error.error_type;
+
+      if (errorType) {
+        switch (errorType) {
+          case 'ASSIGNMENT_MISSING':
+            toast.error(errorData.message || 'Client is not properly assigned. Please assign to a preparer before uploading.', {
+              autoClose: 5000,
+              icon: '🚨'
+            });
+            break;
+          case 'MULTI_FIRM_CONFLICT':
+            toast.warning(errorData.message || 'This client belongs to multiple firms. Please verify your permissions.', {
+              autoClose: 5000
+            });
+            break;
+          case 'NO_PERMISSION':
+            toast.error(errorData.message || 'You do not have permission to upload documents for this client.', {
+              autoClose: 3000
+            });
+            break;
+          default:
+            toast.error(errorData.message || error.message || 'Upload failed');
+        }
+      } else {
+        const errorMsg = handleAPIError(error);
+        toast.error(errorMsg || 'Failed to upload documents. Please try again.', {
+          position: 'top-right',
+          autoClose: 5000
+        });
+      }
     } finally {
       setUploading(false);
     }
@@ -304,8 +391,20 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
       }}>
         <div className="flex items-center justify-between mb-2">
           <div>
-            <h5 className="upload-heading" style={{ fontSize: '18px', fontWeight: '600' }}>Upload Documents</h5>
-            <p className="upload-subheading" style={{ fontSize: '13px' }}>Upload documents directly to the client's portal</p>
+            <div className="flex items-center gap-2">
+              <h5 className="upload-heading mb-0" style={{ fontSize: '18px', fontWeight: '600' }}>Upload Documents</h5>
+              {clientInfo.status && (
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getStatusBadge(clientInfo.status).bg} ${getStatusBadge(clientInfo.status).text}`}>
+                  {getStatusBadge(clientInfo.status).label}
+                </span>
+              )}
+              {clientInfo.autoAssigned && (
+                <span className="px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-[10px] font-bold uppercase tracking-wider">
+                  Auto-Assigned
+                </span>
+              )}
+            </div>
+            <p className="upload-subheading mb-0" style={{ fontSize: '13px' }}>Upload documents directly to the client's portal</p>
           </div>
           <button onClick={resetModal} className="p-2 rounded-full transition-colors text-slate-400">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -439,6 +538,13 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
                 checked={markForEsign}
                 onChange={(e) => {
                   const checked = e.target.checked;
+                  if (!clientInfo.permissions.can_esign && checked) {
+                    toast.warning("You do not have permission to request e-signatures for this client.", {
+                      position: 'top-right',
+                      autoClose: 3000
+                    });
+                    return;
+                  }
                   if (checked && files.length > 0) {
                     const hasNonPdf = files.some(f => {
                       const file = f.fileObject;
@@ -457,11 +563,21 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
                   }
                   setMarkForEsign(checked);
                 }}
-                disabled={uploading}
+                disabled={uploading || !clientInfo.permissions.can_esign}
               />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className={`w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 ${!clientInfo.permissions.can_esign ? 'opacity-50 grayscale' : ''}`}></div>
             </label>
           </div>
+          {!clientInfo.permissions.can_upload && (
+            <div className="p-3 bg-red-50 border border-red-100 rounded-lg flex items-center gap-3">
+              <div className="w-8 h-8 rounded bg-red-100 flex items-center justify-center text-red-600">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <p className="text-[11px] font-medium text-red-700 m-0">You don't have permission to upload documents for this client.</p>
+            </div>
+          )}
         </div>
 
         {/* Footer Actions */}
@@ -476,7 +592,7 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
           </button>
           <button
             onClick={handleUpload}
-            disabled={uploading || files.length === 0}
+            disabled={uploading || files.length === 0 || !clientInfo.permissions.can_upload}
             className="btn-upload-custom px-6 py-2 text-sm font-bold text-white rounded-md transition-all shadow-sm font-[BasisGrotesquePro] disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
             style={{ borderRadius: "10px" }}
           >

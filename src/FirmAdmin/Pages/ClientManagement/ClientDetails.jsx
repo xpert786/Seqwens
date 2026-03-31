@@ -257,7 +257,9 @@ export default function ClientDetails() {
     },
     billingHistory: client.billing_history || [],
     dateJoined: client.account_details?.join_date_value || '',
-    isSigned: client.personal_information?.is_signed || false
+    isSigned: client.personal_information?.is_signed || false,
+    client_status: client.client_status || client.account_details?.status || client.profile?.account_status || 'ACTIVE',
+    autoAssigned: client.auto_assigned || false
   } : null;
 
   const tabs = [
@@ -388,6 +390,24 @@ export default function ClientDetails() {
                 }`}>
                 {clientData.status.charAt(0).toUpperCase() + clientData.status.slice(1)}
               </span>
+              {clientData.client_status && clientData.client_status.toUpperCase() !== clientData.status?.toUpperCase() && (
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${(() => {
+                  switch (clientData.client_status.toUpperCase()) {
+                    case 'ACTIVE': return 'bg-cyan-100 text-cyan-700 border border-cyan-200';
+                    case 'FORMER': return 'bg-gray-100 text-gray-700 border border-gray-200';
+                    case 'SHARED': return 'bg-indigo-100 text-indigo-700 border border-indigo-200';
+                    case 'MULTI_FIRM': return 'bg-fuchsia-100 text-fuchsia-700 border border-fuchsia-200';
+                    default: return 'bg-slate-100 text-slate-700 border border-slate-200';
+                  }
+                })()}`}>
+                  {clientData.client_status}
+                </span>
+              )}
+              {clientData.autoAssigned && (
+                <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200 text-[10px] font-bold uppercase tracking-wider">
+                  Auto-Assigned
+                </span>
+              )}
             </div>
 
             {/* Contact Information - Responsive Grid */}

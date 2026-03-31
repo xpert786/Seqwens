@@ -639,19 +639,19 @@ body.is-impersonating .Toastify__toast-container--top-left {
 
 /* Bootstrap Modal Overrides */
 .modal {
-  z-index: 1070;
+  z-index: 1000000;
 }
 
 .modal-backdrop {
-  z-index: 1060;
+  z-index: 999999;
 }
 
 .modal-dialog {
-  z-index: 1070;
+  z-index: 1000001;
 }
 
 .modal-content {
-  z-index: 1070;
+  z-index: 1000001;
   position: relative;
 }
 
@@ -660,7 +660,7 @@ body.is-impersonating .Toastify__toast-container--top-left {
 [class*="Modal"],
 [class*="popup"],
 [class*="Popup"] {
-  z-index: 1070;
+  z-index: 1000000;
 }
 
 /* Fixed position overlays for modals */
@@ -668,13 +668,13 @@ body.is-impersonating .Toastify__toast-container--top-left {
 .fixed.inset-0[style*="z-index"],
 div[style*="zIndex"][style*="fixed"],
 div[style*="z-index"][style*="fixed"] {
-  z-index: 1070;
+  z-index: 1000000;
 }
 
 /* Ensure React Bootstrap Modal components are above everything */
 .react-bootstrap-modal,
 .bootstrap-modal {
-  z-index: 1070;
+  z-index: 1000000;
 }
 
 /* Spinner animation for loading states */
