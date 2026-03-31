@@ -5,8 +5,24 @@
 *::before,
 *::after {
     transition-property: background-color, border-color, color, fill, stroke, box-shadow;
-    transition-duration: 0.5s;
+    transition-duration: 0.3s;
     transition-timing-function: ease-in-out;
+}
+
+/* Tab Switching Animation */
+@keyframes tabFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-tab-content {
+    animation: tabFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* Base overrides */

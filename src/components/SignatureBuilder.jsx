@@ -27,8 +27,14 @@ const FIELD_TYPES = {
   TEXT: 'Text',
 };
 
+const DEFAULT_WIDTH = 140;
+const DEFAULT_HEIGHT = 45;
+const MIN_WIDTH = 80;
+const MIN_HEIGHT = 30;
+
 // Simple UI component for the field (used in sidebar, overlay, and on page)
-const FieldUI = ({ type, role, isDragging, isOverlay, scale = 1, onRemove }) => {
+// Simple UI component for the field (used in sidebar, overlay, and on page)
+const FieldUI = ({ type, role, isDragging, isOverlay, scale = 1, onRemove, isSelected, width, height }) => {
   const getBackgroundColor = (type) => {
     switch (type) {
       case FIELD_TYPES.SIGNATURE: return 'bg-pink-100 border-pink-300 text-pink-700';
@@ -40,34 +46,28 @@ const FieldUI = ({ type, role, isDragging, isOverlay, scale = 1, onRemove }) => 
 
   const getIcon = (type) => {
     switch (type) {
-      case FIELD_TYPES.SIGNATURE: return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 20H4L14 10L10 6L14 2L22 10L18 14L20 20Z" /></svg>;
-      case FIELD_TYPES.DATE: return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>;
-      case FIELD_TYPES.INITIALS: return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 17L10 3L17.5 17L2.5 17Z" /><path d="M11 12H19" /></svg>;
+      case FIELD_TYPES.SIGNATURE: return <svg width={14 * scale} height={14 * scale} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 20H4L14 10L10 6L14 2L22 10L18 14L20 20Z" /></svg>;
+      case FIELD_TYPES.DATE: return <svg width={14 * scale} height={14 * scale} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>;
+      case FIELD_TYPES.INITIALS: return <svg width={14 * scale} height={14 * scale} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 17L10 3L17.5 17L2.5 17Z" /><path d="M11 12H19" /></svg>;
       default: return null;
     }
   };
 
   return (
     <div
-      className={`px-3 py-2 rounded border-2 shadow-sm flex items-center gap-2 group min-w-[120px] select-none ${getBackgroundColor(type)} ${isDragging ? 'opacity-50' : ''} ${isOverlay ? 'cursor-grabbing shadow-xl ring-2 ring-blue-400' : 'cursor-grab'}`}
-      style={isOverlay ? { transform: `scale(${scale})` } : {}}
+      className={`px-3 py-2 rounded-xl border shadow-sm flex items-center gap-2 group select-none transition-all duration-200 ${getBackgroundColor(type)} ${isDragging ? 'opacity-40 scale-105' : ''} ${isOverlay ? 'cursor-grabbing shadow-2xl ring-2 ring-blue-400' : 'cursor-grab'} ${isSelected ? 'ring-2 ring-blue-500 border-transparent shadow-lg scale-[1.02]' : 'hover:shadow-md'}`}
+      style={{
+        width: width ? `${width * scale}px` : (isOverlay ? `${DEFAULT_WIDTH * scale}px` : 'auto'),
+        height: height ? `${height * scale}px` : (isOverlay ? `${DEFAULT_HEIGHT * scale}px` : 'auto'),
+        minWidth: !width && !isOverlay ? '120px' : 'none',
+        fontSize: `${Math.max(8, 11 * scale)}px`
+      }}
     >
-      <div className="flex-shrink-0 opacity-70">{getIcon(type)}</div>
-      <div className="flex flex-col">
-        <span className="text-[10px] font-bold uppercase leading-none">{type}</span>
-        {role && <span className="text-[9px] opacity-60 leading-tight">{role}</span>}
+      <div className="flex-shrink-0 opacity-80">{getIcon(type)}</div>
+      <div className="flex flex-col min-w-0 overflow-hidden">
+        <span className="font-bold uppercase tracking-tight leading-none truncate" style={{ fontSize: `${Math.max(7, 9 * scale)}px` }}>{type}</span>
+        {role && <span className="opacity-70 leading-tight truncate font-medium mt-0.5" style={{ fontSize: `${Math.max(6, 8 * scale)}px` }}>{role}</span>}
       </div>
-      {onRemove && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onRemove(); }}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="ml-auto hidden group-hover:flex items-center justify-center w-5 h-5 rounded-full bg-white bg-opacity-50 hover:bg-red-500 transition-all shadow-sm"
-        >
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M1 1L9 9M9 1L1 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </button>
-      )}
     </div>
   );
 };
@@ -103,14 +103,15 @@ const MemoizedPage = React.memo(({ pageNumber, scale }) => (
   <Page
     pageNumber={pageNumber}
     scale={scale}
-    loading={<div className="h-[800px] w-[600px] bg-gray-100 animate-pulse flex items-center justify-center">Loading page...</div>}
+    devicePixelRatio={Math.min(2, window.devicePixelRatio || 1) * 1.5}
+    loading={<div className="h-[800px] w-full bg-gray-100 animate-pulse flex items-center justify-center" style={{ minWidth: '600px' }}>Loading page...</div>}
     renderAnnotationLayer={false}
     renderTextLayer={false}
   />
 ));
 
 // Droppable PDF Page
-const PDFPageWrapper = React.memo(({ pageNumber, placedFields, onRemoveField, onUpdateField, scale = 1.0 }) => {
+const PDFPageWrapper = React.memo(({ pageNumber, placedFields, onRemoveField, onUpdateField, scale = 1.0, selectedFieldId, onSelectField }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: `page-${pageNumber}`,
     data: { pageNumber },
@@ -136,6 +137,8 @@ const PDFPageWrapper = React.memo(({ pageNumber, placedFields, onRemoveField, on
             onRemove={onRemoveField}
             onUpdate={onUpdateField}
             scale={scale}
+            isSelected={selectedFieldId === field.id}
+            onSelect={onSelectField}
           />
         ))}
       </div>
@@ -144,24 +147,27 @@ const PDFPageWrapper = React.memo(({ pageNumber, placedFields, onRemoveField, on
 }, (prevProps, nextProps) => {
   if (prevProps.scale !== nextProps.scale) return false;
   if (prevProps.pageNumber !== nextProps.pageNumber) return false;
-  if (prevProps.placedFields.length !== nextProps.placedFields.length) return false; // Early exit if count changed
+  if (prevProps.placedFields.length !== nextProps.placedFields.length) return false;
+  if (prevProps.selectedFieldId !== nextProps.selectedFieldId) return false;
 
   const prevFields = prevProps.placedFields.filter(f => f.page === prevProps.pageNumber);
   const nextFields = nextProps.placedFields.filter(f => f.page === nextProps.pageNumber);
 
   if (prevFields.length !== nextFields.length) return false;
   for (let i = 0; i < prevFields.length; i++) {
-    // Only re-render if essential field properties changed
     if (prevFields[i].id !== nextFields[i].id) return false;
     if (prevFields[i].x !== nextFields[i].x) return false;
     if (prevFields[i].y !== nextFields[i].y) return false;
+    if (prevFields[i].width !== nextFields[i].width) return false;
+    if (prevFields[i].height !== nextFields[i].height) return false;
     if (prevFields[i].role !== nextFields[i].role) return false;
   }
   return true;
 });
 
 // Component for a field placed on the PDF
-const PlacedField = React.memo(({ field, onRemove, scale }) => {
+// Component for a field placed on the PDF
+const PlacedField = React.memo(({ field, onRemove, onUpdate, scale, isSelected, onSelect }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: field.id,
     data: { ...field, isSidebarItem: false },
@@ -171,9 +177,40 @@ const PlacedField = React.memo(({ field, onRemove, scale }) => {
     position: 'absolute',
     left: `${field.x * scale}px`,
     top: `${field.y * scale}px`,
+    width: `${(field.width || DEFAULT_WIDTH) * scale}px`,
+    height: `${(field.height || DEFAULT_HEIGHT) * scale}px`,
     zIndex: isDragging ? 0 : 100,
     opacity: isDragging ? 0 : 1,
     cursor: isDragging ? 'grabbing' : 'grab',
+  };
+
+  const handleResizePointerDown = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onSelect(field.id);
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = field.width || DEFAULT_WIDTH;
+    const startHeight = field.height || DEFAULT_HEIGHT;
+
+    const handlePointerMove = (moveEvent) => {
+      const deltaX = (moveEvent.clientX - startX) / scale;
+      const deltaY = (moveEvent.clientY - startY) / scale;
+
+      onUpdate(field.id, {
+        width: Math.max(MIN_WIDTH, startWidth + deltaX),
+        height: Math.max(MIN_HEIGHT, startHeight + deltaY)
+      });
+    };
+
+    const handlePointerUp = () => {
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
+    };
+
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
   };
 
   return (
@@ -182,25 +219,60 @@ const PlacedField = React.memo(({ field, onRemove, scale }) => {
       {...listeners}
       {...attributes}
       style={style}
+      onPointerDown={() => onSelect(field.id)}
     >
       <FieldUI
         type={field.type}
         role={field.role}
-        onRemove={() => onRemove(field.id)}
+        isSelected={isSelected}
+        width={field.width || DEFAULT_WIDTH}
+        height={field.height || DEFAULT_HEIGHT}
+        scale={scale}
+        isDragging={isDragging}
       />
+
+      {/* Primary Delete Button (Cross) - Increased Size and better touch target */}
+      {isSelected && !isDragging && (
+        <button
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            onRemove(field.id);
+          }}
+          className="absolute top-[-12px] right-[-12px] w-7 h-7 bg-red-500 text-white rounded-lg flex items-center justify-center shadow-xl hover:bg-red-600 transition-all z-[130] border-2 border-white hover:scale-110 active:scale-95 cursor-pointer"
+          title="Remove field"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      )}
+
+      {/* Resize Handle - Slightly larger for touch */}
+      {isSelected && !isDragging && (
+        <div
+          onPointerDown={handleResizePointerDown}
+          className="absolute bottom-[-8px] right-[-8px] w-5 h-5 bg-blue-600 rounded-lg border-2 border-white cursor-nwse-resize z-[120] shadow-md flex items-center justify-center transition-transform hover:scale-125 hover:bg-blue-700 shadow-lg"
+          title="Drag to resize"
+        >
+          <svg width="8" height="8" viewBox="0 0 6 6" fill="white">
+            <path d="M6 6H0L6 0V6Z" />
+          </svg>
+        </div>
+      )}
     </div>
   );
 });
 
-const PDFRenderer = React.memo(({ pdfFile, onDocumentLoadSuccess, numPages, placedFields, removeField, updateField, scale }) => {
+const PDFRenderer = React.memo(({ pdfFile, onDocumentLoadSuccess, numPages, placedFields, removeField, updateField, scale, selectedFieldId, onSelectField }) => {
   return (
     <Document
       file={pdfFile}
       onLoadSuccess={onDocumentLoadSuccess}
       loading={
         <div className="flex flex-col items-center justify-center pt-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-          <p className="text-white font-medium">Preparing document content...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-300 mb-4"></div>
+          <p className="text-slate-500 font-medium font-[BasisGrotesquePro]">Preparing document content...</p>
         </div>
       }
       onLoadError={(error) => console.error('PDF error:', error)}
@@ -213,6 +285,8 @@ const PDFRenderer = React.memo(({ pdfFile, onDocumentLoadSuccess, numPages, plac
           onRemoveField={removeField}
           onUpdateField={updateField}
           scale={scale}
+          selectedFieldId={selectedFieldId}
+          onSelectField={onSelectField}
         />
       ))}
     </Document>
@@ -230,11 +304,71 @@ export default function SignatureBuilder({
   const [selectedRole, setSelectedRole] = useState(availableRoles[0]);
   const [scale, setScale] = useState(1.0);
   const [activeDragItem, setActiveDragItem] = useState(null);
+  const [selectedFieldId, setSelectedFieldId] = useState(null);
+  const [snapToGrid, setSnapToGrid] = useState(false);
   const containerRef = useRef(null);
+
+  const GRID_SIZE = 10;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(MouseSensor),
+    useSensor(TouchSensor),
   );
+
+  // Arrow nudge support
+  useEffect(() => {
+    if (!selectedFieldId) return;
+
+    const handleKeyDown = (e) => {
+      const isArrowKey = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key);
+      const isDeleteKey = ['Delete', 'Backspace'].includes(e.key);
+
+      if (!isArrowKey && !isDeleteKey) return;
+
+      // Prevent scrolling when nudging
+      if (isArrowKey) e.preventDefault();
+
+      if (isDeleteKey) {
+        removeField(selectedFieldId);
+        setSelectedFieldId(null);
+        return;
+      }
+
+      const nudge = e.shiftKey ? 10 : 1;
+      let dx = 0;
+      let dy = 0;
+
+      switch (e.key) {
+        case 'ArrowUp': dy = -nudge; break;
+        case 'ArrowDown': dy = nudge; break;
+        case 'ArrowLeft': dx = -nudge; break;
+        case 'ArrowRight': dx = nudge; break;
+        default: break;
+      }
+
+      setPlacedFields(prev => prev.map(f => {
+        if (f.id !== selectedFieldId) return f;
+        
+        let newX = f.x + (dx / scale);
+        let newY = f.y + (dy / scale);
+
+        if (snapToGrid) {
+          newX = Math.round(newX / GRID_SIZE) * GRID_SIZE;
+          newY = Math.round(newY / GRID_SIZE) * GRID_SIZE;
+        }
+
+        return {
+          ...f,
+          x: newX,
+          y: newY
+        };
+      }));
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedFieldId, scale]);
 
   const onDocumentLoadSuccess = ({ numPages }) => {
     setNumPages(numPages);
@@ -259,43 +393,41 @@ export default function SignatureBuilder({
     // Correct pointer-based drop position
     const dragRect = active.rect.current.translated;
 
-    const x =
-      (dragRect.left - pageRect.left) / scale;
+    let x = (dragRect.left - pageRect.left) / scale;
+    let y = (dragRect.top - pageRect.top) / scale;
 
-    const y =
-      (dragRect.top - pageRect.top) / scale;
+    if (snapToGrid) {
+      x = Math.round(x / GRID_SIZE) * GRID_SIZE;
+      y = Math.round(y / GRID_SIZE) * GRID_SIZE;
+    }
 
     if (fieldData.isSidebarItem) {
-
       const newField = {
         id: `field-${Date.now()}`,
         type: fieldData.type,
         page: pageData.pageNumber,
         x,
         y,
+        width: DEFAULT_WIDTH,
+        height: DEFAULT_HEIGHT,
         role: selectedRole,
       };
 
       setPlacedFields(prev => [...prev, newField]);
-
+      setSelectedFieldId(newField.id);
     } else {
-
       setPlacedFields(prev =>
         prev.map(field => {
-
-          if (field.id !== active.id)
-            return field;
-
+          if (field.id !== active.id) return field;
           return {
             ...field,
             page: pageData.pageNumber,
             x,
             y,
           };
-
         })
       );
-
+      setSelectedFieldId(active.id);
     }
   };
 
@@ -348,11 +480,26 @@ export default function SignatureBuilder({
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-4">
             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block">Available Fields</label>
-            <DraggableField type={FIELD_TYPES.SIGNATURE} />
-            <DraggableField type={FIELD_TYPES.DATE} />
-            <DraggableField type={FIELD_TYPES.INITIALS} />
+            <div className="space-y-2">
+              <DraggableField type={FIELD_TYPES.SIGNATURE} />
+              <DraggableField type={FIELD_TYPES.DATE} />
+              <DraggableField type={FIELD_TYPES.INITIALS} />
+            </div>
+
+            <div className="pt-4 border-t border-gray-100">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input 
+                  type="checkbox" 
+                  checked={snapToGrid}
+                  onChange={(e) => setSnapToGrid(e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">Snap to Grid</span>
+              </label>
+              <p className="text-[10px] text-gray-400 mt-1 pl-6">Aligns fields to a 10px grid for precision</p>
+            </div>
           </div>
 
           <div className="mt-auto pt-6 border-t border-gray-100 flex flex-col gap-3">
@@ -392,6 +539,7 @@ export default function SignatureBuilder({
           <div
             ref={containerRef}
             className="flex-1 overflow-y-auto p-12 pt-16 scroll-smooth bg-gray-100"
+            onClick={() => setSelectedFieldId(null)}
           >
             <div className="max-w-fit mx-auto">
               <PDFRenderer
@@ -402,6 +550,8 @@ export default function SignatureBuilder({
                 removeField={removeField}
                 updateField={updateField}
                 scale={scale}
+                selectedFieldId={selectedFieldId}
+                onSelectField={setSelectedFieldId}
               />
             </div>
           </div>
