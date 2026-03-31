@@ -1037,15 +1037,15 @@ export default function FirmDetails() {
                                         {/* Developer Settings Section */}
                                         <div className="pt-6 border-t border-gray-100 dark:border-gray-700">
                                             <h6 className="text-base font-semibold text-[#1E293B] dark:text-white mb-4">Developer Settings</h6>
-                                            <div className="flex items-center justify-between p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800">
+                                            <div className="flex items-center justify-between p-4 rounded-xl bg-blue-50 dark:bg-blue-900/40 border border-blue-100 dark:border-blue-800">
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
                                                         <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-blue-600 dark:text-blue-400">
                                                             <path d="M10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2ZM10 16.5C6.41015 16.5 3.5 13.5899 3.5 10C3.5 6.41015 6.41015 3.5 10 3.5C13.5899 3.5 16.5 6.41015 16.5 10C16.5 13.5899 13.5899 16.5 10 16.5ZM9.25 6.5V10.75L12.75 12.75L13.25 11.75L10.25 10.25V6.5H9.25Z" fill="currentColor" />
                                                         </svg>
-                                                        <p className="text-sm font-semibold text-blue-900 dark:text-blue-950">Developer Subscription (QA Mode)</p>
+                                                        <p className="text-sm font-semibold text-blue-900 dark:text-white">Developer Subscription (QA Mode)</p>
                                                     </div>
-                                                    <p className="text-xs text-blue-700 dark:text-slate-950">Grant full access to all features (OCR, AI, etc.) for testing internal workflows. Bypasses all billing limits.</p>
+                                                    <p className="text-xs text-blue-700 dark:text-blue-200">Grant full access to all features (OCR, AI, etc.) for testing internal workflows. Bypasses all billing limits.</p>
                                                 </div>
                                                 <button
                                                     type="button"
