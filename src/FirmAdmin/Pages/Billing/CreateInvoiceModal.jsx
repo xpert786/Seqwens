@@ -510,6 +510,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
                   placeholder="mm/dd/yyyy"
                   className="w-full !border border-[#E8F0FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
+                  minDate={new Date()}
                 />
               </div>
               <div>
@@ -525,6 +526,7 @@ export default function CreateInvoiceModal({ onClose, onInvoiceCreated, preSelec
                     : 'border-[#E8F0FF] focus:ring-blue-500'
                     }`}
                   required
+                  minDate={new Date()}
                 />
                 {fieldErrors.due_date && (
                   <p className="text-red-600 text-xs mt-1 font-[BasisGrotesquePro]">

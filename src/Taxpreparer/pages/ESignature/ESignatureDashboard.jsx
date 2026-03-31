@@ -99,6 +99,14 @@ export default function ESignatureDashboard() {
   const folderDropdownRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  // Statistics calculation for the UI
+  const stats = [
+    { label: 'Pending', value: statistics.pending + statistics.inprogress, icon: <FiClock />, color: '#3AD6F2' },
+    { label: 'Completed', value: statistics.completed, icon: <FiCheckCircle />, color: '#22C55E' },
+    { label: 'Declined', value: statistics.declined, icon: <FiXCircle />, color: '#EF4444' },
+    { label: 'Expired', value: statistics.expired, icon: <FiInfo />, color: '#F56D2D' }
+  ];
+
   // Fetch signature requests
   useEffect(() => {
     fetchSignatureRequests();
@@ -1544,7 +1552,6 @@ export default function ESignatureDashboard() {
         show={showCreateModal}
         onHide={processing ? undefined : handleCloseCreateModal}
         size="md"
-        centered
         backdrop={processing ? 'static' : true}
         keyboard={!processing}
         style={{ fontFamily: 'BasisGrotesquePro' }}

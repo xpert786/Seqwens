@@ -669,6 +669,7 @@ const Appointments = () => {
                                             type="date"
                                             value={eventDate}
                                             onChange={(e) => setEventDate(e.target.value)}
+                                            min={new Date().toISOString().split('T')[0]}
                                             className="w-full px-3 py-1.5 text-sm !border border-[#E8F0FF] rounded-lg focus:outline-none font-[BasisGrotesquePro] bg-white"
                                         />
                                     </div>

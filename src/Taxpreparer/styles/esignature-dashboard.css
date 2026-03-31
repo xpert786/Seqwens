@@ -506,3 +506,25 @@
     padding: 16px !important;
   }
 }
+
+/* Fix modal header sticking to top */
+.custom-modal-width-md.modal {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding-top: 20px !important;
+  padding-bottom: 20px !important;
+}
+
+.custom-modal-width-md .modal-dialog {
+  margin: 1.75rem auto !important;
+  max-width: 600px !important;
+  width: 95% !important;
+}
+
+@media (max-width: 768px) {
+  .custom-modal-width-md .modal-dialog {
+    margin: 1rem auto !important;
+    max-width: 95% !important;
+  }
+}

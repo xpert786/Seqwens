@@ -3299,6 +3299,7 @@ export default function TasksPage() {
                         type="date"
                         value={formData.due_date}
                         onChange={(e) => handleInputChange('due_date', e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
                         style={{
                           width: '100%',
                           padding: '10px 12px',

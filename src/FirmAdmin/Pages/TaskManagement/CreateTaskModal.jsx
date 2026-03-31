@@ -868,6 +868,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
                   type="date"
                   className={`w-full px-3 py-2 bg-white border rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#3AD6F2] transition-all ${errors.due_date ? 'border-red-500' : 'border-gray-300'}`}
                   value={formData.due_date}
+                  min={new Date().toISOString().split('T')[0]}
                   onChange={(e) => {
                     setFormData(prev => ({ ...prev, due_date: e.target.value }));
                     if (errors.due_date) {

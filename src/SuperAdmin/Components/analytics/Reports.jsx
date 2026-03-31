@@ -1358,6 +1358,7 @@ export default function Reports() {
                 <input
                   type="datetime-local"
                   value={scheduleFormData.first_delivery}
+                  min={new Date().toISOString().slice(0, 16)}
                   onChange={(e) => setScheduleFormData(prev => ({ ...prev, first_delivery: e.target.value }))}
                   className="w-full px-3 py-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200"
                   style={{ border: '1px solid #E8F0FF' }}

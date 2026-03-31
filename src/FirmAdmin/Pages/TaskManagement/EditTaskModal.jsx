@@ -456,6 +456,7 @@ const EditTaskModal = ({ isOpen, onClose, onTaskUpdated, task }) => {
                                         className={`form-control border-slate-200 py-2 ${errors.due_date ? 'is-invalid' : ''}`}
                                         value={formData.due_date}
                                         onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
+                                        min={new Date().toISOString().split('T')[0]}
                                         style={{ fontSize: '13px', borderRadius: '10px' }}
                                     />
                                 </div>

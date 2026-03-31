@@ -2380,6 +2380,7 @@ export default function ClientDetails() {
                       type="date"
                       value={formData.due_date}
                       onChange={(e) => handleInputChange('due_date', e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
                       className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:border-blue-500 transition-all cursor-pointer"
                       style={{ fontFamily: 'BasisGrotesquePro' }}
                     />

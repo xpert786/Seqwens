@@ -16,6 +16,7 @@ const DatePicker = ({
   placeholder = 'mm/dd/yyyy',
   className = '',
   required = false,
+  minDate = null,
   ...props
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -224,18 +225,23 @@ const DatePicker = ({
                 day.getMonth() === new Date().getMonth() &&
                 day.getFullYear() === new Date().getFullYear();
 
+              const isPast = minDate && day < new Date(new Date(minDate).setHours(0, 0, 0, 0));
+              const isDisabled = isPast;
+
               return (
                 <button
                   key={index}
-                  onClick={() => handleDateSelect(day)}
+                  type="button"
+                  onClick={() => !isDisabled && handleDateSelect(day)}
+                  disabled={isDisabled}
                   className={`text-center text-sm py-2 px-1 rounded-md transition-colors ${isSelected
                     ? 'bg-blue-600 text-white'
                     : isToday
                       ? 'bg-blue-100 text-blue-600'
                       : isCurrentMonth
-                        ? 'text-gray-900 hover:bg-gray-100'
-                        : 'text-gray-400 hover:bg-gray-100'
-                    }`}
+                        ? (isDisabled ? 'text-gray-200 cursor-not-allowed' : 'text-gray-900 hover:bg-gray-100 cursor-pointer')
+                        : (isDisabled ? 'text-gray-100 cursor-not-allowed' : 'text-gray-400 hover:bg-gray-100 cursor-pointer')
+                    } ${isDisabled ? 'bg-gray-50' : ''}`}
                 >
                   {day.getDate()}
                 </button>

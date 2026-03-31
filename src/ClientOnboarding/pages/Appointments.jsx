@@ -2335,6 +2335,7 @@ export default function Appointments() {
                       // Fetch time slots when date changes
                       fetchEditModalTimeSlots(newDate);
                     }}
+                    min={new Date().toISOString().split('T')[0]}
                     style={{ fontFamily: "BasisGrotesquePro" }}
                   />
                 </div>

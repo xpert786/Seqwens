@@ -178,6 +178,7 @@ const AddPaymentMethodModal = ({ isOpen, onClose, onSuccess, isLoading = false }
             onClick={handleClose}
             disabled={loading || isLoading}
             aria-label="Close modal"
+            style={{ borderRadius: "50px" }}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -257,49 +258,43 @@ const AddPaymentMethodModal = ({ isOpen, onClose, onSuccess, isLoading = false }
               </div>
             </div>
 
-            <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 border-dashed">
-              <label className="flex flex-row items-start gap-3 cursor-pointer group">
-
-                {/* Checkbox */}
-                <div className="relative flex items-center justify-center mt-1">
-                  <input
-                    type="checkbox"
-                    checked={setAsDefault}
-                    onChange={(e) => setSetAsDefault(e.target.checked)}
-                    disabled={loading || isLoading}
-                    className="w-5 h-5 appearance-none border-2 border-gray-300 rounded-lg checked:bg-orange-500 checked:border-orange-500 transition-all cursor-pointer"
-                  />
-
-                  {setAsDefault && (
-                    <svg
-                      className="absolute w-3 h-3 text-white pointer-events-none"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  )}
-                </div>
-
-                {/* Text (2 lines) */}
-                <div className="flex flex-col leading-tight">
-
-                  {/* First line */}
-                  <span className="text-sm font-bold text-gray-700 group-hover:text-gray-900 transition-colors font-[BasisGrotesquePro]">
+            <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 border-dashed transition-all hover:bg-gray-100/50">
+              <label className="flex flex-col gap-0.5 cursor-pointer group w-full">
+                {/* Top Row: Title (Left) and Checkbox/Icon (Right) */}
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-sm font-bold text-gray-800 group-hover:text-orange-600 transition-colors font-[BasisGrotesquePro]">
                     Set as primary card
                   </span>
 
-                  {/* Second line (bracket line below) */}
-                  <span className="text-[10px] text-gray-500 font-medium mt-0.5">
-                    (Use this card for future renewals and invoices)
-                  </span>
-
+                  {/* Custom Circular Checkbox - Moved to the RIGHT side */}
+                  <div className="relative flex items-center justify-center flex-shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={setAsDefault}
+                      onChange={(e) => setSetAsDefault(e.target.checked)}
+                      disabled={loading || isLoading}
+                      className="w-6 h-6 appearance-none border-2 border-gray-300 rounded-full checked:bg-orange-500 checked:border-orange-500 transition-all cursor-pointer ring-offset-2 focus:ring-2 focus:ring-orange-500/20"
+                    />
+                    {setAsDefault && (
+                      <svg
+                        className="absolute w-3.5 h-3.5 text-white pointer-events-none"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    )}
+                  </div>
                 </div>
 
+                {/* Second Row: Description (Left) */}
+                <span className="text-[10px] text-gray-500 font-medium leading-tight">
+                  (Use this card for future renewals and invoices)
+                </span>
               </label>
             </div>
 

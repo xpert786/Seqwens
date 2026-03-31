@@ -304,12 +304,12 @@ const SavedPaymentMethods = () => {
           <button
             className="px-8 py-3 bg-[#F97316] text-white rounded-lg font-bold transition-all shadow-lg shadow-orange-100 active:scale-95 font-[BasisGrotesquePro]"
             onClick={() => setIsAddModalOpen(true)}
+            style={{ borderRadius: "10px" }}
           >
             Add Your First Card
           </button>
         </div>
       )}
-
       {/* Info Section */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
         <div className="bg-white p-3 rounded-xl border border-[#E8F0FF] shadow-sm">
@@ -378,13 +378,13 @@ const SavedPaymentMethods = () => {
           <div className="flex gap-3">
             <button
               onClick={() => setShowDeleteModal(false)}
-              className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 font-bold text-sm hover:bg-gray-200 transition-colors font-[BasisGrotesquePro] rounded-xl" style={{borderRadius: '10px'}}
+              className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 font-bold text-sm hover:bg-gray-200 transition-colors font-[BasisGrotesquePro] rounded-xl" style={{ borderRadius: '10px' }}
             >
               Cancel
             </button>
             <button
               onClick={confirmDelete}
-              className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-lg font-bold text-sm shadow-lg shadow-red-100 transition-all font-[BasisGrotesquePro]" style={{borderRadius: '10px'}}
+              className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-lg font-bold text-sm shadow-lg shadow-red-100 transition-all font-[BasisGrotesquePro]" style={{ borderRadius: '10px' }}
               disabled={deletingId}
             >
               {deletingId ? 'Deleting...' : 'Delete Card'}

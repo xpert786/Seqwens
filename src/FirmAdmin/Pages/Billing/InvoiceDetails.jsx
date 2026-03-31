@@ -615,6 +615,7 @@ export default function InvoiceDetails() {
                   type="date"
                   className="w-full px-3 py-2 bg-gray-50 border border-gray-200 !rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-[BasisGrotesquePro]"
                   value={editFormData.due_date}
+                  min={new Date().toISOString().split('T')[0]}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, due_date: e.target.value }))}
                 />
               </div>
