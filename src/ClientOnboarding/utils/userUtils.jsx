@@ -169,17 +169,37 @@ export const clearUserData = (keepImpersonation = false) => {
  * @returns {boolean} True if user is logged in
  */
 export const isLoggedIn = () => {
-  // Check sessionStorage first (current session)
-  if (sessionStorage.getItem("isLoggedIn") === "true") {
-    return true;
+  // 1. Check Fundamental boolean markers in storage
+  const isSessionLoggedIn = sessionStorage.getItem("isLoggedIn") === "true";
+  const isLocalLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+
+  if (!isSessionLoggedIn && !isLocalLoggedIn) {
+    return false;
   }
 
-  // Check localStorage (persistent sessions)
-  if (localStorage.getItem("isLoggedIn") === "true") {
-    return true;
+  // 2. Check for Token Presence
+  // If markers exist but the access token is missing, the session state is corrupted/inconsistent
+  const token = getAccessToken();
+  if (!token) {
+    console.warn('[USER_UTILS] isLoggedIn: Session markers exist but access token is missing');
+    return false;
   }
 
-  return false;
+  // 3. Expiry Check
+  // If the token is expired, we check if we at least have a refresh token to recover the session.
+  // If we have no refresh token and the access token is expired, we are effectively logged out.
+  if (isTokenExpired()) {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+      console.warn('[USER_UTILS] isLoggedIn: Access token is expired and no refresh token found');
+      return false;
+    }
+    
+    // If we have a refresh token, we return true and rely on the apiUtils.jsx 
+    // interceptor to perform the silent refresh on the next API call.
+  }
+
+  return true;
 };
 
 /**

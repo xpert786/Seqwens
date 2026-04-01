@@ -225,7 +225,9 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
               <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2 sm:gap-4 mt-2 text-sm text-gray-600">
                 <span className="inline-flex items-center gap-1">
                   <span className="text-gray-500">Status:</span>
-                  <span className="font-medium">{instance.status_display || instance.status || 'Active'}</span>
+                  <span className={`font-medium ${(instance.status?.toLowerCase() === 'cancelled' || instance.status?.toLowerCase() === 'deleted') ? 'text-red-600 font-bold' : ''}`}>
+                    {instance.status_display || instance.status || 'Active'}
+                  </span>
                 </span>
                 {instance.started_at && (
                   <span className="inline-flex items-center gap-1">
@@ -241,7 +243,7 @@ const WorkflowInstanceView = ({ instance: initialInstance, onBack }) => {
                 )}
               </div>
             </div>
-            {canDelete && (
+            {canDelete && instance.status?.toLowerCase() !== 'cancelled' && instance.status?.toLowerCase() !== 'deleted' && (
               <div className="flex-shrink-0 lg:ml-4">
                 <button
                   onClick={handleDeleteClick}

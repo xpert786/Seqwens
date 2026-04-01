@@ -27,6 +27,9 @@ const ActiveWorkflowsDashboard = ({ instances, onViewInstance, onRefresh, loadin
         return 'bg-yellow-100 text-yellow-700';
       case 'completed':
         return 'bg-blue-100 text-blue-700';
+      case 'cancelled':
+      case 'deleted':
+        return 'bg-red-100 text-red-700 font-bold';
       default:
         return 'bg-gray-100 text-gray-700';
     }
@@ -192,13 +195,15 @@ const ActiveWorkflowsDashboard = ({ instances, onViewInstance, onRefresh, loadin
                       >
                         View Details
                       </button>
-                      <button
-                        onClick={() => handleDeleteClick(instance)}
-                        className="px-4 py-2 text-sm font-medium text-red-500 bg-white border border-red-500 rounded-lg font-[BasisGrotesquePro]"
-                        style={{ borderRadius: '8px' }}
-                      >
-                        Delete
-                      </button>
+                      {instance.status?.toLowerCase() !== 'cancelled' && instance.status?.toLowerCase() !== 'deleted' && (
+                        <button
+                          onClick={() => handleDeleteClick(instance)}
+                          className="px-4 py-2 text-sm font-medium text-red-500 bg-white border border-red-500 rounded-lg font-[BasisGrotesquePro]"
+                          style={{ borderRadius: '8px' }}
+                        >
+                          Delete
+                        </button>
+                      )}
                     </div>
                   </div>
 

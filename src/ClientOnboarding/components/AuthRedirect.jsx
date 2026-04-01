@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { isLoggedIn, getStorage } from "../utils/userUtils";
+import { isLoggedIn, getStorage, clearUserData } from "../utils/userUtils";
 
 /**
  * AuthRedirect component that redirects authenticated users to their appropriate dashboard
@@ -10,8 +10,18 @@ export default function AuthRedirect({ children }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
-    if (isLoggedIn()) {
+    const isActuallyLoggedIn = isLoggedIn();
+    const sessionMarked = sessionStorage.getItem("isLoggedIn") === "true" || localStorage.getItem("isLoggedIn") === "true";
+
+    // If session indicators exist but isLoggedIn() is false, it means we have a stale or corrupted session
+    if (!isActuallyLoggedIn && sessionMarked) {
+      console.warn('[AUTH_REDIRECT] Stale session indicators found, performing automatic cleanup');
+      clearUserData();
+      // No redirect needed, just stay on the current flow (Signup/Login)
+      return;
+    }
+
+    if (isActuallyLoggedIn) {
       // Get user type from storage
       const storage = getStorage();
       const userType = storage?.getItem("userType");
