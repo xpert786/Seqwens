@@ -537,9 +537,9 @@ export default function ClientManage() {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (showDropdown && 
-          !event.target.closest('.dropdown-container') && 
-          !event.target.closest('.portal-dropdown')) {
+      if (showDropdown &&
+        !event.target.closest('.dropdown-container') &&
+        !event.target.closest('.portal-dropdown')) {
         setShowDropdown(null);
       }
     };
@@ -2048,9 +2048,10 @@ export default function ClientManage() {
                       <p className="text-[11px] text-orange-700 m-0">You have <strong>{overview.pending}</strong> client{overview.pending !== 1 ? 's' : ''} in the <strong>Needs Assignment</strong> tab waiting for work to begin.</p>
                     </div>
                   </div>
-                  <button 
+                  <button
                     onClick={() => handleTabChange('pending-requests')}
                     className="px-4 py-1.5 bg-orange-600 text-white text-xs font-bold rounded-lg hover:bg-orange-700 transition-colors"
+                    style={{ borderRadius: "10px" }}
                   >
                     Go to Assignment
                   </button>
@@ -2542,7 +2543,7 @@ export default function ClientManage() {
 
           {/* Pagination */}
           {pagination.total_count > 0 && (
-           <div className="p-3 sm:p-4 border-t border-gray-200 flex flex-nowrap items-center justify-between gap-2 overflow-x-auto">
+            <div className="p-3 sm:p-4 border-t border-gray-200 flex flex-nowrap items-center justify-between gap-2 overflow-x-auto">
               <div className="text-[10px] sm:text-xs text-gray-600 font-[BasisGrotesquePro] whitespace-nowrap">
                 Showing {((pagination.page - 1) * pagination.page_size) + 1}-{Math.min(pagination.page * pagination.page_size, pagination.total_count)} of {pagination.total_count}
               </div>
