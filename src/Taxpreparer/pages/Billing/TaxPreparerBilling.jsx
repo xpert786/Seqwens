@@ -240,7 +240,7 @@ export default function TaxPreparerBilling() {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8 mt-4">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <div className="w-14 py-2 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
+            <div className="w-14 py-2 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white">
               <FiDollarSign size={32} />
             </div>
             <div>
@@ -258,7 +258,7 @@ export default function TaxPreparerBilling() {
           {canCreateInvoices && activeTab === 'clients' && (
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 hover:scale-[1.02] transition-all !rounded-xl shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
+              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] hover:bg-[#F56D2D]/30 transition-all !rounded-xl active:scale-95"
             >
               <svg className="w-5 h-5 font-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
@@ -303,7 +303,7 @@ export default function TaxPreparerBilling() {
               { id: 'overdue', label: 'Overdue Count', val: summary.overdue_count || 0, icon: <FiAlertCircle size={18} />, bg: 'bg-red-50', text: 'text-red-500' },
               { id: 'next', label: 'Next Due Date', val: summary.next_due_date ? formatDate(summary.next_due_date) : 'N/A', icon: <FiCalendar size={18} />, bg: 'bg-indigo-50', text: 'text-indigo-500' },
             ].map((card) => (
-              <div key={card.id} className="bg-white rounded-xl border border-[#E8F0FF] p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 transition-all hover:shadow-md">
+              <div key={card.id} className="bg-white rounded-2xl border border-[#E8F0FF] p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 transition-all hover:bg-gray-50/20">
                 <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg ${card.bg} flex items-center justify-center ${card.text} flex-shrink-0`}>
                   {card.icon}
                 </div>
@@ -340,7 +340,7 @@ export default function TaxPreparerBilling() {
           </div>
 
           {/* Invoices Table */}
-          <div className="bg-white rounded-xl border border-[#E8F0FF] shadow-sm overflow-hidden">
+          <div className="bg-white rounded-3xl border border-[#E8F0FF] overflow-hidden">
             {loading ? (
               <div className="text-center py-20">
                 <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-[#3AD6F2]"></div>
@@ -496,13 +496,13 @@ export default function TaxPreparerBilling() {
             </div>
           ) : platformBilling ? (
             <>
-              <div className="bg-white rounded-xl border border-[#E8F0FF] p-5 sm:p-6 shadow-sm">
+              <div className="bg-white rounded-3xl border border-[#E8F0FF] p-5 sm:p-8 transition-all">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                   <div>
                     <h3 className="text-lg sm:text-xl font-bold text-gray-900 font-[BasisGrotesquePro]">Split Billing Estimate</h3>
                     <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">Period: {platformBilling.billing_summary.period_start} to {platformBilling.billing_summary.period_end}</p>
                   </div>
-                  <div className="flex items-center gap-2 w-full sm:w-auto px-4 py-2 sm:p-0 bg-orange-50 sm:bg-transparent rounded-lg sm:text-right border border-orange-100 sm:border-0 shadow-sm sm:shadow-none">
+                  <div className="flex items-center gap-2 w-full sm:w-auto px-4 py-2 sm:p-0 bg-orange-50 sm:bg-transparent rounded-xl sm:text-right border border-orange-100 sm:border-0 sm:shadow-none">
                     <span className="text-xs text-orange-600 sm:text-gray-500 font-bold sm:font-normal uppercase sm:capitalize tracking-wider sm:tracking-normal">Estimated Total</span>
                     <span className="text-xl sm:text-3xl font-black text-[#F97316] font-[BasisGrotesquePro] leading-tight">${platformBilling.billing_summary.estimated_monthly_total.toFixed(2)}</span>
                   </div>
@@ -510,11 +510,11 @@ export default function TaxPreparerBilling() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {platformBilling.sections.map((section) => (
-                    <div key={section.id} className="border border-[#E8F0FF] rounded-xl p-4 sm:p-5 bg-gradient-to-br from-white to-gray-50 shadow-sm">
+                    <div key={section.id} className="border border-[#E8F0FF] rounded-2xl p-4 sm:p-5 bg-white transition-all hover:bg-gray-50/20">
                       <div className="flex justify-between items-start mb-3 gap-2">
                         <h4 className="font-bold text-gray-900 
                         !text-sm font-[BasisGrotesquePro]">{section.title}</h4>
-                        <span className={`!text-[9px] !sm:text-[10px] uppercase font-bold px-2 py-0.5 rounded shadow-sm ${section.is_covered ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                        <span className={`!text-[9px] !sm:text-[10px] uppercase font-bold px-2 py-0.5 rounded ${section.is_covered ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
                           {section.status}
                         </span>
                       </div>
@@ -531,8 +531,8 @@ export default function TaxPreparerBilling() {
                   <div className="mt-8 pt-6 border-t border-gray-100">
                     <button
                       onClick={() => setShowPaymentModal(true)}
-                      className="w-full sm:w-auto sm:float-right px-8 py-3.5 bg-[#F97316] text-white rounded-lg font-bold hover:bg-orange-600 transition-all shadow-lg shadow-orange-100 active:scale-95"
-                      style={{ borderRadius: '10px' }}
+                      className="w-full sm:w-auto sm:float-right px-8 py-3.5 bg-[#F97316] text-white font-bold hover:bg-orange-600 transition-all active:scale-95"
+                      style={{ borderRadius: '16px' }}
                     >
                       Pay Outstanding Portion
                     </button>
@@ -547,7 +547,7 @@ export default function TaxPreparerBilling() {
                 )}
               </div>
 
-              <div className="bg-white rounded-lg border border-[#E8F0FF] p-6 shadow-sm">
+              <div className="bg-white rounded-3xl border border-[#E8F0FF] p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Resource Breakdown</h3>
                 <div className="space-y-4">
                   {platformBilling.sections.map((section) => (
@@ -583,7 +583,7 @@ export default function TaxPreparerBilling() {
           onClick={() => !paymentProcessing && setShowPaymentModal(false)}
         >
           <div
-            className="bg-white !rounded-xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col"
+            className="bg-white !rounded-3xl max-w-lg w-full overflow-hidden flex flex-col"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-between items-center p-5 sm:p-6 border-b border-[#E8F0FF]">
@@ -603,7 +603,7 @@ export default function TaxPreparerBilling() {
             </div>
 
             <div className="p-5 sm:p-8">
-              <div className="mb-6 p-4 bg-orange-50 border border-orange-100 !rounded-xl flex justify-between items-center shadow-sm">
+              <div className="mb-6 p-4 bg-orange-50 border border-orange-100 !rounded-2xl flex justify-between items-center">
                 <span className="text-orange-800 font-bold uppercase text-xs tracking-wider">Amount to Pay</span>
                 <span className="text-2xl sm:text-3xl font-black text-orange-900 font-[BasisGrotesquePro]">${platformBilling?.billing_summary.estimated_monthly_total.toFixed(2)}</span>
               </div>
@@ -611,7 +611,7 @@ export default function TaxPreparerBilling() {
               <button
                 onClick={handlePlatformPayment}
                 disabled={paymentProcessing}
-                className="w-full py-4 bg-[#635BFF] text-white rounded-lg font-bold text-lg shadow-lg shadow-indigo-100 transition-all flex items-center justify-center gap-2"
+                className="w-full py-4 bg-[#635BFF] text-white rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2"
               >
                 {paymentProcessing ? (
                   <>

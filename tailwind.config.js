@@ -10,6 +10,15 @@ export default {
       fontFamily: {
         grotesque: ["BasisGrotesquePro", "sans-serif"],
       },
+      boxShadow: {
+        'sm': 'none',
+        'DEFAULT': 'none',
+        'md': 'none',
+        'lg': 'none',
+        'xl': 'none',
+        '2xl': 'none',
+        'inner': 'none',
+      },
     },
   },
   plugins: [],

@@ -27,18 +27,17 @@
 
   /* Individual column card */
   .task-column-card {
-    border-radius: 12px;
+    border-radius: 16px;
     border: 1px solid #E8F0FF;
     background: #F8FAFC;
     width: 100%;
     box-sizing: border-box;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   }
 
   /* Card body */
   .task-column-body {
-    padding: 1rem;
+    padding: 1.25rem;
   }
 
   /* Column header */
@@ -46,17 +45,16 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 1rem;
-    font-weight: 600;
+    margin-bottom: 1.25rem;
+    font-weight: 700;
     font-size: 16px;
     color: #3B4A66;
     flex-wrap: wrap;
-    /* wrap icon/text if needed */
   }
 
   /* Individual task item */
   .task-item {
-    border-radius: 10px;
+    border-radius: 16px;
     border: 1px solid #E8F0FF;
     padding: 1rem;
     margin-bottom: 0.75rem;
@@ -65,14 +63,13 @@
     cursor: pointer;
     overflow-wrap: break-word;
     background: #ffffff;
-    box-shadow: 0 2px 4px rgba(59, 74, 102, 0.04);
     transition: all 0.2s ease;
   }
 
   .task-item:hover {
-    box-shadow: 0 4px 12px rgba(59, 74, 102, 0.08);
     border-color: #00C0C6;
-    transform: translateY(-2px);
+    background-color: #F8FAFC;
+    transform: translateY(-1px);
   }
 
   /* Task inner content */

@@ -622,7 +622,7 @@ export default function CalendarPage() {
         {cardData.map((item, index) => (
           <div
             key={index}
-            className="bg-white rounded-xl border border-[#E8F0FF] p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+            className="bg-white rounded-2xl border border-[#E8F0FF] p-4 transition-all hover:bg-gray-50/20 cursor-pointer"
             onClick={() => handleStatClick(item.type)}
           >
             <div className="flex justify-between items-center mb-3">
@@ -664,7 +664,7 @@ export default function CalendarPage() {
 
       <div className="flex flex-col xl:flex-row gap-6 w-full calendar-main-layout animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Calendar Navigation and Grid Container */}
-        <div id="calendar-view-container" className="border border-[#E8F0FF] rounded-2xl pt-4 bg-white w-full xl:w-[75%] calendar-content-area shadow-sm">
+        <div id="calendar-view-container" className="border border-[#E8F0FF] rounded-3xl pt-4 bg-white w-full xl:w-[75%] calendar-content-area">
           {/* Calendar Navigation */}
           <div className="flex justify-between items-center mb-4 calendar-nav-controls">
             <div className="flex items-center gap-3 w-full justify-start pl-4 calendar-date-title">
@@ -676,7 +676,7 @@ export default function CalendarPage() {
               </h4>
             </div>
             <div className="flex items-center gap-2 justify-end w-full md:w-auto pr-4 calendar-nav-buttons">
-              <div className="flex items-center bg-white rounded-xl border border-[#E8F0FF] p-1 shadow-sm">
+              <div className="flex items-center bg-white rounded-2xl border border-[#E8F0FF] p-1">
                 <button
                   className="p-2 text-gray-600 transition-all rounded-lg"
                   onClick={() => navigateCalendar(-1)}
@@ -706,7 +706,7 @@ export default function CalendarPage() {
           {/* Calendar Grid */}
           <div className="flex gap-6 px-4 pb-4">
             <div className="flex-1">
-              <div className="bg-white !rounded-2xl border border-[#E8F0FF] overflow-hidden shadow-sm">
+              <div className="bg-white !rounded-3xl border border-[#E8F0FF] overflow-hidden">
                 {/* Day Headers */}
                 {selectedPeriod !== "Day" && selectedPeriod !== "Years" && (
                   <div className="grid grid-cols-7 bg-[#F8FAFC] border-b border-[#E8F0FF]">
@@ -753,7 +753,7 @@ export default function CalendarPage() {
                         }}
                       >
                         <div className="flex justify-between items-start mb-2">
-                          <div className={`calendar-day-number-wrapper flex items-center justify-center font-bold transition-all ${selectedPeriod === "Years" ? 'px-4 py-1.5 rounded-xl text-xs uppercase tracking-widest' : 'w-8 h-8 text-sm rounded-xl'} ${isToday ? 'bg-[#F56D2D] text-white shadow-lg shadow-orange-500/30' : 'text-slate-600 bg-slate-50'
+                          <div className={`calendar-day-number-wrapper flex items-center justify-center font-bold transition-all ${selectedPeriod === "Years" ? 'px-4 py-1.5 rounded-xl text-xs uppercase tracking-widest' : 'w-8 h-8 text-sm rounded-xl'} ${isToday ? 'bg-[#F56D2D] text-white' : 'text-slate-600 bg-slate-50'
                             }`}>
                             {displayValue}
                           </div>
@@ -762,7 +762,7 @@ export default function CalendarPage() {
                           {dayEvents.map(event => (
                             <div
                               key={event.id}
-                              className="calendar-task-item flex flex-col gap-0.5 p-1.5 rounded-lg text-xs mb-1 shadow-sm cursor-pointer transition-all"
+                              className="calendar-task-item flex flex-col gap-0.5 p-1.5 rounded-xl text-xs mb-1 cursor-pointer transition-all"
                               style={{
                                 backgroundColor: '#FFF7ED',
                               }}
@@ -790,9 +790,9 @@ export default function CalendarPage() {
         {/* Sidebar */}
         <div className="w-full xl:w-96 space-y-5 calendar-sidebar-area">
           {/* Today's Events */}
-          <div className=" max-h-[380px] overflow-y-auto custom-scrollbar bg-white rounded-2xl border border-[#E8F0FF] p-3 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-all duration-300">
+          <div className=" max-h-[380px] overflow-y-auto custom-scrollbar bg-white rounded-3xl border border-[#E8F0FF] p-3 transition-all duration-300">
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#F56D2D] animate-pulse shadow-sm shadow-[#F56D2D]/50"></div>
+              <div className="w-2.5 h-2.5 rounded-full bg-[#F56D2D] animate-pulse"></div>
               <h6 className="font-black text-slate-800 m-0 text-sm uppercase tracking-wider">Today's Schedule</h6>
             </div>
             <p className="text-[10px] font-bold text-slate-400 mb-4 uppercase tracking-[0.15em]">

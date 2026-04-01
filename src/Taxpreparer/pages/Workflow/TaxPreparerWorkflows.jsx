@@ -225,7 +225,7 @@ const TaxPreparerWorkflows = () => {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12 mt-4">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <div className="w-14 py-2 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
+            <div className="w-14 py-2 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white">
               <Activity size={32} />
             </div>
             <div>
@@ -250,7 +250,7 @@ const TaxPreparerWorkflows = () => {
           { label: 'Completed', value: stats.completed, icon: <CheckCircle2 size={18} />, color: '#22C55E' },
           { label: 'Pending Requests', value: stats.pendingRequests, icon: <AlertCircle size={18} />, color: '#EF4444' }
         ].map((item, i) => (
-          <div key={i} className="bg-white !rounded-lg !border border-[#E8F0FF] p-4 shadow-sm hover:shadow-md transition-all">
+          <div key={i} className="bg-white !rounded-2xl !border border-[#E8F0FF] p-4 transition-all hover:border-[#3AD6F2]/20">
             <div className="flex items-center justify-between mb-2">
               <div className="text-gray-600 mb-2">{item.icon}</div>
               <p className="text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] leading-none mb-0">{item.value}</p>
@@ -269,7 +269,7 @@ const TaxPreparerWorkflows = () => {
           </div>
           <input
             type="text"
-            className="w-full py-2.5 pl-12 pr-6 bg-white !border border-[#E8F0FF] !rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all font-[BasisGrotesquePro]"
+            className="w-full py-2.5 pl-12 pr-6 bg-white !border border-[#E8F0FF] !rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all font-[BasisGrotesquePro]"
             placeholder="Search workflows..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -277,12 +277,12 @@ const TaxPreparerWorkflows = () => {
         </div>
 
         {/* Filter Tabs */}
-        <div className="bg-white !rounded-lg !border border-[#E8F0FF] p-1.5 flex gap-2 w-full lg:w-auto">
+        <div className="bg-white !rounded-2xl !border border-[#E8F0FF] p-1.5 flex gap-2 w-full lg:w-auto">
           {['all', 'active', 'completed'].map((s) => (
             <button
               key={s}
               onClick={() => setFilter(s)}
-              className={`px-4 py-2 !rounded-lg text-sm font-medium transition-all capitalize font-[BasisGrotesquePro] ${filter === s
+              className={`px-4 py-2 !rounded-xl text-sm font-bold transition-all capitalize font-[BasisGrotesquePro] ${filter === s
                 ? 'bg-[#3AD6F2] text-white'
                 : 'text-gray-600 hover:bg-gray-50'
                 }`}
@@ -295,8 +295,8 @@ const TaxPreparerWorkflows = () => {
 
       {/* Workflow List */}
       {filteredWorkflows.length === 0 ? (
-        <div className="bg-white rounded-2xl p-16 text-center border border-gray-100 shadow-sm">
-          <div className="bg-gray-50 w-28 h-28 rounded-[32px] flex items-center justify-center mx-auto mb-8 text-[#3AD6F2]/40 shadow-inner">
+        <div className="bg-white rounded-3xl p-16 text-center border border-[#E8F0FF]">
+          <div className="bg-gray-50 w-28 h-28 rounded-[32px] flex items-center justify-center mx-auto mb-8 text-[#3AD6F2]/40">
             <Search size={48} />
           </div>
           <h3 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">No workflows found</h3>
@@ -309,7 +309,7 @@ const TaxPreparerWorkflows = () => {
           {filteredWorkflows.map((workflow) => {
             const style = getStatusStyle(workflow.status);
             return (
-              <div key={workflow.id} className="bg-white !rounded-lg !border border-[#E8F0FF] p-5 shadow-sm hover:shadow-md transition-all">
+              <div key={workflow.id} className="bg-white !rounded-[32px] !border border-[#E8F0FF] p-8 transition-all hover:bg-gray-50/20">
                 <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-3">
@@ -322,19 +322,19 @@ const TaxPreparerWorkflows = () => {
                       <span className="text-gray-400 text-xs">Updated recently</span>
                     </div>
 
-                    <h5 className="text-lg font-bold text-gray-900 mb-4 font-[BasisGrotesquePro]">
+                    <h5 className="text-xl font-bold text-gray-900 mb-6 font-[BasisGrotesquePro]">
                       {workflow.template_name || 'Tax Workflow'}
                     </h5>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 !rounded-lg border border-gray-100">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      <div className="flex items-center gap-3 p-4 bg-gray-50 !rounded-2xl border border-gray-100">
                         <LayoutGrid size={16} className="text-gray-400" />
                         <div>
                           <p className="text-[10px] text-gray-400 font-bold uppercase mb-0">Client</p>
                           <p className="text-sm font-semibold text-gray-900 mb-0 truncate">{workflow.tax_case_name || 'Individual Taxpayer'}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 !rounded-lg border border-gray-100">
+                      <div className="flex items-center gap-3 p-4 bg-gray-50 !rounded-2xl border border-gray-100">
                         <Activity size={16} className="text-[#3AD6F2]" />
                         <div>
                           <p className="text-[10px] text-gray-400 font-bold uppercase mb-0">Stage</p>
@@ -357,16 +357,16 @@ const TaxPreparerWorkflows = () => {
                     </div>
                   </div>
 
-                  <div className="flex flex-row lg:flex-column gap-2 w-full lg:w-48 shrink-0">
+                  <div className="flex flex-row lg:flex-row gap-3 w-full lg:w-auto mt-4 lg:mt-0 items-center">
                     <button
                       onClick={() => handleViewWorkflow(workflow)}
-                      className="flex-1 px-4 py-2 bg-gray-900 text-white font-bold text-xs uppercase tracking-wider hover:bg-black transition-all !rounded-lg"
+                      className="px-6 py-2.5 bg-gray-900 text-white font-bold text-xs uppercase tracking-wider hover:bg-black transition-all rounded-xl"
                     >
                       View Activity
                     </button>
                     <button
                       onClick={() => handleCreateRequest(workflow)}
-                      className="flex-1 px-4 py-2 bg-white !border border-[#E8F0FF] text-[#3AD6F2] font-bold text-xs uppercase tracking-wider hover:bg-gray-50 transition-all !rounded-lg"
+                      className="px-6 py-2.5 bg-white border border-[#E8F0FF] text-[#3AD6F2] font-bold text-xs uppercase tracking-wider hover:bg-emerald-50 transition-all rounded-xl"
                     >
                       New Request
                     </button>
@@ -391,11 +391,11 @@ const TaxPreparerWorkflows = () => {
       )}
 
       {showVerifyModal && selectedRequest && (
-        <div className="fixed inset-0 backdrop-blur-xl bg-black/50 flex items-center justify-center p-4 z-[100000] animate-in fade-in duration-500">
-          <div className="bg-white rounded-[60px] max-w-6xl w-full max-h-[92vh] overflow-hidden flex flex-col shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-500 border border-white/50">
-            <div className="p-10 lg:p-14 border-b border-gray-100 flex justify-between items-center bg-gray-50/40 relative">
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[100000] animate-in fade-in duration-300">
+          <div className="bg-white rounded-[32px] max-w-6xl w-full max-h-[92vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300 border border-white/50">
+            <div className="p-10 lg:p-12 border-b border-gray-100 flex justify-between items-center bg-gray-50/40 relative">
               <div className="flex items-center gap-8">
-                <div className="w-20 h-20 rounded-[28px] bg-gradient-to-br from-[#3AD6F2] to-[#2bcada] flex items-center justify-center text-white shadow-2xl shadow-[#3AD6F2]/30">
+                <div className="w-20 h-20 rounded-[28px] bg-gradient-to-br from-[#3AD6F2] to-[#2bcada] flex items-center justify-center text-white">
                   <FileText size={40} />
                 </div>
                 <div>
@@ -413,7 +413,7 @@ const TaxPreparerWorkflows = () => {
                   setSelectedRequest(null);
                   setRequestDocuments([]);
                 }}
-                className="w-14 py-2 bg-white flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all rounded-2xl shadow-xl shadow-black/5 border border-gray-100 active:scale-90 group"
+                className="w-14 py-2 bg-white flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all rounded-2xl border border-gray-100 active:scale-90 group"
               >
                 <Plus size={32} className="rotate-45 group-hover:rotate-[135deg] transition-transform duration-500" />
               </button>

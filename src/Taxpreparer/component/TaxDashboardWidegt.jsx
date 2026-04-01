@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { dashboardAPI, handleAPIError } from "../../ClientOnboarding/utils/apiUtils";
 import { getApiBaseUrl, fetchWithCors } from "../../ClientOnboarding/utils/corsConfig";
 import { getAccessToken } from "../../ClientOnboarding/utils/userUtils";
-import "../styles/taxdashboard.css";
 import TaxUploadModal from "../upload/TaxUploadModal";
 import { useNavigate } from "react-router-dom";
 
@@ -47,7 +46,6 @@ export default function Dashboard() {
         const result = await response.json();
         if (result.success && result.data) {
           const pendingCount = result.data.pagination?.total_count || result.data.tasks?.length || 0;
-          const statistics = result.data.statistics || {};
 
           // Update pending tasks count
           setSummaryCards(prev => ({
@@ -93,139 +91,99 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="py-2 font-basis">
+    <div className="py-4">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
         <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <div className="w-14 py-2 rounded-2xl bg-[#3AD6F2] flex items-center justify-center text-white shadow-xl shadow-[#3AD6F2]/30">
-              <Analytics size={32} color="white" />
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-[20px] bg-[#3AD6F2] flex items-center justify-center text-white">
+              <Analytics size={28} color="white" />
             </div>
             <div>
-              <h3 className="mb-0 font-black text-gray-900 tracking-tight leading-none">
-                Dashboard
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-0.5">
+                Staff Dashboard
               </h3>
-              <span className="text-gray-400 text-sm font-medium tracking-tight">
+              <p className="text-gray-500 text-sm font-medium font-[BasisGrotesquePro]">
                 Welcome back, {taxPreparerInfo
                   ? `${taxPreparerInfo.first_name || ''} ${taxPreparerInfo.last_name || ''}`.trim()
                   : loading
                     ? 'Loading...'
                     : 'Tax Preparer'}
-              </span>
+              </p>
             </div>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           <button
-            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-100 text-gray-700 font-black !text-xs uppercase tracking-[0.2em] transition-all !rounded-xl shadow-lg shadow-black/5 active:scale-95"
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white border border-[#E8F0FF] text-[#3B4A66] font-bold text-sm transition-all !rounded-2xl hover:bg-emerald-50 hover:text-[#3AD6F2] hover:border-[#3AD6F2]/30 active:scale-95 font-[BasisGrotesquePro]"
             onClick={() => navigate('/taxdashboard/calendar')}
           >
-            <AiOutlineCalendar size={20} className="text-[#3AD6F2]" />
-            <span>View Calendar</span>
+            <AiOutlineCalendar size={18} className="text-[#3AD6F2]" />
+            <span>Schedule</span>
           </button>
 
           <button
-            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-[#F56D2D] text-white font-black !text-xs uppercase tracking-[0.2em] transition-all !rounded-xl shadow-2xl shadow-[#F56D2D]/10 active:scale-95"
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-[#F56D2D] text-white font-bold text-sm transition-all !rounded-2xl hover:brightness-110 active:scale-95 font-[BasisGrotesquePro]"
             onClick={() => setShowUploadModal(true)}
           >
-            <Uploading size={20} />
-            <span>Upload Documents</span>
+            <Uploading size={18} />
+            <span>Upload Now</span>
           </button>
         </div>
       </div>
 
       {/* Dashboard Cards */}
-      <div className="row g-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {[
           {
             label: "Assigned Clients",
-            icon: <Client size={26} className="dashboard-stat-icon" style={{ color: "#00C0C6" }} />,
+            labelIcon: <Client size={22} className="text-[#3AD6F2]" />,
             value: loading ? "..." : summaryCards.assigned_clients?.count || 0,
-            content: loading ? "Loading..." : summaryCards.assigned_clients?.status || "",
-            statusType: summaryCards.assigned_clients?.status_type || "",
+            content: summaryCards.assigned_clients?.status || "Total assigned",
             path: "/taxdashboard/clients"
           },
           {
-            label: "Client Pending Tasks",
-            icon: <Clock size={26} className="dashboard-stat-icon" style={{ color: "#00C0C6" }} />,
+            label: "Pending Tasks",
+            labelIcon: <Clock size={22} className="text-[#3AD6F2]" />,
             value: loading ? "..." : summaryCards.pending_tasks?.count || 0,
-            content: loading ? "Loading..." : summaryCards.pending_tasks?.status || "",
-            statusType: summaryCards.pending_tasks?.status_type || "",
-            tooltip: summaryCards.pending_tasks?.status && summaryCards.pending_tasks.status.includes('behind target')
-              ? `This shows tasks that are behind your daily completion target. The target is set in your firm's settings and represents the expected number of tasks to complete per day. Currently: ${summaryCards.pending_tasks.count} pending tasks.`
-              : summaryCards.pending_tasks?.status || "",
+            content: summaryCards.pending_tasks?.status || "Tasks to complete",
             path: "/taxdashboard/tasks"
           },
           {
             label: "Completed Today",
-            icon: <Check size={26} className="dashboard-stat-icon" style={{ color: "#00C0C6" }} />,
+            labelIcon: <Check size={22} className="text-[#3AD6F2]" />,
             value: loading ? "..." : summaryCards.completed_today?.count || 0,
-            content: loading ? "Loading..." : summaryCards.completed_today?.status || "",
-            statusType: summaryCards.completed_today?.status_type || "",
+            content: summaryCards.completed_today?.status || "Successful actions",
             path: "/taxdashboard/tasks?section=completed"
           },
           {
             label: "New Messages",
-            icon: <Msg size={26} className="dashboard-stat-icon" style={{ color: "#00C0C6" }} />,
+            labelIcon: <Msg size={22} className="text-[#3AD6F2]" />,
             value: loading ? "..." : summaryCards.new_messages?.count || 0,
-            content: loading ? "Loading..." : summaryCards.new_messages?.status || "",
-            statusType: summaryCards.new_messages?.status_type || "",
+            content: summaryCards.new_messages?.status || "Unread chats",
             path: "/taxdashboard/messages"
           },
-        ].map((card, index) => {
-          // Hide icons when status_type is "no_change"
-          const shouldShowStatusIcon = card.statusType !== "no_change";
-
-          return (
-            <div className="col-12 col-sm-6 col-md-6 col-lg-3" key={index}>
-              <div
-                className={`carded dashboard-carded h-100 ${card.path ? 'clickable-card' : ''}`}
-                style={{
-                  cursor: card.path ? 'pointer' : 'default',
-                  position: 'relative',
-                  transition: 'all 0.2s ease-in-out'
-                }}
-                onClick={() => card.path && navigate(card.path)}
-              >
-                <div className="d-flex justify-content-between align-items-center">
-                  <div className="dashboarded-carded-labeled">{card.label}</div>
-                  {card.icon}
-                </div>
-                <h5 className="dashboarded-carded-valued">{card.value}</h5>
-                <div style={{ position: 'relative' }}>
-                  <p
-                    className="card-contented"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      cursor: card.tooltip ? 'help' : (card.path ? 'pointer' : 'default')
-                    }}
-                    title={card.tooltip || card.content}
-                  >
-                    {card.content}
-                    {/* Only show tooltip icon if status_type is not "no_change" */}
-                    {card.tooltip && shouldShowStatusIcon && (
-                      <span
-                        style={{
-                          fontSize: '12px',
-                          color: '#6B7280',
-                          cursor: 'help'
-                        }}
-                        title={card.tooltip}
-                      >
-
-                      </span>
-                    )}
-                  </p>
-                </div>
+        ].map((card, index) => (
+          <div
+            key={index}
+            className={`group bg-white !rounded-2xl p-6 border border-[#E8F0FF] transition-all flex flex-col justify-between min-h-[160px] ${card.path ? 'cursor-pointer hover:border-[#3AD6F2]/30 hover:bg-[#F9FAFB] hover:-translate-y-0.5' : ''}`}
+            onClick={() => card.path && navigate(card.path)}
+          >
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-xs sm:text-sm font-medium text-gray-500 font-[BasisGrotesquePro]">{card.label}</span>
+              <div className="p-2 rounded-lg bg-gray-50 group-hover:bg-[#F3F7FF] transition-colors">
+                {card.labelIcon}
               </div>
             </div>
-          );
-        })}
+            <div>
+              <h5 className="text-2xl sm:text-3xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1 leading-none">{card.value}</h5>
+              <p className="text-[11px] sm:text-xs font-medium text-[#F56D2D] font-[BasisGrotesquePro] truncate m-0">
+                {loading ? 'Updating...' : card.content}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
-
-
 
       {/* Upload Modal */}
       <TaxUploadModal show={showUploadModal} handleClose={() => setShowUploadModal(false)} />

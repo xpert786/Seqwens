@@ -27,6 +27,15 @@ const previewStyles = `
   }
 `;
 
+const getInitials = (name) => {
+  if (!name) return '??';
+  const parts = name.split(' ');
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return parts[0].slice(0, 2).toUpperCase();
+};
+
 export default function ESignatureDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -1106,84 +1115,63 @@ export default function ESignatureDashboard() {
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+      <div className="row g-3 mb-4">
         {[
           {
             id: 'pending',
             label: 'Pending / In Progress',
             val: (statistics.pending || 0) + (statistics.inprogress || 0),
-            icon: <FiClock size={24} />,
-            theme: 'orange',
+            icon: <FiClock size={20} />,
+            color: '#F56D2D',
             active: statusFilter === 'pending' || statusFilter === 'inprogress'
           },
           {
             id: 'completed',
             label: 'Completed',
             val: statistics.completed || 0,
-            icon: <FiCheckCircle size={24} />,
-            theme: 'emerald',
+            icon: <FiCheckCircle size={20} />,
+            color: '#10B981',
             active: statusFilter === 'completed'
           },
           {
             id: 'declined',
             label: 'Declined / Cancelled',
             val: statistics.declined || 0,
-            icon: <FiXCircle size={24} />,
-            theme: 'rose',
+            icon: <FiXCircle size={20} />,
+            color: '#EF4444',
             active: statusFilter === 'declined'
           },
           {
             id: 'expired',
             label: 'Expired',
             val: statistics.expired || 0,
-            icon: <FiFileText size={24} />,
-            theme: 'gray',
+            icon: <FiFileText size={20} />,
+            color: '#6B7280',
             active: statusFilter === 'expired'
           }
         ].map((stat) => (
-          <div
-            key={stat.id}
-            onClick={() => {
-              if (stat.id === 'pending') {
-                setStatusFilter(statusFilter === 'pending' || statusFilter === 'inprogress' ? 'all' : 'pending');
-              } else {
-                setStatusFilter(statusFilter === stat.id ? 'all' : stat.id);
-              }
-            }}
-            className={`group relative p-8 rounded-[35px] border transition-all duration-300 cursor-pointer overflow-hidden
-              ${stat.active
-                ? `bg-white border-${stat.theme}-500 shadow-xl shadow-${stat.theme}-500/10 scale-[1.02] -translate-y-1`
-                : 'bg-white border-gray-100 hover:border-gray-200 shadow-sm hover:shadow-md'
-              }`}
-          >
-            <div className={`absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 rounded-full blur-3xl opacity-20 transition-all duration-500 group-hover:scale-150
-              ${stat.theme === 'orange' ? 'bg-orange-400' :
-                stat.theme === 'emerald' ? 'bg-emerald-400' :
-                  stat.theme === 'rose' ? 'bg-rose-400' : 'bg-gray-400'}
-            `}></div>
-
-            <div className="relative flex justify-between items-start">
-              <div>
-                <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">{stat.label}</p>
-                <h3 className="text-4xl font-black text-gray-900 tracking-tight leading-none">{stat.val}</h3>
+          <div key={stat.id} className="col-lg-3 col-md-6 col-12">
+            <div
+              className={`stat-card ${stat.active ? 'active' : ''}`}
+              onClick={() => {
+                if (stat.id === 'pending') {
+                  setStatusFilter(statusFilter === 'pending' || statusFilter === 'inprogress' ? 'all' : 'pending');
+                } else {
+                  setStatusFilter(statusFilter === stat.id ? 'all' : stat.id);
+                }
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              <div className="d-flex justify-content-between align-items-start">
+                <div className="stat-icon" style={{ color: stat.color }}>
+                  {stat.icon}
+                </div>
               </div>
-              <div className={`p-4 rounded-2xl transition-all duration-300
-                ${stat.active
-                  ? `bg-${stat.theme}-500 text-white shadow-lg shadow-${stat.theme}-500/20`
-                  : `bg-${stat.theme}-50 text-${stat.theme}-500 group-hover:bg-${stat.theme}-100`
-                }`}
-              >
-                {stat.icon}
+              <div className="stat-count-wrapper">
+                <div className="stat-count">{stat.val}</div>
               </div>
-            </div>
-
-            <div className="relative mt-8 flex items-center gap-2">
-              <span className={`text-[10px] font-black uppercase tracking-widest ${stat.active ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
-                Currently Viewing
-              </span>
-              <div className={`h-1 flex-1 rounded-full overflow-hidden bg-gray-100 ${stat.active ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
-                <div className={`h-full bg-${stat.theme}-500 w-full`}></div>
+              <div className="mt-2 text-center w-100">
+                <p className="mb-0 text-muted small fw-semibold">{stat.label}</p>
               </div>
             </div>
           </div>
@@ -1191,21 +1179,21 @@ export default function ESignatureDashboard() {
       </div>
 
       {/* Filters and Search */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-8 mt-2 p-3 bg-white rounded-[32px] border border-gray-100 shadow-sm">
-        <div className="relative flex-1 w-full group">
-          <FiSearch className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#F56D2D] transition-colors" size={20} />
+      <div className="flex flex-col md:flex-row items-center gap-3 mb-6 mt-4">
+        <div className="relative w-full md:w-[350px] group">
+          <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[#F56D2D] transition-colors" size={16} />
           <input
             type="text"
-            className="w-full pl-14 pr-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-[15px] font-medium text-gray-700 focus:bg-white focus:ring-4 focus:ring-[#F56D2D]/5 focus:border-[#F56D2D] outline-none transition-all placeholder:text-gray-400"
-            placeholder="Search by client name, document, or title..."
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E8F0FF] rounded-2xl text-[13px] font-medium text-gray-700 focus:border-[#F56D2D]/30 outline-none transition-all placeholder:text-gray-400"
+            placeholder="Search request or client..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
-        <div className="w-full md:w-auto min-w-[200px] relative">
+        <div className="w-full md:w-auto relative">
           <select
-            className="w-full pl-6 pr-12 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-[13px] font-black uppercase tracking-[0.2em] text-gray-500 cursor-pointer appearance-none transition-all focus:bg-white focus:ring-4 focus:ring-[#F56D2D]/5 hover:border-[#F56D2D]/30"
+            className="w-full pl-4 pr-10 py-2.5 bg-white border border-[#E8F0FF] rounded-2xl text-[12px] font-bold uppercase tracking-wider text-gray-500 cursor-pointer appearance-none transition-all hover:border-[#F56D2D]/30 outline-none"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -1216,8 +1204,8 @@ export default function ESignatureDashboard() {
             <option value="declined">Declined</option>
             <option value="expired">Expired</option>
           </select>
-          <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </div>
         </div>
       </div>
@@ -1225,325 +1213,168 @@ export default function ESignatureDashboard() {
       {/* Signature Requests List */}
       <div className="signature-requests-list">
         {filteredRequests.length === 0 ? (
-          <div className="py-5">
-            <FiFileText size={48} style={{ color: '#D1D5DB', marginBottom: '16px' }} />
-            <p style={{ color: '#6B7280', fontSize: '16px', marginBottom: '8px' }}>
-              No signature requests found
-            </p>
-            <p style={{ color: '#9CA3AF', fontSize: '14px' }}>
+          <div className="py-20 text-center w-full">
+            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-dashed border-gray-200">
+              <FiFileText size={40} className="text-gray-300" />
+            </div>
+            <h5 className="text-gray-900 font-bold mb-1" style={{ color: '#131323' }}>No requests found</h5>
+            <p className="text-gray-500 text-sm">
               {searchTerm || statusFilter !== 'all'
-                ? 'Try adjusting your filters'
+                ? 'Try adjusting your filters or search'
                 : 'Signature requests will appear here when created'}
             </p>
           </div>
         ) : (
-          <div className="d-flex flex-column gap-3 w-full">
+          <div className="row g-3 w-full">
             {filteredRequests
               .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
               .map((request, index) => {
+                const documentId = request.document_id || request.id;
+                const documentName = request.document_name || request.doc_name || 'Document';
+                const clientName = request.client_name || request.client?.full_name || 'Unknown Client';
                 const statusBadge = getStatusBadge(request);
-                const clientName = request.taxpayer_name || request.client_name || request.client?.full_name || 'Unknown Client';
-                const documentName = request.document_name || request.document?.name || 'No Document';
-
                 const userData = getUserData();
                 const currentUserId = userData?.id || userData?.user?.id;
-
-                // Robust check for creator status - ensure IDs exist and convert to strings for comparison
-                const isCreator = currentUserId && request.requested_by && String(currentUserId) === String(request.requested_by);
-
-                // Check for firm admin role
+                const isAssignedPreparer = request.assigned_preparer_ids?.includes(currentUserId);
                 const isFirmAdmin = userData?.role === 'FirmAdmin' || userData?.user?.role === 'FirmAdmin' || userData?.is_firm_admin;
-
-                // Allow management if user is creator or firm admin
+                const isCreator = currentUserId && request.requested_by && String(currentUserId) === String(request.requested_by);
                 const canManage = isCreator || isFirmAdmin;
 
-                const isAssignedPreparer = request.assigned_preparer_ids?.includes(currentUserId);
-
                 return (
-                  <div
-                    key={`${request.id}-${index}`}
-                    className="signature-request-card"
-                    onClick={(e) => handleViewDetails(request, e)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <div className="d-flex justify-content-between align-items-start">
-                      <div className="flex-grow-1">
-                        <div className="d-flex align-items-center gap-2 mb-2 signature-request-header">
-                          <h5 className="signature-request-title" style={{ color: '#3B4A66', fontWeight: '600', margin: 0 }}>
-                            {request.title || documentName}
-                          </h5>
-                          <span className={`status-badge ${statusBadge.className}`}>
-                            {statusBadge.text}
-                          </span>
-                        </div>
-                        <div className="d-flex flex-column gap-1 mb-2">
-                          <div className="d-flex align-items-start gap-2">
-                            <span className="signature-label" style={{ color: '#6B7280', fontSize: '14px', fontWeight: '500' }}>
-                              Client:
-                            </span>
-                            <span className="signature-request-info-text" style={{ color: '#3B4A66', fontSize: '14px' }}>
-                              {clientName}
-                            </span>
+                  <div key={`${request.id}-${index}`} className="col-md-6 col-12">
+                    <div
+                      className="client-card bg-white !rounded-2xl p-3 transition-all cursor-pointer hover:bg-[#FFF4E6] hover:border-[#F56D2D]/30 h-full flex flex-column"
+                      onClick={() => handleViewDetails(request)}
+                      style={{ border: '1px solid #E8F0FF' }}
+                    >
+                      <div className="flex justify-between items-start mb-2.5">
+                        <div className="flex gap-2.5">
+                          <div className="client-initials flex-shrink-0" style={{ width: '36px', height: '36px', background: '#E8F0FF', borderRadius: '50%', color: '#131323', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '13px' }}>
+                            {getInitials(clientName)}
                           </div>
-                          <div className="d-flex align-items-start gap-2">
-                            <span className="signature-label" style={{ color: '#6B7280', fontSize: '14px', fontWeight: '500' }}>
-                              Document:
-                            </span>
-                            <span className="signature-request-info-text" style={{ color: '#3B4A66', fontSize: '14px' }}>
-                              {documentName}
-                            </span>
+                          <div className="flex flex-column" style={{ overflow: 'hidden' }}>
+                            <h6 className="mb-0 font-bold truncate" style={{ color: '#131323', fontSize: '14px', lineHeight: '1.2' }}>
+                              {request.title || documentName}
+                            </h6>
+                            <span className="text-gray-400 text-[11px] font-medium truncate">{clientName}</span>
+                            <div className="flex flex-wrap gap-2 mt-1.5">
+                              <span className={`status-badge ${statusBadge.className}`} style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '20px' }}>
+                                {statusBadge.text}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                        {/* {request.description && (
-                          <p style={{ color: '#6B7280', fontSize: '13px', marginBottom: '8px' }}>
-                            {request.description}
-                          </p>
-                        )} */}
-                        {request.preparer_must_sign === true && (() => {
-                          const userData = getUserData();
-                          const userEmail = userData?.email || userData?.user?.email;
-                          const preparerEmail = request.preparer_email;
-                          if (userEmail === preparerEmail && request.signer_urls) {
-                            return (
-                              <div className="mb-2">
-                                <span style={{
-                                  color: '#FFFFFF',
-                                  fontSize: '13px',
-                                  fontWeight: '500',
-                                  backgroundColor: '#00C0C6',
-                                  padding: '4px 8px',
-                                  borderRadius: '4px',
-                                  display: 'inline-block'
-                                }}>
-                                  ⚠️ Preparer signature required - Click to sign
-                                </span>
-                              </div>
-                            );
-                          }
-                          return null;
-                        })()}
-                        <div className="d-flex flex-wrap gap-3 align-items-center" style={{ fontSize: '12px', color: '#9CA3AF', marginBottom: '12px' }}>
-                          <span>
-                            Created: {formatDate(request.created_at)}
+                        <div className="text-end">
+                          <span className="text-gray-400 block" style={{ fontSize: '9px' }}>
+                            {formatDate(request.created_at)}
                           </span>
-                          {request.deadline && (
-                            <span>
-                              Deadline: {formatDate(request.deadline)}
-                            </span>
-                          )}
-                          {request.signed_at && (
-                            <span>
-                              Signed: {formatDate(request.signed_at)}
-                            </span>
-                          )}
                         </div>
-                        {/* Action Buttons */}
-                        <div className="mt-2 d-flex gap-2 flex-wrap action-buttons-wrapper">
-                          {/* Preview Button - Show if document URL exists */}
-                          {request.document_url && (
+                      </div>
+
+                      <div className="flex items-center gap-2 mb-3 p-1.5 bg-gray-50 rounded-xl border border-gray-100">
+                        <FiFileText size={12} className="text-[#3AD6F2]" />
+                        <span className="text-[11px] font-semibold text-gray-600 truncate" title={documentName}>
+                          {documentName}
+                        </span>
+                      </div>
+
+                      {/* Action Required Alert */}
+                      {request.preparer_must_sign === true && request.preparer_signed === false && (() => {
+                        const userEmail = userData?.email || userData?.user?.email;
+                        const preparerEmail = request.preparer_email;
+                        if (userEmail === preparerEmail) {
+                          return (
+                            <div className="mb-3 p-1.5 bg-amber-50 border border-amber-100 rounded-xl flex items-center gap-2">
+                              <FiPenTool size={12} className="text-amber-500" />
+                              <span className="text-[9px] font-bold text-amber-700 uppercase tracking-wider">
+                                Action Required
+                              </span>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+
+                      <div className="mt-auto pt-2.5 border-t border-gray-100 flex flex-wrap gap-1.5">
+                        {request.document_url && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedPreviewDocument({
+                                url: request.document_url,
+                                name: request.document_name || request.title || 'Document',
+                                isAnnotated: false
+                              });
+                              setShowPreviewModal(true);
+                            }}
+                            className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gray-50 text-[#3B4A66] border border-[#E8F0FF] !rounded-xl text-[10px] font-bold hover:bg-gray-100 transition-all"
+                          >
+                            <FiEye size={12} />
+                            Preview
+                          </button>
+                        )}
+
+                        {areTaxpayerAndSpouseSigned(request) &&
+                          request.preparer_must_sign === true &&
+                          request.preparer_signed === false &&
+                          (isAssignedPreparer || !request.assigned_preparer_ids?.length) && (
                             <button
+                              type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setSelectedPreviewDocument({
-                                  url: request.document_url,
+                                const pdfUrl = request.annotated_pdf_url || request.document_url;
+                                setSelectedDocumentForAnnotation({
+                                  url: pdfUrl,
                                   name: request.document_name || request.title || 'Document',
-                                  isAnnotated: false
+                                  id: request.id,
+                                  document_id: request.document
                                 });
-                                setShowPreviewModal(true);
+                                setShowAnnotationModal(true);
                               }}
-                              className="btn d-flex align-items-center gap-2"
-                              style={{
-                                backgroundColor: '#F3F4F6',
-                                color: '#3B4A66',
-                                border: '1px solid #E5E7EB',
-                                fontFamily: 'BasisGrotesquePro',
-                                fontWeight: '500',
-                                padding: '8px 16px',
-                                borderRadius: '6px',
-                                fontSize: '14px'
-                              }}
-                              title="Preview Document"
+                              className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-[#00C0C6] text-white !rounded-xl text-[10px] font-bold hover:brightness-110 transition-all shadow-sm"
                             >
-                              <FiEye size={14} />
-                              Preview
+                              <FiPenTool size={12} />
+                              Sign
                             </button>
                           )}
-                          {/* Annotate & Sign for Preparer Button - Show when taxpayer and spouse (if required) have signed */}
-                          {areTaxpayerAndSpouseSigned(request) &&
-                            request.preparer_must_sign === true &&
-                            request.preparer_signed === false &&
-                            (isAssignedPreparer || !request.assigned_preparer_ids?.length) && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  // Use annotated_pdf_url if available, otherwise use document_url
-                                  const pdfUrl = request.annotated_pdf_url || request.document_url;
-                                  setSelectedDocumentForAnnotation({
-                                    url: pdfUrl,
-                                    name: request.document_name || request.title || 'Document',
-                                    id: request.id,
-                                    document_id: request.document
-                                  });
-                                  console.log('📄 Opening annotation modal for preparer:', {
-                                    esign_request_id: request.id,
-                                    document_id: request.document,
-                                    document_name: request.document_name,
-                                    using_annotated_pdf: !!request.annotated_pdf_url,
-                                    pdf_url: pdfUrl
-                                  });
-                                  setShowAnnotationModal(true);
-                                }}
-                                className="btn d-flex align-items-center gap-2"
-                                style={{
-                                  backgroundColor: '#00C0C6',
-                                  color: 'white',
-                                  border: 'none',
-                                  fontFamily: 'BasisGrotesquePro',
-                                  fontWeight: '500',
-                                  padding: '8px 16px',
-                                  borderRadius: '6px',
-                                  fontSize: '14px'
-                                }}
-                              >
-                                <FiPenTool size={14} />
-                                Annotate & Sign for Preparer
-                              </button>
-                            )}
 
-                          {/* Show action buttons when all signees have signed */}
-                          {areAllSigneesSigned(request) && (
-                            <>
-                              {/* Preview Annotated Document Button */}
-                              {request.annotated_pdf_url && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedPreviewDocument({
-                                      url: request.annotated_pdf_url,
-                                      name: request.document_name || request.title || 'Document',
-                                      isAnnotated: true
-                                    });
-                                    setShowPreviewModal(true);
-                                  }}
-                                  className="btn d-flex align-items-center gap-2"
-                                  style={{
-                                    backgroundColor: '#F3F4F6',
-                                    color: '#3B4A66',
-                                    border: '1px solid #E5E7EB',
-                                    fontFamily: 'BasisGrotesquePro',
-                                    fontWeight: '500',
-                                    padding: '8px 16px',
-                                    borderRadius: '6px',
-                                    fontSize: '14px'
-                                  }}
-                                  title="Preview Annotated Document"
-                                >
-                                  <FiEye size={14} />
-                                  Preview Annotated Document
-                                </button>
-                              )}
-
-                              {/* Mark as Completed and Re-Request buttons - Hide if status is completed */}
-                              {request.status?.toLowerCase() !== 'completed' &&
-                                request.status?.toLowerCase() !== 'processed' &&
-                                canManage && (
-                                  <>
-                                    {/* Mark as Completed Button */}
-                                    <button
-                                      onClick={(e) => handleCompleteRequest(request.id, e)}
-                                      className="btn d-flex align-items-center gap-2"
-                                      style={{
-                                        backgroundColor: '#10B981',
-                                        color: 'white',
-                                        border: 'none',
-                                        fontFamily: 'BasisGrotesquePro',
-                                        fontWeight: '500',
-                                        padding: '8px 16px',
-                                        borderRadius: '6px',
-                                        fontSize: '14px'
-                                      }}
-                                      title="Mark E-Sign Request as Completed"
-                                    >
-                                      <FiCheckCircle size={14} />
-                                      Mark as Completed
-                                    </button>
-
-                                    {/* Re-Request E-Sign Button */}
-                                    <button
-                                      onClick={(e) => handleRerequestSignature(request.id, e)}
-                                      className="btn d-flex align-items-center gap-2"
-                                      style={{
-                                        backgroundColor: '#F59E0B',
-                                        color: 'white',
-                                        border: 'none',
-                                        fontFamily: 'BasisGrotesquePro',
-                                        fontWeight: '500',
-                                        padding: '8px 16px',
-                                        borderRadius: '6px',
-                                        fontSize: '14px',
-                                        opacity: rerequestingId === request.id ? 0.7 : 1,
-                                        cursor: rerequestingId === request.id ? 'not-allowed' : 'pointer'
-                                      }}
-                                      title="Re-Request E-Sign"
-                                      disabled={rerequestingId === request.id}
-                                    >
-                                      {rerequestingId === request.id ? (
-                                        <>
-                                          <div className="spinner-border spinner-border-sm text-white" role="status">
-                                            <span className="visually-hidden">Loading...</span>
-                                          </div>
-                                          Sending...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <FiRefreshCw size={14} />
-                                          Re-Request E-Sign
-                                        </>
-                                      )}
-                                    </button>
-                                  </>
-                                )}
-                            </>
-                          )}
-                        </div>
-                        {/* Sign Document Button for Ready Status */}
-                        {request.status === 'ready' && (
-                          <div className="mt-2">
-                            <button
-                              onClick={(e) => handleSignDocument(request, e)}
-                              className="btn"
-                              style={{
-                                backgroundColor: '#00C0C6',
-                                color: 'white',
-                                border: 'none',
-                                fontFamily: 'BasisGrotesquePro',
-                                fontWeight: '500',
-                                padding: '8px 16px',
-                                borderRadius: '6px',
-                                fontSize: '14px'
-                              }}
-                            >
-                              Sign Document
-                            </button>
-                          </div>
+                        {request.annotated_pdf_url && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedPreviewDocument({
+                                url: request.annotated_pdf_url,
+                                name: request.document_name || request.title || 'Document',
+                                isAnnotated: true
+                              });
+                              setShowPreviewModal(true);
+                            }}
+                            className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-[#F6FAFF] text-[#3AD6F2] border border-[#3AD6F2]/20 !rounded-xl text-[10px] font-bold hover:bg-[#3AD6F2]/5 transition-all"
+                          >
+                            <FiEye size={12} />
+                            Full
+                          </button>
                         )}
                       </div>
                     </div>
                   </div>
                 );
               })}
-            <Pagination
-              currentPage={currentPage}
-              totalPages={Math.ceil(filteredRequests.length / itemsPerPage)}
-              onPageChange={setCurrentPage}
-              totalItems={filteredRequests.length}
-              itemsPerPage={itemsPerPage}
-              startIndex={(currentPage - 1) * itemsPerPage}
-              endIndex={Math.min(currentPage * itemsPerPage, filteredRequests.length)}
-            />
+
+            <div className="col-12 mt-6">
+              <Pagination
+                totalItems={filteredRequests.length}
+                itemsPerPage={itemsPerPage}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+                startIndex={(currentPage - 1) * itemsPerPage}
+                endIndex={Math.min(currentPage * itemsPerPage, filteredRequests.length)}
+              />
+            </div>
           </div>
-        )
-        }
+        )}
       </div>
 
 

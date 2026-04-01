@@ -1,8 +1,7 @@
 /* Calendar Grid Styles */
 .calendar-grid {
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
   overflow: hidden;
 }
 
@@ -129,9 +128,8 @@
 
 .sidebar-card {
   background: white;
-  border-radius: 8px;
+  border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border: 1px solid #dee2e6;
 }
 
@@ -213,9 +211,8 @@
 /* Stat Card Styles */
 .stat-card {
   background: white;
-  border-radius: 8px;
+  border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border: 1px solid #dee2e6;
   transition: transform 0.2s ease;
 }

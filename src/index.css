@@ -925,3 +925,12 @@ div[style*="z-index"][style*="fixed"] {
 .firm-panel button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-gray"]):not([class*="bg-transparent"]):hover, .firm-dashboard-layout button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-gray"]):not([class*="bg-transparent"]):hover, .firm-panel button[style*="background-color"]:not([style*="color"]):hover, .btn-primary:hover {
     color: #000000 !important;
 }
+/* GLOBAL FLAT UI OVERRIDE: Remove all box shadows while maintaining structure */
+.card, .container, .modal-content, .btn, .popover, .tooltip, [class*=\u0022shadow-\u0022] {
+  box-shadow: none !important;
+}
+
+/* ADDITIONAL GLOBAL FLAT UI OVERRIDES */
+.sidebar, .topbar, .widget, .panel, .alert, .dropdown-menu, div[class*=\u0022card\u0022], div[class*=\u0022Card\u0022], button:not(:focus) {
+  box-shadow: none !important;
+}

@@ -48,9 +48,9 @@
 }
 
 .workflow-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
     border-color: #3AD6F2;
+    background-color: #F9FAFB;
 }
 
 .stat-card {
@@ -60,9 +60,9 @@
 }
 
 .stat-card:hover {
-    transform: scale(1.02);
-    box-shadow: 0 8px 16px -4px rgba(58, 214, 242, 0.1);
+    transform: translateY(-2px);
     border-color: #3AD6F2;
+    background-color: #F9FAFB;
 }
 
 .progress-bar-container {
@@ -80,7 +80,7 @@
 
 .filter-button {
     transition: all 0.2s ease;
-    border-radius: 8px;
+    border-radius: 12px;
 }
 
 .filter-button.active {
@@ -90,7 +90,7 @@
 
 .status-badge {
     padding: 4px 12px;
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;

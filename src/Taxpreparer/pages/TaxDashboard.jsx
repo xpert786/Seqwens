@@ -13,174 +13,51 @@ import {
   Analytics,
 } from "../component/icons";
 import { handleAPIError, dashboardAPI } from "../../ClientOnboarding/utils/apiUtils";
-import "../styles/taxpopup.css";
-import "../styles/taxdashboard.css";
 
-// ------------------- Tasks ----------------------
-const whatsDueTasks = [
-  {
-    title: "Review W-2 Documents",
-    due: "Due: Today",
-    user: (
-      <span className="db-user">
-        <span className="db-user-icon-wrapper"><Contacted /></span>
-        John Doe
-      </span>
-    ),
-    status: ["high", "pending"],
-    icon: <span className="icon-circle"><FileIcon /></span>,
-  },
-  {
-    title: "Prepare Quarterly Return",
-    due: "Due: Tomorrow",
-    user: (
-      <span className="db-user">
-        <span className="db-user-icon-wrapper"><Building /></span>
-        ABC Corp
-      </span>
-    ),
-    status: ["high", "in progress"],
-    icon: <span className="icon-circle"><FileIcon /></span>,
-  },
-  {
-    title: "Schedule Tax Review",
-    due: "Due: 20/08/2025",
-    user: (
-      <span className="db-user">
-        <span className="db-user-icon-wrapper"><Contacted /></span>
-        Sarah Wilson
-      </span>
-    ),
-    status: ["medium", "in progress"],
-    icon: <span className="icon-circle"><FileIcon /></span>,
-  },
-  {
-    title: "Upload Tax Documents",
-    due: "Due: 20/08/2025",
-    user: (
-      <span className="db-user">
-        <span className="db-user-icon-wrapper"><Contacted /></span>
-        Mike Johnson
-      </span>
-    ),
-    status: ["low", "pending"],
-    icon: <span className="icon-circle"><FileIcon /></span>,
-  },
-];
+// ------------------- Task Card Component ------------------------
+const TaskCard = ({ title, due, status, user, icon, value, onClick, className }) => {
+  const isHighPriority = status?.some(s => s?.toLowerCase() === 'high');
+  const isMediumPriority = status?.some(s => s?.toLowerCase() === 'medium');
 
-const recentActivityTasks = [
-  {
-    title: "Quarterly Filing",
-    due: "Due: 24/07/2025",
-    user: (
-      <span className="db-user">
-        <span className="db-user-icon-wrapper"><Building /></span>
-        ABC Corp
-      </span>
-    ),
-    status: ["high"],
-    value: "2 days left",
-    icon: <span className="icon-circle"><FileIcon /></span>,
-  },
-  {
-    title: "Annual Return",
-    due: "Due: 24/07/2025",
-    value: "7 days left",
-    user: (
-      <span className="db-user">
-        <span className="db-user-icon-wrapper"><Building /></span>
-        XYZ LLC
-      </span>
-    ),
-    status: ["medium"],
-    icon: <span className="icon-circle"><FileIcon /></span>,
-  },
-  {
-    title: "Tax Review",
-    due: "Due: 24/07/2025",
-    value: "3 days left",
-    user: (
-      <span className="db-user">
-        <span className="db-user-icon-wrapper"><Contacted /></span>
-        Smith Family
-      </span>
-    ),
-    status: ["low"],
-    icon: <span className="icon-circle"><FileIcon /></span>,
-  },
-];
-const messages = [
-  {
-    name: "John Doe",
-    role: "Client",
-    content: "I uploaded my W-2 forms",
-    icon: <Msg />,
-    time: "1 hour ago",
-    type: "client",
-  },
-  {
-    name: "Sarah Wilson",
-    role: "Client",
-    content: "When can we schedule the review?",
-    icon: <Msg />,
-    time: "3 hours ago",
-    type: "client",
-  },
-  {
-    name: "Admin",
-    role: "internal",
-    content: "New client assigned to you",
-    icon: <Msg />,
-    time: "5 hours ago",
-    type: "internal",
-  },
-];
-
-// ------------------- Status Colors ----------------------
-const statusColors = {
-  high: "#EF4444",
-  medium: "#F59E0B",
-  low: "#10B981",
-  pending: "#8B5CF6",
-  "in progress": "#3B82F6",
-};
-
-// ------------------- Task Card ------------------------
-const TaskCard = ({ title, due, status, user, icon, selected, onClick, singleStatus, value, className }) => {
-  const displayStatus = singleStatus && Array.isArray(status) ? [status[0]] : status;
+  const badgeColor = isHighPriority ? 'bg-red-500' : isMediumPriority ? 'bg-yellow-400' : 'bg-green-500';
 
   return (
     <div
-      className={`task-card-v2 ${selected ? 'selected' : ''} ${className || ''}`}
       onClick={onClick}
+      className={`bg-white rounded-2xl p-3 sm:p-4 border border-[#E8F0FF] hover:border-[#F56D2D]/30 transition-all cursor-pointer ${className || ''}`}
     >
-      <div className="task-header-row">
-        <div className="task-title-group">
-          {icon && <span className="task-icon-mini">{icon}</span>}
-          <span className="task-main-title">{title}</span>
+      <div className="flex justify-between items-start gap-4 mb-3">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center flex-shrink-0 text-[#3AD6F2]">
+            {icon || <FileIcon size={20} />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h5 className="text-sm sm:text-base font-semibold text-[#3B4A66] font-[BasisGrotesquePro] truncate mb-0.5">
+              {title}
+            </h5>
+            <p className="text-[11px] sm:text-xs text-gray-500 font-[BasisGrotesquePro] mb-0">
+              {due}
+            </p>
+          </div>
         </div>
-        <div className="task-status-group">
-          {displayStatus?.map((s, i) => (
-            <span
-              key={i}
-              className="badge rounded-pill text-capitalize task-badge-v2"
-              style={{ backgroundColor: statusColors[s.toLowerCase()] || "#6B7280" }}
-            >
-              {s}
+        <div className="flex flex-col items-end gap-1.5">
+          {status?.length > 0 && (
+            <span className={`px-2 py-0.5 text-[10px] sm:text-xs rounded-full text-white font-medium capitalize ${badgeColor}`}>
+              {status[0]}
             </span>
-          ))}
-          {value && <span className="task-value-text">{value}</span>}
+          )}
+          {value && <span className="text-[10px] sm:text-xs font-bold text-[#F56D2D] font-[BasisGrotesquePro]">{value}</span>}
         </div>
       </div>
-      <div className="task-meta-row">
-        <div className="task-due-date">{due}</div>
-        <div className="task-user-info">{user}</div>
+      <div className="flex items-center justify-end mt-2 pt-2 border-t border-gray-50">
+        <div className="flex items-center gap-2 text-[10px] sm:text-xs text-[#3B4A66] font-medium font-[BasisGrotesquePro]">
+          {user}
+        </div>
       </div>
     </div>
   );
 };
 
-// ------------------- Main Dashboard --------------------
 // ------------------- Main Dashboard --------------------
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -193,13 +70,6 @@ export default function Dashboard() {
   // Pagination states
   const [myTasksPage, setMyTasksPage] = useState(1);
   const [deadlinesPage, setDeadlinesPage] = useState(1);
-  const [messagesPage, setMessagesPage] = useState(1);
-
-  // View All states - to show all items or paginated
-  const [showAllTasks, setShowAllTasks] = useState(false);
-  const [showAllDeadlines, setShowAllDeadlines] = useState(false);
-
-  // Items per page
   const ITEMS_PER_PAGE = 3;
 
   useEffect(() => {
@@ -214,7 +84,6 @@ export default function Dashboard() {
       try {
         setLoading(true);
         const result = await dashboardAPI.getTaxPreparerDashboard();
-
         if (result.success && result.data) {
           setMyTasks(result.data.my_tasks || []);
           setUpcomingDeadlines(result.data.upcoming_deadlines || []);
@@ -227,102 +96,56 @@ export default function Dashboard() {
         setLoading(false);
       }
     };
-
     fetchDashboardData();
   }, []);
 
-  const handleSelect = (taskTitle) => setSelectedTask(taskTitle);
+  const paginatedTasks = myTasks.slice((myTasksPage - 1) * ITEMS_PER_PAGE, myTasksPage * ITEMS_PER_PAGE);
+  const paginatedDeadlines = upcomingDeadlines.slice((deadlinesPage - 1) * ITEMS_PER_PAGE, deadlinesPage * ITEMS_PER_PAGE);
 
-  // Helper function to get priority color
-  const getPriorityColor = (priority) => {
-    const priorityLower = (priority || '').toLowerCase();
-    if (priorityLower === 'high') return "#EF4444";
-    if (priorityLower === 'medium') return "#F59E0B";
-    if (priorityLower === 'low') return "#10B981";
-    return "#6B7280";
-  };
-
-  // Helper function to get status color
-  const getStatusColor = (status) => {
-    const statusLower = (status || '').toLowerCase();
-    if (statusLower === 'pending') return "#8B5CF6";
-    if (statusLower === 'in progress' || statusLower === 'in_progress') return "#3B82F6";
-    return "#6B7280";
-  };
-
-  // Pagination helper functions
-  const getPaginatedData = (data, page, itemsPerPage, showAll = false) => {
-    if (showAll) {
-      return data; // Return all items when showAll is true
-    }
-    const startIndex = (page - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return data.slice(startIndex, endIndex);
-  };
-
-  const getTotalPages = (data, itemsPerPage) => {
-    return Math.ceil(data.length / itemsPerPage);
-  };
-
-  // Quick Actions data (static for now)
   const quickActions = [
-    {
-      icon: <Client className="action-icon" />,
-      label: "View Client",
-      path: '/taxdashboard/clients'
-    },
-    {
-      icon: <FileIcon className="action-icon" />,
-      label: "Documents",
-      path: '/taxdashboard/documents'
-    },
-    {
-      icon: <Schedule className="action-icon" />,
-      label: "Schedule",
-      path: '/taxdashboard/calendar'
-    },
-    {
-      icon: <Analytics className="action-icon" />,
-      label: "Tasks",
-      path: '/taxdashboard/tasks'
-    }
+    { icon: <Client size={22} />, label: "Clients", path: '/taxdashboard/clients', color: 'bg-blue-50 text-[#3AD6F2]' },
+    { icon: <FileIcon size={22} />, label: "Docs", path: '/taxdashboard/documents', color: 'bg-orange-50 text-[#F56D2D]' },
+    { icon: <Schedule size={22} />, label: "Cal", path: '/taxdashboard/calendar', color: 'bg-purple-50 text-purple-500' },
+    { icon: <Analytics size={22} />, label: "Tasks", path: '/taxdashboard/tasks', color: 'bg-green-50 text-emerald-500' }
   ];
 
-  // Pagination Component
-  const PaginationControls = ({ currentPage, totalPages, onPageChange, sectionName }) => {
+  const SectionHeader = ({ title, subtitle, onViewAll }) => (
+    <div className="flex justify-between items-center mb-8">
+      <div>
+        <h3 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">{title}</h3>
+        <p className="text-sm text-gray-500 font-[BasisGrotesquePro]">{subtitle}</p>
+      </div>
+      {onViewAll && (
+        <button
+          onClick={onViewAll}
+          className="px-4 py-2 bg-orange-50 text-[#F56D2D] text-xs font-bold rounded-xl hover:bg-[#F56D2D] hover:text-white transition-all font-[BasisGrotesquePro]"
+        >
+          View All
+        </button>
+      )}
+    </div>
+  );
+
+  const Pagination = ({ currentPage, totalItems, onPageChange }) => {
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
     if (totalPages <= 1) return null;
 
-    const btnStyle = (isDisabled) => ({
-      backgroundColor: isDisabled ? '#E5E7EB' : '#F56D2D',
-      color: isDisabled ? '#9CA3AF' : '#FFFFFF',
-      border: 'none',
-      borderRadius: '6px',
-      padding: '8px 16px',
-      fontSize: '14px',
-      cursor: isDisabled ? 'not-allowed' : 'pointer',
-      opacity: isDisabled ? 0.6 : 1,
-      width: '120px',
-      flex: 'none',
-      fontWeight: '500',
-      transition: 'all 0.2s ease'
-    });
-
     return (
-      <div className="d-flex justify-content-between align-items-center mt-3 w-100" style={{ paddingTop: '1rem', borderTop: '1px solid #E5E7EB' }}>
+      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-50">
         <button
-          onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          style={{ ...btnStyle(currentPage === 1), width: '100px' }}
+          onClick={() => onPageChange(currentPage - 1)}
+          className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-[#F56D2D] disabled:opacity-30 disabled:hover:text-gray-500 transition-colors"
         >
           Previous
         </button>
-        <span style={{ fontSize: '13px', color: '#4B5563', fontWeight: '500', textAlign: 'center' }}>
+        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
           {currentPage} / {totalPages}
         </span>
         <button
-          onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          style={{ ...btnStyle(currentPage === totalPages), width: '100px' }}
+          onClick={() => onPageChange(currentPage + 1)}
+          className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-[#F56D2D] disabled:opacity-30 disabled:hover:text-gray-500 transition-colors"
         >
           Next
         </button>
@@ -331,228 +154,169 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen px-4 font-basis">
+    <div className="w-full pb-8">
       <TaxDashboardWidget />
 
-      <div className="row mt-3 g-3 dashboard-sections-wrapper">
-        {/* My Tasks */}
-        <div className="col-12 col-md-6">
-          <div className="card custom-card p-3 p-md-4 rounded-3 h-100">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <h4 className="section-title mb-1">My Tasks</h4>
-                <span className="section-subtitle m-0">Tasks assigned to you</span>
-              </div>
-              <button
-                className="view-all-btn"
-                onClick={() => {
-                  if (showAllTasks) {
-                    setShowAllTasks(false);
-                    setMyTasksPage(1);
-                  } else {
-                    setShowAllTasks(true);
-                  }
-                }}
-              >
-                {showAllTasks ? 'Show Less' : 'View All'}
-              </button>
-            </div>
-            <div className="d-flex flex-column gap-3">
-              {loading ? (
-                <div className="text-center py-3">Loading tasks...</div>
-              ) : myTasks.length === 0 ? (
-                <div className="text-center py-3">No tasks assigned</div>
-              ) : (
-                getPaginatedData(myTasks, myTasksPage, ITEMS_PER_PAGE, showAllTasks).map((task, i) => {
-                  const taskTitle = task.task_title || task.title || 'Untitled Task';
-                  return (
-                    <TaskCard
-                      key={task.id || i}
-                      title={taskTitle}
-                      due={task.due_date_formatted || `Due: ${task.due_date || 'N/A'}`}
-                      status={[task.priority_display || task.priority || 'medium', task.status_display || task.status || 'pending']}
-                      user={(
-                        <span className="db-user d-flex align-items-center gap-2">
-                          <span className="db-user-icon-wrapper"><Contacted /></span>
-                          {task.client?.name || 'Unknown Client'}
-                        </span>
-                      )}
-                      icon={<span className="icon-circle"><FileIcon /></span>}
-                      selected={selectedTask === taskTitle}
-                      onClick={() => handleSelect(taskTitle)}
-                    />
-                  );
-                })
-              )}
-            </div>
-            {!showAllTasks && myTasks.length > ITEMS_PER_PAGE && (
-              <PaginationControls
-                currentPage={myTasksPage}
-                totalPages={getTotalPages(myTasks, ITEMS_PER_PAGE)}
-                onPageChange={setMyTasksPage}
-                sectionName="myTasks"
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Upcoming Deadlines */}
-        <div className="col-12 col-md-6">
-          <div className="card custom-card upcoming-deadlines-card p-3 p-md-4 rounded-3 h-100">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <h4 className="section-title mb-1">Upcoming Deadlines</h4>
-                <p className="section-subtitle m-0">Important dates to remember</p>
-              </div>
-              <button
-                className="view-all-btn"
-                onClick={() => {
-                  if (showAllDeadlines) {
-                    setShowAllDeadlines(false);
-                    setDeadlinesPage(1);
-                  } else {
-                    setShowAllDeadlines(true);
-                  }
-                }}
-              >
-                {showAllDeadlines ? 'Show Less' : 'View All'}
-              </button>
-            </div>
-            <div className="d-flex flex-column gap-3">
-              {loading ? (
-                <div className="text-center py-3">Loading deadlines...</div>
-              ) : upcomingDeadlines.length === 0 ? (
-                <div className="text-center py-3">No upcoming deadlines</div>
-              ) : (
-                getPaginatedData(upcomingDeadlines, deadlinesPage, ITEMS_PER_PAGE, showAllDeadlines).map((deadline, i) => {
-                  const deadlineTitle = deadline.title || 'Untitled';
-                  return (
-                    <TaskCard
-                      key={deadline.id || i}
-                      title={deadlineTitle}
-                      due={deadline.due_date_formatted || `Due: ${deadline.due_date || 'N/A'}`}
-                      status={[deadline.priority_display || deadline.priority || 'medium']}
-                      value={deadline.time_left || deadline.days_left !== undefined ? `${deadline.days_left} days left` : ''}
-                      user={(
-                        <span className="db-user d-flex align-items-center gap-2">
-                          <span className="db-user-icon-wrapper"><Contacted /></span>
-                          {deadline.client?.name || 'Unknown Client'}
-                        </span>
-                      )}
-                      icon={<span className="icon-circle"><FileIcon /></span>}
-                      singleStatus
-                      selected={selectedTask === deadlineTitle}
-                      onClick={() => handleSelect(deadlineTitle)}
-                      className="upcoming-deadline-task"
-                    />
-                  );
-                })
-              )}
-            </div>
-            {!showAllDeadlines && upcomingDeadlines.length > ITEMS_PER_PAGE && (
-              <PaginationControls
-                currentPage={deadlinesPage}
-                totalPages={getTotalPages(upcomingDeadlines, ITEMS_PER_PAGE)}
-                onPageChange={setDeadlinesPage}
-                sectionName="deadlines"
-              />
-            )}
-          </div>
-
-        </div>
-      </div>
-
-      {/* Bottom Section */}
-
-      <div className="row mt-3 g-3 dashboard-sections-wrapper">
-        {/* Recent Messages */}
-
-        <div className="col-12 col-md-6">
-          <div className="card custom-card p-3 p-md-4 rounded-3 h-100">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <h4 className="section-title mb-1">Recent Messages</h4>
-                <p className="section-subtitle m-0">Latest client communications</p>
-              </div>
-              <button
-                className="view-all-btn"
-                onClick={() => navigate('/taxdashboard/messages')}
-              >
-                View All
-              </button>
-            </div>
-            <div className="d-flex flex-column gap-2">
-              {loading ? (
-                <div className="text-center py-3">Loading messages...</div>
-              ) : recentMessages.length === 0 ? (
-                <div className="text-center py-3">No recent messages</div>
-              ) : (
-                getPaginatedData(recentMessages, messagesPage, ITEMS_PER_PAGE).map((msg, i) => {
-                  const msgType = msg.sender?.role === 'client' || msg.sender_type === 'Client' ? 'client' : 'internal';
-                  const senderName = msg.sender?.name || msg.sender_name || 'Unknown';
-                  return (
-                    <div
-                      key={msg.id || i}
-                      className={`recent-msg-card ${msgType === "client" ? "client-msg" : "internal-msg"}`}
-                      onClick={() => navigate(`/taxdashboard/messages?thread=${msg.thread_id}`)}
-                    >
-                      <div className="msg-header-row">
-                        <div className="msg-sender-box">
-                          <span className="msg-name-text">{senderName}</span>
-                          <span className="name-role-circle"></span>
-                          <span className="role-badge">{msg.sender_type || (msg.sender?.role === 'client' ? 'Client' : 'Internal')}</span>
-                        </div>
-                        <div className="msg-time-box">
-                          <Clocking />
-                          <span>{msg.time_ago || 'Just now'}</span>
-                        </div>
-                      </div>
-
-                      <div className="msg-body-row">
-                        <div className="msg-icon-holder">
-                          <Msg />
-                        </div>
-                        <div className="msg-preview-text">
-                          {msg.message_preview || msg.message_snippet || msg.content || 'No message content'}
-                        </div>
-                      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4 items-stretch">
+        {/* My Tasks Section */}
+        <div className="bg-white !rounded-2xl p-6 sm:p-8 border border-[#E8F0FF] flex flex-col">
+          <SectionHeader
+            title="My Tasks"
+            subtitle="Tasks assigned to you"
+            onViewAll={() => navigate('/taxdashboard/tasks')}
+          />
+          <div className="flex flex-col gap-4 flex-grow">
+            {loading ? (
+              <div className="flex justify-center py-12 text-gray-400 animate-pulse font-medium">Loading tasks...</div>
+            ) : myTasks.length === 0 ? (
+              <div className="text-center py-12 text-gray-400 font-medium">No tasks assigned</div>
+            ) : (
+              paginatedTasks.map((task, i) => (
+                <TaskCard
+                  key={task.id || i}
+                  title={task.task_title || task.title || 'Untitled Task'}
+                  due={task.due_date_formatted || `Due: ${task.due_date || 'N/A'}`}
+                  status={[task.priority_display || task.priority || 'medium']}
+                  user={
+                    <div className="flex items-center gap-2">
+                       <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center scale-90"><Contacted size={12}/></div>
+                       <span>{task.client?.name || 'Unknown Client'}</span>
                     </div>
-                  );
-                })
-              )}
-            </div>
-            <PaginationControls
-              currentPage={messagesPage}
-              totalPages={getTotalPages(recentMessages, ITEMS_PER_PAGE)}
-              onPageChange={setMessagesPage}
-              sectionName="messages"
-            />
+                  }
+                  onClick={() => navigate('/taxdashboard/tasks')}
+                />
+              ))
+            )}
           </div>
+          <Pagination
+            currentPage={myTasksPage}
+            totalItems={myTasks.length}
+            onPageChange={setMyTasksPage}
+          />
         </div>
 
-        {/* Recent Activity */}
-        <div className="col-12 col-md-6">
-          <div className="card custom-card p-3 p-md-4 rounded-3 h-100">
-            <div className="mb-3">
-              <h4 className="section-title mb-1">Quick Actions</h4>
-              <p className="section-subtitle m-0">Common tasks and shortcuts</p>
-            </div>
-            <div className="quick-action-container">
-              {quickActions.map((action, i) => (
+        {/* Upcoming Deadlines Section */}
+        <div className="bg-white !rounded-2xl p-6 sm:p-8 border border-[#E8F0FF] flex flex-col">
+          <SectionHeader
+            title="Deadlines"
+            subtitle="Important dates to watch"
+            onViewAll={() => navigate('/taxdashboard/tasks')}
+          />
+          <div className="flex flex-col gap-4 flex-grow">
+            {loading ? (
+              <div className="flex justify-center py-12 text-gray-400 animate-pulse font-medium">Loading deadlines...</div>
+            ) : upcomingDeadlines.length === 0 ? (
+              <div className="text-center py-12 text-gray-400 font-medium">No upcoming deadlines</div>
+            ) : (
+              paginatedDeadlines.map((deadline, i) => (
+                <TaskCard
+                  key={deadline.id || i}
+                  title={deadline.title || 'Untitled'}
+                  due={deadline.due_date_formatted || `Due: ${deadline.due_date || 'N/A'}`}
+                  status={[deadline.priority_display || deadline.priority || 'medium']}
+                  value={deadline.time_left || (deadline.days_left !== undefined ? `${deadline.days_left} days left` : '')}
+                  user={
+                    <div className="flex items-center gap-2">
+                       <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center scale-90"><Contacted size={12}/></div>
+                       <span>{deadline.client?.name || 'Unknown Client'}</span>
+                    </div>
+                  }
+                  onClick={() => navigate('/taxdashboard/tasks')}
+                />
+              ))
+            )}
+          </div>
+          <Pagination
+            currentPage={deadlinesPage}
+            totalItems={upcomingDeadlines.length}
+            onPageChange={setDeadlinesPage}
+          />
+        </div>
+
+        {/* Recent Messages Section */}
+        <div className="bg-white !rounded-2xl p-6 sm:p-8 border border-[#E8F0FF] flex flex-col">
+          <SectionHeader
+            title="Communications"
+            subtitle="Latest messages from clients"
+            onViewAll={() => navigate('/taxdashboard/messages')}
+          />
+          <div className="flex flex-col gap-4 flex-grow">
+            {loading ? (
+              <div className="flex justify-center py-12 text-gray-400 animate-pulse font-medium">Loading messages...</div>
+            ) : recentMessages.length === 0 ? (
+              <div className="text-center py-12 text-gray-400 font-medium text-sm">No recent messages</div>
+            ) : (
+              recentMessages.slice(0, 3).map((msg, i) => (
                 <div
-                  key={i}
-                  className="quick-action-card"
-                  onClick={() => navigate(action.path)}
-                  style={{ cursor: 'pointer' }}
+                  key={msg.id || i}
+                  onClick={() => navigate(`/taxdashboard/messages?thread=${msg.thread_id}`)}
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                    (msg.sender?.role === 'client' || msg.sender_type === 'Client') ? 'bg-[#F3F7FF] border-[#E8F0FF]' : 'bg-white border-[#E8F0FF]'
+                  }`}
                 >
-                  {action.icon}
-                  <span>{action.label}</span>
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-gray-900 font-[BasisGrotesquePro]">
+                        {msg.sender?.name || msg.sender_name || 'Unknown'}
+                      </span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#F56D2D]"></span>
+                      <span className="text-[10px] font-bold text-[#F56D2D] uppercase tracking-wider">
+                        {msg.sender_type || (msg.sender?.role === 'client' ? 'Client' : 'Internal')}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-medium">
+                      <Clocking size={12} />
+                      <span>{msg.time_ago || 'Just now'}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0">
+                      <Msg size={16} className="text-[#F56D2D]" />
+                    </div>
+                    <p className="text-xs text-gray-600 line-clamp-1 m-0 font-[BasisGrotesquePro]">
+                      {msg.message_preview || msg.message_snippet || msg.content || 'No preview available'}
+                    </p>
+                  </div>
                 </div>
-              ))}
-            </div>
+              ))
+            )}
           </div>
         </div>
 
+        {/* Quick Actions Section */}
+        <div className="bg-white !rounded-2xl p-6 sm:p-8 border border-[#E8F0FF] flex flex-col justify-between">
+          <SectionHeader
+            title="Quick Shortcuts"
+            subtitle="Common navigation actions"
+          />
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-3 flex-grow content-start">
+            {quickActions.map((action, i) => (
+              <button
+                key={i}
+                onClick={() => navigate(action.path)}
+                className="flex flex-col items-center justify-center gap-3 p-4 rounded-2xl bg-gray-50 hover:bg-[#F56D2D] group transition-all duration-300 border border-transparent hover:border-[#F56D2D]"
+              >
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${action.color} group-hover:bg-white/20 group-hover:text-white`}>
+                  {action.icon}
+                </div>
+                <span className="text-[11px] font-bold text-gray-600 group-hover:text-white font-[BasisGrotesquePro] uppercase tracking-wider">
+                  {action.label}
+                </span>
+              </button>
+            ))}
+          </div>
+          <div className="mt-8 p-4 bg-[#F3F7FF] rounded-2xl border border-[#E8F0FF]">
+             <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#3AD6F2]">
+                   <Analytics size={20} />
+                </div>
+                <div>
+                   <p className="text-xs font-bold text-gray-900 m-0">Need assistance?</p>
+                   <p className="text-[10px] text-gray-500 m-0">Visit the help center</p>
+                </div>
+             </div>
+          </div>
+        </div>
       </div>
     </div>
   );
