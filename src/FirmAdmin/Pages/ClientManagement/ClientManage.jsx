@@ -1605,7 +1605,7 @@ export default function ClientManage() {
             transition: 'all 0.2s ease'
           }}
         >
-          Pending & Unlinked
+          Needs Assignment
           {(pendingInvitesPagination.total_count + unlinkedTaxpayersPagination.total_count > 0) && (
             <span className="badge bg-danger text-white ms-2" style={{
               fontSize: '10px',
@@ -1630,8 +1630,8 @@ export default function ClientManage() {
           }}>
             <div className="d-flex justify-content-between align-items-center mb-4">
               <div>
-                <h6 className="fw-bold mb-1" style={{ color: '#131323', fontSize: '16px' }}>Unlinked Taxpayers</h6>
-                <p className="text-muted small mb-0">Users not yet assigned to a specific tax preparer</p>
+                <h6 className="fw-bold mb-1" style={{ color: '#131323', fontSize: '16px' }}>Needs Assignment</h6>
+                <p className="text-muted small mb-0">Newly created or unlinked taxpayers that need to be assigned to a preparer</p>
               </div>
               <div className="d-flex align-items-center gap-2">
                 <button
@@ -1826,8 +1826,8 @@ export default function ClientManage() {
           }}>
             <div className="d-flex justify-content-between align-items-center mb-4">
               <div>
-                <h6 className="fw-bold mb-1" style={{ color: '#131323', fontSize: '16px' }}>Pending Invites</h6>
-                <p className="text-muted small mb-0">Client invites awaiting acceptance</p>
+                <h6 className="fw-bold mb-1" style={{ color: '#131323', fontSize: '16px' }}>Awaiting Acceptance</h6>
+                <p className="text-muted small mb-0">Clients who have been invited but have not yet accepted or linked their account</p>
               </div>
               <div className="d-flex align-items-center gap-2">
                 <button
@@ -1842,7 +1842,7 @@ export default function ClientManage() {
                   {pendingInvitesPagination.page_size === 6 ? 'View All' : 'View Less'}
                 </button>
                 <span className="badge bg-danger text-white px-3 py-2" style={{ borderRadius: '20px', fontSize: '11px', fontWeight: '600' }}>
-                  {pendingInvitesPagination.total_count} Pending
+                  {pendingInvitesPagination.total_count} Awaiting
                 </span>
               </div>
             </div>
@@ -1863,7 +1863,7 @@ export default function ClientManage() {
               </div>
             ) : pendingInvites.length === 0 ? (
               <div className="text-center py-5 bg-light rounded-3">
-                <p className="text-muted mb-0">No pending invites found</p>
+                <p className="text-muted mb-0">No invites awaiting acceptance</p>
               </div>
             ) : (
               <>
@@ -2036,6 +2036,27 @@ export default function ClientManage() {
           {/* Toolbar - Only show for clients tab */}
           <div className="p-4 sm:p-6 border-b border-gray-200">
             <div className="d-flex flex-column gap-4">
+              {/* Needs Assignment Banner */}
+              {overview.pending > 0 && activeTab === 'clients' && (
+                <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg flex items-center justify-between animate-pulse-subtle">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                      <FaExclamationTriangle size={14} />
+                    </div>
+                    <div>
+                      <span className="text-sm font-bold text-orange-800">Next Step: Assign Your Clients</span>
+                      <p className="text-[11px] text-orange-700 m-0">You have <strong>{overview.pending}</strong> client{overview.pending !== 1 ? 's' : ''} in the <strong>Needs Assignment</strong> tab waiting for work to begin.</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => handleTabChange('pending-requests')}
+                    className="px-4 py-1.5 bg-orange-600 text-white text-xs font-bold rounded-lg hover:bg-orange-700 transition-colors"
+                  >
+                    Go to Assignment
+                  </button>
+                </div>
+              )}
+
               {/* Search Bar Row */}
               <div className="w-100 position-relative">
                 <input

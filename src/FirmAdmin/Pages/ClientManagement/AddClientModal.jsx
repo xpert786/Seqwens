@@ -627,19 +627,16 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
         // Close add client modal first
         onClose();
 
-        // Show success toast with backend message (e.g., "Linked as Taxpayer")
-        toast.success(result.message || "Client created successfully!", getToastOptions());
+        // Refresh list
+        if (onClientCreated) {
+          onClientCreated();
+        }
 
-        // If user chose NOT to send invite immediately, offer to send/share it now
+        // Handle path based on whether invite was sent
         if (!sendInvite) {
-          // Generate invite link using the firm admin API (same flow as tax preparer)
           try {
-            const inviteResponse = await firmAdminClientsAPI.generateInviteLink({
-              client_id: clientId
-            });
-
+            const inviteResponse = await firmAdminClientsAPI.generateInviteLink({ client_id: clientId });
             if (inviteResponse.success) {
-              // Format invite data
               const inviteData = {
                 id: inviteResponse.data?.invite_id,
                 invite_id: inviteResponse.data?.invite_id,
@@ -654,25 +651,33 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
                 firm_name: result.data.firm?.name || null
               };
 
-              // Small delay to ensure Add Client modal is closed first
-              setTimeout(() => {
-                openInviteActionsModal(inviteData);
-              }, 100);
-
-              toast.info("Client added. You can now share the invite manually.", getToastOptions());
+              setTimeout(() => { openInviteActionsModal(inviteData); }, 100);
+              
+              toast.info(
+                <div className="flex flex-col gap-1">
+                  <span className="font-bold">Client Created & Needs Assignment</span>
+                  <span className="text-[12px] leading-tight text-slate-600">
+                    You can now share the invite manually. Your client is also visible in the <strong>Needs Assignment</strong> tab.
+                  </span>
+                </div>,
+                { ...getToastOptions(), autoClose: 8000, icon: '🔗' }
+              );
             }
           } catch (inviteError) {
             console.error("Error creating invite options:", inviteError);
-            toast.error(handleAPIError(inviteError) || "Failed to create invite options. You can send it later from the client's invite options.", getToastOptions());
           }
         } else {
-          // Invite already sent automatically by backend
-          // Trigger refresh callback if provided
-          if (onClientCreated) {
-            onClientCreated();
-          }
+          // Success toast with guidance for automated invite path
+          toast.success(
+            <div className="flex flex-col gap-1">
+              <span className="font-bold">Client Created Successfully!</span>
+              <span className="text-[12px] leading-tight text-slate-600">
+                Next Step: You can find your client under the <strong>Needs Assignment</strong> tab to complete their profile and start working.
+              </span>
+            </div>,
+            { ...getToastOptions(), autoClose: 8000, icon: '👤' }
+          );
         }
-
       } else {
         // Don't close modal on error - show error message
         const errorMsg = result.message || 'Failed to create client';
@@ -743,14 +748,29 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
 
         onClose();
 
-        toast.success(result.message || "Client linked successfully!", getToastOptions());
-
+        // Handle path based on whether invite was sent
         if (!sendInvite) {
-          // ... existing invite logic if needed ...
-          // For simplicity, just show success toast if linked
-          toast.info("Client linked. You can share access details manually.", getToastOptions());
+          toast.info(
+            <div className="flex flex-col gap-1">
+              <span className="font-bold">Client Linked & Needs Assignment</span>
+              <span className="text-[12px] leading-tight text-slate-600">
+                The account has been linked. You can share access details manually. The client is now visible in the <strong>Needs Assignment</strong> tab.
+              </span>
+            </div>,
+            { ...getToastOptions(), autoClose: 8000, icon: '🔗' }
+          );
         } else {
           if (onClientCreated) onClientCreated();
+          // Guided success toast for forced link + automated invite
+          toast.success(
+            <div className="flex flex-col gap-1">
+              <span className="font-bold">Client Linked Successfully!</span>
+              <span className="text-[12px] leading-tight text-slate-600">
+                You can now find your client under the <strong>Needs Assignment</strong> tab to complete their profile.
+              </span>
+            </div>,
+            { ...getToastOptions(), autoClose: 8000, icon: '👤' }
+          );
         }
       } else {
         throw new Error(result.message || 'Failed to link client');
@@ -788,8 +808,16 @@ export default function AddClientModal({ isOpen, onClose, onClientCreated }) {
         // Close modal
         onClose();
 
-        // Show success message
-        toast.success(response.message || "Client restored successfully!", getToastOptions());
+        // Show success message with guidance
+        toast.success(
+          <div className="flex flex-col gap-1">
+            <span className="font-bold">Client Restored!</span>
+            <span className="text-[12px] leading-tight text-slate-600">
+              Your client is now visible in the <strong>Needs Assignment</strong> tab. Please assign them before you continue.
+            </span>
+          </div>,
+          { ...getToastOptions(), autoClose: 8000, icon: '♻️' }
+        );
 
         // Refresh list
         if (onClientCreated) {

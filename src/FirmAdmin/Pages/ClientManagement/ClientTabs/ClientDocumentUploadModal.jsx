@@ -334,7 +334,7 @@ export default function ClientDocumentUploadModal({ show, handleClose, clientId,
       if (errorType) {
         switch (errorType) {
           case 'ASSIGNMENT_MISSING':
-            toast.error(errorData.message || 'Client is not properly assigned. Please assign to a preparer before uploading.', {
+            toast.error(errorData.message || 'This client needs to be assigned before you can continue. Assign them to yourself now.', {
               autoClose: 5000,
               icon: '🚨'
             });
