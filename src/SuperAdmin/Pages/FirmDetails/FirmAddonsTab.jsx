@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { toast } from 'react-toastify';
 import { superAdminAddonsAPI, handleAPIError } from '../../../ClientOnboarding/utils/apiUtils';
 
@@ -12,6 +13,18 @@ export default function FirmAddonsTab({ firmId, firmName }) {
   const [removingAddon, setRemovingAddon] = useState(null);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [addonToRemove, setAddonToRemove] = useState(null);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (showAddModal || showRemoveConfirm) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showAddModal, showRemoveConfirm]);
 
   // Fetch firm addons
   const fetchFirmAddons = useCallback(async () => {
@@ -54,7 +67,7 @@ export default function FirmAddonsTab({ firmId, firmName }) {
       console.error('Error fetching available addons:', err);
       setAvailableAddons([]);
     }
-  }, [firmAddons]);
+  }, [firmAddons, firmId]);
 
   useEffect(() => {
     fetchFirmAddons();
@@ -292,101 +305,112 @@ export default function FirmAddonsTab({ firmId, firmName }) {
         </div>
       )}
 
-      {/* Add Addon Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1070] p-4" style={{ zIndex: 9999 }}>
-          <div className="bg-white w-full max-w-2xl rounded-xl shadow-lg p-6 relative max-h-[75vh] overflow-y-auto">
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h4 className="text-xl font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">
-                  Add Addon to Firm
-                </h4>
-                <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                  Select an addon to add to {firmName || 'this firm'}
-                </p>
+      {/* Add Addon Modal - Portaled to body for perfect centering */}
+      {showAddModal && createPortal(
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/60 transition-opacity" onClick={() => setShowAddModal(false)} />
+          
+          <div className="relative bg-white dark:bg-gray-900 w-full max-w-2xl transform overflow-hidden rounded-2xl p-0 text-left shadow-2xl transition-all border border-[#E8F0FF] dark:border-gray-800 z-[10001] max-h-[85vh] flex flex-col">
+            {/* Header - Fixed at top */}
+            <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="text-xl font-bold text-gray-900 dark:text-white font-[BasisGrotesquePro] mb-1">
+                    Add Addon to Firm
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-[BasisGrotesquePro]">
+                    Select an addon to add to {firmName || 'this firm'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
               </div>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
             </div>
 
-            {availableAddons.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-sm text-gray-600 font-[BasisGrotesquePro]">
-                  No available addons to add. All active addons are already added to this firm.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {availableAddons.map((addon) => (
-                  <div
-                    key={addon.id}
-                    className="border border-[#E8F0FF] rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h6 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro] mb-1">
-                          {addon.name}
-                        </h6>
-                        {addon.description && (
-                          <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-2">
-                            {addon.description}
-                          </p>
-                        )}
-                        <div className="flex flex-col gap-1 mb-2">
-                          <p className="text-sm font-medium text-[#F56D2D] font-[BasisGrotesquePro]">
-                            {addon.limit_type === 'unlimited'
-                              ? `Unlimited ${addon.unit_type || addon.category}`
-                              : `Gives ${addon.unit_quantity || 0} ${addon.unit_type || (addon.category === 'storage' ? 'GB' : 'Units')} ${addon.billing_frequency === 'one_time' ? '' : 'per month'}`
-                            }
-                          </p>
+            {/* Scrollable Content */}
+            <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+              {availableAddons.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-[BasisGrotesquePro]">
+                    No available addons to add. All active addons are already added to this firm.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {availableAddons.map((addon) => (
+                    <div
+                      key={addon.id}
+                      className="border border-[#E8F0FF] dark:border-gray-800 rounded-xl p-4 bg-gray-50/50 dark:bg-gray-800/30 hover:border-[#F56D2D] transition-all group"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h6 className="text-lg font-bold text-gray-900 dark:text-white font-[BasisGrotesquePro] mb-1">
+                            {addon.name}
+                          </h6>
+                          {addon.description && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400 font-[BasisGrotesquePro] mb-3 line-clamp-2">
+                              {addon.description}
+                            </p>
+                          )}
+                          <div className="flex flex-col gap-1 mb-3">
+                            <p className="text-sm font-semibold text-[#F56D2D] font-[BasisGrotesquePro]">
+                              {addon.limit_type === 'unlimited'
+                                ? `Unlimited ${addon.unit_type || addon.category}`
+                                : `Gives ${addon.unit_quantity || 0} ${addon.unit_type || (addon.category === 'storage' ? 'GB' : 'Units')} ${addon.billing_frequency === 'one_time' ? '' : 'per month'}`
+                              }
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className="font-bold text-gray-900 dark:text-white font-[BasisGrotesquePro]">
+                              {addon.price_display || formatCurrency(addon.price)}
+                            </span>
+                            <span className="text-gray-500 dark:text-gray-400 font-[BasisGrotesquePro] lowercase">
+                              {addon.price_unit || (addon.billing_frequency === 'one_time' ? 'total' : 'per month')}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${addon.billing_frequency === 'one_time'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-indigo-100 text-indigo-700'
+                              }`}>
+                              {addon.billing_frequency || 'one_time'}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-4 text-sm">
-                          <span className="font-semibold text-gray-900 font-[BasisGrotesquePro]">
-                            {addon.price_display || formatCurrency(addon.price)}
-                          </span>
-                          <span className="text-gray-500 font-[BasisGrotesquePro] lowercase">
-                            {addon.price_unit || (addon.billing_frequency === 'one_time' ? 'total' : 'per month')}
-                          </span>
-                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${addon.billing_frequency === 'one_time'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-indigo-100 text-indigo-700'
-                            }`}>
-                            {addon.billing_frequency || 'one_time'}
-                          </span>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleAddAddon(addon.id)}
+                          disabled={addingAddon === addon.id}
+                          className="ml-4 px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50"
+                          style={{ borderRadius: '10px' }}
+                        >
+                          {addingAddon === addon.id ? 'Adding...' : 'Add'}
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleAddAddon(addon.id)}
-                        disabled={addingAddon === addon.id}
-                        className="ml-4 px-4 py-2 bg-[#F56D2D] text-white rounded-lg hover:bg-orange-600 transition-colors font-[BasisGrotesquePro] text-sm font-medium disabled:opacity-50"
-                        style={{borderRadius: '10px'}}
-                      >
-                        {addingAddon === addon.id ? 'Adding...' : 'Add'}
-                      </button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Remove Confirmation Modal */}
-      {showRemoveConfirm && addonToRemove && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1070] p-4" style={{ zIndex: 10000 }}>
-          <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full">
-            <h4 className="text-lg font-bold text-gray-900 font-[BasisGrotesquePro] mb-2">
+      {/* Remove Confirmation Modal - Portaled to body for perfect centering */}
+      {showRemoveConfirm && addonToRemove && createPortal(
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/60 transition-opacity" onClick={() => setShowRemoveConfirm(false)} />
+
+          <div className="relative bg-white dark:bg-gray-900 w-full max-w-md transform overflow-hidden rounded-2xl p-6 text-left shadow-2xl transition-all border border-[#E8F0FF] dark:border-gray-800 z-[10001]">
+            <h4 className="text-lg font-bold text-gray-900 dark:text-white font-[BasisGrotesquePro] mb-2">
               Remove Addon
             </h4>
-            <p className="text-sm text-gray-600 font-[BasisGrotesquePro] mb-6">
+            <p className="text-sm text-gray-600 dark:text-gray-400 font-[BasisGrotesquePro] mb-6">
               Are you sure you want to remove "{addonToRemove.addon?.name || 'this addon'}" from {firmName || 'this firm'}? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
@@ -396,7 +420,7 @@ export default function FirmAddonsTab({ firmId, firmName }) {
                   setShowRemoveConfirm(false);
                   setAddonToRemove(null);
                 }}
-                className="px-4 py-2 border border-[#E8F0FF] bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-[BasisGrotesquePro] text-sm font-medium"
+                className="px-4 py-2 border border-[#E8F0FF] dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-[BasisGrotesquePro] text-sm font-medium"
               >
                 Cancel
               </button>
@@ -410,9 +434,9 @@ export default function FirmAddonsTab({ firmId, firmName }) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
 }
-
