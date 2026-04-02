@@ -656,3 +656,36 @@
   background-color: transparent !important;
   color: #3B4A66 !important;
 }
+
+/* Final Fix for Stacking Context & Interactivity Issues */
+.upload-modal {
+  z-index: 9999999 !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  display: block !important;
+}
+
+.upload-modal .modal-content {
+  opacity: 1 !important;
+  z-index: 9999999 !important;
+  background-color: #ffffff !important;
+  pointer-events: auto !important;
+}
+
+.upload-modal .modal-dialog {
+  z-index: 9999999 !important;
+  opacity: 1 !important;
+}
+
+/* Ensure the specific backdrop for this modal stays below the content */
+.upload-modal-backdrop {
+  z-index: 9999998 !important;
+  opacity: 0.6 !important;
+  background-color: #000 !important;
+}
+
+/* Fallback if backdropClassName isn't applied correctly */
+body > .modal-backdrop.show {
+  z-index: 9999998 !important;
+}
+

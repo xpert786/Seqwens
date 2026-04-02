@@ -8,6 +8,8 @@ import { documentsAPI, handleAPIError } from "../utils/apiUtils";
 import { toast } from "react-toastify";
 
 
+import { createPortal } from "react-dom";
+
 export default function UploadModal({ show, handleClose, onUploadSuccess }) {
     const fileInputRef = useRef();
     const [files, setFiles] = useState([]);
@@ -281,12 +283,44 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
         });
 
 
-    return (
-        <Modal show={show} onHide={resetModal} centered backdrop="static" size={step === 1 ? "md" : "xl"} className="upload-modal">
-            <Modal.Body className="" ref={modalBodyRef}>
+    if (!show) return null;
 
-                <h5 className="upload-heading">Upload Documents</h5>
-                <p className="upload-subheading ">Upload your tax documents securely</p>
+    return createPortal(
+        <div 
+            className="upload-modal-container"
+            style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 20000000,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                pointerEvents: 'auto'
+            }}
+            onClick={resetModal}
+        >
+            <div 
+                className={`upload-modal-content bg-white rounded-4 shadow-lg p-0 ${step === 2 ? 'modal-xl-width' : 'modal-md-width'}`}
+                style={{
+                    maxHeight: '90vh',
+                    width: step === 1 ? '500px' : '1100px',
+                    maxWidth: '95vw',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    pointerEvents: 'auto',
+                    position: 'relative',
+                    animation: 'none'
+                }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="p-4 overflow-y-auto custom-scrollbar flex-1">
+                    <h5 className="upload-heading mb-1">Upload Documents</h5>
+                    <p className="upload-subheading mb-4 text-muted">Upload your tax documents securely</p>
 
 
                 <p className="upload-section-title">Add Files</p>
@@ -665,8 +699,10 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                         </div>
                     </>
                 )}
-            </Modal.Body>
-        </Modal>
+                </div>
+            </div>
+        </div>,
+        document.body
     );
 }
 

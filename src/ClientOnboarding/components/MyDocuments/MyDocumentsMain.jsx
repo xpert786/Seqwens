@@ -82,14 +82,6 @@ export default function MyDocumentsMain() {
               <span className="text-nowrap">Upload Documents</span>
             </button>
           </div>
-
-          <UploadModal
-            show={showUploadModal}
-            handleClose={() => setShowUploadModal(false)}
-            onUploadSuccess={() => {
-              setDocumentsRefreshKey(prev => prev + 1);
-            }}
-          />
         </div>
       </div>
 
@@ -137,6 +129,16 @@ export default function MyDocumentsMain() {
         {activeTab === 'reviews' && <ReviewRequests />}
         {activeTab === 'archived' && <ArchivedDocuments />}
       </div>
+
+      <UploadModal
+        show={showUploadModal}
+        handleClose={() => setShowUploadModal(false)}
+        onUploadSuccess={() => {
+          setDocumentsRefreshKey(prev => prev + 1);
+        }}
+      />
     </div>
   );
 }
+
+
