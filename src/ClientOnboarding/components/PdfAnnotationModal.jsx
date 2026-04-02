@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Modal, Spinner } from 'react-bootstrap';
+import { Spinner } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
 import { FiPenTool, FiTrash, FiImage, FiSave, FiX, FiRotateCw, FiDownload, FiTrash2, FiCornerUpLeft, FiCornerUpRight, FiMove, FiZoomIn, FiZoomOut, FiMonitor } from 'react-icons/fi';
@@ -1243,76 +1243,54 @@ export default function PdfAnnotationModal({
         inset: 0,
         zIndex: 50000000,
         pointerEvents: 'auto',
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: isMobile ? '0' : '24px'
       }}
-      onClick={(e) => e.stopPropagation()} // Prevent closing anything behind it
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+        e.stopPropagation();
+      }}
     >
-      <style>{`
-        /* Force modal backdrop and content to be visible and interactive */
-        .manual-portal-wrapper .modal {
-          display: block !important;
-          opacity: 1 !important;
-          pointer-events: auto !important;
-          background: rgba(0,0,0,0.6); /* Manual backdrop */
-        }
-        .manual-portal-wrapper .modal-dialog {
-          z-index: 20000001 !important;
-          pointer-events: auto !important;
-        }
-        .manual-portal-wrapper .modal-backdrop {
-          display: none !important; /* We use the wrapper for backdrop to avoid z-index hell */
-        }
-        /* Mobile fixes */
-        @media (max-width: 768px) {
-          .manual-portal-wrapper .modal-dialog {
-            margin: 0 !important;
-            max-width: 100% !important;
-            height: 100% !important;
-          }
-          .manual-portal-wrapper .modal-content {
-            height: 100% !important;
-            border-radius: 0 !important;
-          }
-        }
-      `}</style>
-      <Modal
-        show={true} // Controlled by the portal rendering itself
-        onHide={handleClose}
-        centered
-        size="xl"
-        className="pdf-annotation-modal"
-        animation={false} // Disable animation to prevent pointer-event 'fade' issues
-        backdrop={false} // We handle the backdrop via the portal wrapper
-        autoFocus={true}
-        enforceFocus={true}
-        style={{ pointerEvents: 'auto' }}
+      <div 
+        className="pdf-annotation-modal bg-white flex flex-col shadow-2xl"
+        style={{ 
+          width: '100%', 
+          maxWidth: isMobile ? '100%' : '1140px', 
+          height: isMobile ? '100%' : '90vh',
+          borderRadius: isMobile ? '0' : '12px',
+          pointerEvents: 'auto',
+          overflow: 'hidden'
+        }}
+        onClick={(e) => e.stopPropagation()}
       >
-        <Modal.Header style={{ 
+        <div style={{ 
           borderBottom: '2px solid #E5E7EB', 
           padding: '16px 24px', 
-          position: 'sticky', 
-          top: 0, 
-          zIndex: 60000000, // Even higher than modal content
           backgroundColor: 'white',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          flexShrink: 0
         }}>
           <div className="d-flex justify-content-between align-items-center w-100">
             <div>
-              <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66', margin: 0 }}>
+              <h4 style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66', margin: 0, fontSize: '1.25rem' }}>
                 {documentName || 'PDF Signature Tool'}
-              </Modal.Title>
+              </h4>
             </div>
             <button
-              onClick={onClose} // Direct onClose for emergency closing
+              onClick={handleClose}
               className="btn-close"
               aria-label="Close"
-              style={{ zIndex: 60000001, pointerEvents: 'auto', cursor: 'pointer', padding: '10px' }}
+              style={{ cursor: 'pointer', padding: '10px' }}
             />
           </div>
-        </Modal.Header>
+        </div>
 
-        <Modal.Body className="custom-scrollbar" style={{ padding: 0, display: 'flex', flexDirection: 'column', height: '70vh', overflowY: 'auto', pointerEvents: 'auto' }}>
+        <div className="custom-scrollbar" style={{ padding: 0, display: 'flex', flexDirection: 'column', flex: 1, overflowY: 'auto' }}>
 
           {isMobile ? (
             /* --- Mobile Warning Message --- */
@@ -1514,8 +1492,8 @@ export default function PdfAnnotationModal({
               )}
             </>
           )}
-        </Modal.Body>
-        <Modal.Footer style={{
+        </div>
+        <div style={{
           borderTop: '2px solid #E5E7EB',
           padding: '16px 24px',
           position: 'sticky',
@@ -1557,8 +1535,8 @@ export default function PdfAnnotationModal({
               </button>
             </div>
           </div>
-        </Modal.Footer>
-      </Modal>
+        </div>
+      </div>
     </div>,
     document.body
   );
