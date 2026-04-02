@@ -55,7 +55,7 @@ export default function Subscriptions() {
   // Pagination for subscriptions
   const [pageSize, setPageSize] = useState(() => {
     const saved = localStorage.getItem('subscriptions_page_size');
-    return saved ? parseInt(saved) : 25;
+    return saved ? parseInt(saved) : 6;
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({
@@ -356,9 +356,9 @@ export default function Subscriptions() {
       case 'trial':
         return 'bg-blue-100 text-blue-700';
       case 'inactive':
-        return 'bg-gray-200 text-[var(--sa-text-primary)]';
+        return 'bg-gray-200 text-gray-950';
       default:
-        return 'bg-gray-200 text-[var(--sa-text-primary)]';
+        return 'bg-gray-200 text-gray-950';
     }
   };
 
@@ -1407,7 +1407,7 @@ export default function Subscriptions() {
           </div>
 
           {/* Subscriptions Table */}
-          <div className="pb-10">
+          <div className="pb-24">
             {/* Filter Bar */}
             <div className='mb-4'>
               <div className="flex gap-3 subscriptions-filter">
@@ -1467,7 +1467,7 @@ export default function Subscriptions() {
                     onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}
                     className="text-xs border border-[var(--sa-border-color)] bg-[var(--sa-bg-card)] text-[var(--sa-text-primary)] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#F56D2D]"
                   >
-                    {[25, 50, 100, 250].map((size) => (
+                    {[6, 25, 50, 100, 250].map((size) => (
                       <option key={size} value={size}>
                         {size}
                       </option>
@@ -1818,9 +1818,9 @@ const SubscriptionInvoicesTab = ({ plansData }) => {
       'paid': 'bg-green-100 text-green-800',
       'pending': 'bg-yellow-100 text-yellow-800',
       'overdue': 'bg-red-100 text-red-800',
-      'cancelled': 'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)]',
+      'cancelled': 'bg-gray-200 text-gray-950',
     };
-    return statusColors[status] || 'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)]';
+    return statusColors[status] || 'bg-gray-200 text-gray-950';
   };
 
   const formatCurrency = (amount) => {
@@ -2121,8 +2121,9 @@ const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, sub
       case 'active': return 'bg-green-100 text-green-700';
       case 'past_due': return 'bg-yellow-100 text-yellow-700';
       case 'canceled': return 'bg-red-100 text-red-700';
+      case 'inactive': return 'bg-gray-200 text-gray-950';
       case 'trialing': return 'bg-blue-100 text-blue-700';
-      default: return 'bg-[var(--sa-bg-secondary)] text-[var(--sa-text-primary)]';
+      default: return 'bg-gray-200 text-gray-950';
     }
   };
 
@@ -2186,16 +2187,9 @@ const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, sub
                       )}
                     </div>
                   </div>
-                  <div className="bg-[var(--sa-bg-card)] p-4 rounded-xl border border-[var(--sa-border-color)] shadow-sm">
-                    <div className="flex justify-between items-start mb-4">
+                  <div className="bg-[var(--sa-bg-card)] p-4 rounded-xl border border-[var(--sa-border-color)] shadow-sm h-full">
+                    <div className="mb-4">
                       <h4 className="text-xs font-bold text-[var(--sa-text-secondary)] uppercase tracking-widest">Account Information</h4>
-                      <button 
-                        onClick={() => handleManagePlan(details)}
-                        className="px-3 py-1 text-[10px] font-bold text-white bg-[#F56D2D] rounded-lg hover:bg-[#e05d20] transition-colors uppercase tracking-wider"
-                        style={{ borderRadius: '6px' }}
-                      >
-                        Manage Plan
-                      </button>
                     </div>
                     <div className="space-y-3">
                       <div className="flex justify-between"><span className="text-sm text-[var(--sa-text-secondary)]">Firm Name</span><span className="text-sm font-bold text-[var(--sa-text-primary)]">{details.name || '—'}</span></div>
@@ -2301,7 +2295,11 @@ const SubscriptionDetailModal = ({ isOpen, onClose, loading, error, details, sub
 
         {/* Modal Footer */}
         <div className="p-6 border-t border-[var(--sa-border-color)] bg-[var(--sa-bg-secondary)] flex justify-end">
-          <button onClick={onClose} className="px-6 py-2 bg-[#3AD6F2] text-white font-bold rounded-lg transition-colors shadow-sm">
+          <button 
+            onClick={onClose} 
+            className="px-6 py-2 bg-[#3AD6F2] text-white font-bold transition-colors shadow-sm"
+            style={{ borderRadius: '7px' }}
+          >
             Close
           </button>
         </div>

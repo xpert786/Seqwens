@@ -2057,7 +2057,6 @@ export default function ClientManage() {
                   </button>
                 </div>
               )}
-
               {/* Search Bar Row */}
               <div className="w-100 position-relative">
                 <input

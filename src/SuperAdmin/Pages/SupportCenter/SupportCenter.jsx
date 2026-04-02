@@ -97,7 +97,7 @@ export default function SupportCenter() {
             )}
 
             {/* Tab Content */}
-            <div>
+            <div className="pb-20">
                 {activeTab === "overview" && <Overview showHeader={true} onTicketDetailToggle={handleTicketDetailToggle} userType={userType} />}
                 {activeTab === "generalFAQs" && <IRSFAQs onAddFAQModalToggle={handleAddFAQModalToggle} showAddFAQModal={showAddFAQModal} userType={userType} />}
                 {activeTab === "seqwensTraining" && <SeqwensTraining onAddTrainingModalToggle={handleAddTrainingModalToggle} showAddTrainingModal={showAddTrainingModal} userType={userType} />}
