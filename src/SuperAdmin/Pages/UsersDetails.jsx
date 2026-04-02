@@ -235,16 +235,16 @@ const UsersDetails = () => {
 
     // Button Logic
     let actionButtonLabel = 'Suspend Account';
-    let actionButtonClasses = 'px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors';
+    let actionButtonClasses = 'px-3 py-1.5 text-xs font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors whitespace-nowrap';
     let actionHandler = handleSuspendClick;
 
     if (isSuspended) {
         actionButtonLabel = 'Unsuspend Account';
-        actionButtonClasses = 'px-4 py-2 text-sm font-medium text-white bg-[#22C55E] rounded-md hover:bg-[#16A34A] transition-colors';
+        actionButtonClasses = 'px-3 py-1.5 text-xs font-medium text-white bg-[#22C55E] rounded-md hover:bg-[#16A34A] transition-colors whitespace-nowrap';
         actionHandler = handleUnsuspend;
     } else if (isInactive) {
         actionButtonLabel = 'Reactivate Account';
-        actionButtonClasses = 'px-4 py-2 text-sm font-medium text-white bg-[#3B82F6] rounded-md hover:bg-[#2563EB] transition-colors';
+        actionButtonClasses = 'px-3 py-1.5 text-xs font-medium text-white bg-[#3B82F6] rounded-md hover:bg-[#2563EB] transition-colors whitespace-nowrap';
         actionHandler = () => handleStatusAction('reactivate');
     }
 
@@ -511,62 +511,60 @@ const UsersDetails = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="flex flex-col sm:items-end gap-3 w-full sm:w-auto">
-                        <div className="flex flex-col sm:flex-row gap-3">
-                            {isSuperAdmin && (
-                                <button
-                                    className={actionButtonClasses}
-                                    style={{ borderRadius: '7px' }}
-                                    disabled={!actions.can_suspend || actionLoading}
-                                    onClick={actionHandler}
-                                    title={!actions.can_suspend ? 'Suspension not permitted for this user' : undefined}
-                                >
-                                    {actionLoading ? 'Processing...' : actionButtonLabel}
-                                </button>
-                            )}
-                            {isSuperAdmin && (
-                                <button
-                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B4A66] transition-colors"
-                                    onClick={() => setShowPasswordModal(true)}
-                                    disabled={actionLoading}
-                                    style={{ borderRadius: '8px' }}
-                                >
-                                    Password Options
-                                </button>
-                            )}
-                            {isSuperAdmin && actions.can_reset_2fa && (
-                                <button
-                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B4A66] transition-colors"
-                                    onClick={() => setShowReset2FAModal(true)}
-                                    disabled={actionLoading}
-                                    style={{ borderRadius: '8px' }}
-                                >
-                                    Reset 2FA
-                                </button>
-                            )}
-                            {isSuperAdmin && !isLookupMode && profile.role && ['super_admin', 'support_admin', 'billing_admin'].includes(profile.role) && (
-                                <button
-                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#F56D2D] border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F56D2D] disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={actionLoading}
-                                    onClick={handleChangeAdminTypeClick}
-                                    title="Change admin type"
-                                    style={{ borderRadius: '8px' }}
-                                >
-                                    Change Admin Type
-                                </button>
-                            )}
-                            {isSuperAdmin && !isOwnProfile && !isDefaultSuperAdmin && (
-                                <button
-                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={actionLoading}
-                                    onClick={() => setShowDeleteModal(true)}
-                                    title="Permanently delete user"
-                                    style={{ borderRadius: '8px' }}
-                                >
-                                    Permanently Delete
-                                </button>
-                            )}
-                        </div>
+                    <div className="flex flex-wrap items-center gap-2 mt-4 sm:mt-0">
+                        {isSuperAdmin && (
+                            <button
+                                className={actionButtonClasses}
+                                style={{ borderRadius: '7px' }}
+                                disabled={!actions.can_suspend || actionLoading}
+                                onClick={actionHandler}
+                                title={!actions.can_suspend ? 'Suspension not permitted for this user' : undefined}
+                            >
+                                {actionLoading ? 'Processing...' : actionButtonLabel}
+                            </button>
+                        )}
+                        {isSuperAdmin && (
+                            <button
+                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B4A66] transition-colors whitespace-nowrap"
+                                onClick={() => setShowPasswordModal(true)}
+                                disabled={actionLoading}
+                                style={{ borderRadius: '7px' }}
+                            >
+                                Password Options
+                            </button>
+                        )}
+                        {isSuperAdmin && actions.can_reset_2fa && (
+                            <button
+                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B4A66] transition-colors whitespace-nowrap"
+                                onClick={() => setShowReset2FAModal(true)}
+                                disabled={actionLoading}
+                                style={{ borderRadius: '7px' }}
+                            >
+                                Reset 2FA
+                            </button>
+                        )}
+                        {isSuperAdmin && !isLookupMode && profile.role && ['super_admin', 'support_admin', 'billing_admin'].includes(profile.role) && (
+                            <button
+                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-[#F56D2D] border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F56D2D] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                disabled={actionLoading}
+                                onClick={handleChangeAdminTypeClick}
+                                title="Change admin type"
+                                style={{ borderRadius: '7px' }}
+                            >
+                                Change Admin Type
+                            </button>
+                        )}
+                        {isSuperAdmin && !isOwnProfile && !isDefaultSuperAdmin && (
+                            <button
+                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-red-600 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                disabled={actionLoading}
+                                onClick={() => setShowDeleteModal(true)}
+                                title="Permanently delete user"
+                                style={{ borderRadius: '7px' }}
+                            >
+                                Permanently Delete
+                            </button>
+                        )}
                     </div>
                 </div>
 
