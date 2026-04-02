@@ -1656,8 +1656,8 @@ export default function EditSubscriptionPlan({ planType, onClose }) {
               <button
                 type="button"
                 onClick={confirmAutoFillFeatures}
-                className="px-4 py-2 text-sm font-bold text-white transition-all shadow-sm flex items-center gap-2"
-                style={{ backgroundColor: 'var(--sa-text-primary)', borderRadius: '10px' }}
+                className="px-6 py-2 text-sm font-bold text-white transition-all shadow-sm flex items-center gap-2 hover:opacity-90 active:scale-95"
+                style={{ backgroundColor: '#F56D2D', borderRadius: '10px' }}
               >
                 Auto-fill
               </button>
