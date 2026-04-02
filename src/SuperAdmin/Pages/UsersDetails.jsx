@@ -235,16 +235,16 @@ const UsersDetails = () => {
 
     // Button Logic
     let actionButtonLabel = 'Suspend Account';
-    let actionButtonClasses = 'px-3 py-1.5 text-xs font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors whitespace-nowrap';
+    let actionButtonClasses = 'px-2 py-1 text-[10px] font-medium text-white bg-[#F56D2D] rounded-md hover:bg-[#E4561F] transition-colors whitespace-nowrap flex-shrink-0';
     let actionHandler = handleSuspendClick;
 
     if (isSuspended) {
         actionButtonLabel = 'Unsuspend Account';
-        actionButtonClasses = 'px-3 py-1.5 text-xs font-medium text-white bg-[#22C55E] rounded-md hover:bg-[#16A34A] transition-colors whitespace-nowrap';
+        actionButtonClasses = 'px-2 py-1 text-[10px] font-medium text-white bg-[#22C55E] rounded-md hover:bg-[#16A34A] transition-colors whitespace-nowrap flex-shrink-0';
         actionHandler = handleUnsuspend;
     } else if (isInactive) {
         actionButtonLabel = 'Reactivate Account';
-        actionButtonClasses = 'px-3 py-1.5 text-xs font-medium text-white bg-[#3B82F6] rounded-md hover:bg-[#2563EB] transition-colors whitespace-nowrap';
+        actionButtonClasses = 'px-2 py-1 text-[10px] font-medium text-white bg-[#3B82F6] rounded-md hover:bg-[#2563EB] transition-colors whitespace-nowrap flex-shrink-0';
         actionHandler = () => handleStatusAction('reactivate');
     }
 
@@ -511,7 +511,7 @@ const UsersDetails = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 mt-4 sm:mt-0">
+                    <div className="flex flex-nowrap items-center gap-2 mt-4 sm:mt-0 overflow-x-auto no-scrollbar">
                         {isSuperAdmin && (
                             <button
                                 className={actionButtonClasses}
@@ -525,7 +525,7 @@ const UsersDetails = () => {
                         )}
                         {isSuperAdmin && (
                             <button
-                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B4A66] transition-colors whitespace-nowrap"
+                                className="inline-flex items-center px-2 py-1 text-[10px] font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B4A66] transition-colors whitespace-nowrap flex-shrink-0"
                                 onClick={() => setShowPasswordModal(true)}
                                 disabled={actionLoading}
                                 style={{ borderRadius: '7px' }}
@@ -535,7 +535,7 @@ const UsersDetails = () => {
                         )}
                         {isSuperAdmin && actions.can_reset_2fa && (
                             <button
-                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B4A66] transition-colors whitespace-nowrap"
+                                className="inline-flex items-center px-2 py-1 text-[10px] font-medium text-[#3B4A66] bg-white border border-[#E8F0FF] rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B4A66] transition-colors whitespace-nowrap flex-shrink-0"
                                 onClick={() => setShowReset2FAModal(true)}
                                 disabled={actionLoading}
                                 style={{ borderRadius: '7px' }}
@@ -545,7 +545,7 @@ const UsersDetails = () => {
                         )}
                         {isSuperAdmin && !isLookupMode && profile.role && ['super_admin', 'support_admin', 'billing_admin'].includes(profile.role) && (
                             <button
-                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-[#F56D2D] border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F56D2D] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                className="inline-flex items-center px-2 py-1 text-[10px] font-medium text-white bg-[#F56D2D] border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F56D2D] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex-shrink-0"
                                 disabled={actionLoading}
                                 onClick={handleChangeAdminTypeClick}
                                 title="Change admin type"
@@ -556,7 +556,7 @@ const UsersDetails = () => {
                         )}
                         {isSuperAdmin && !isOwnProfile && !isDefaultSuperAdmin && (
                             <button
-                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-red-600 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                className="inline-flex items-center px-2 py-1 text-[10px] font-medium text-white bg-red-600 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex-shrink-0"
                                 disabled={actionLoading}
                                 onClick={() => setShowDeleteModal(true)}
                                 title="Permanently delete user"
