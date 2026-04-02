@@ -1395,7 +1395,7 @@ export default function ESignatureDashboard() {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ padding: 0 }} className="p-0 custom-scrollbar">
-          <div style={{ padding: '24px' }}>
+          <div style={{ padding: '24px', paddingBottom: '200px' }}>
             <div className="d-flex flex-column gap-4">
               {/* Client Selection */}
               <div>
