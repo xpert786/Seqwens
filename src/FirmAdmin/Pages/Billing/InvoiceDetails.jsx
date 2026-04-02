@@ -141,6 +141,18 @@ export default function InvoiceDetails() {
     fetchInvoiceDetails();
   }, [fetchInvoiceDetails]);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (showEditModal || showSendModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showEditModal, showSendModal]);
+
   // Handle send invoice
   const handleSendInvoice = async () => {
     if (!invoiceId) return;
@@ -462,6 +474,7 @@ export default function InvoiceDetails() {
     );
   }
 
+
   return (
     <div className="p-3 sm:p-4 lg:p-6" style={{ minHeight: '100vh', backgroundColor: '#F8F9FA' }}>
       {/* Back Button */}
@@ -552,15 +565,15 @@ export default function InvoiceDetails() {
       {/* Edit Invoice Modal */}
       {showEditModal && createPortal(
         <div
-          className="fixed inset-0 bg-black/60 flex items-start justify-center z-[1100] p-2 sm:p-4 overflow-y-auto"
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-[99999] p-4"
           onClick={() => setShowEditModal(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl relative max-w-[550px] w-full my-auto flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200"
+            className="bg-white rounded-2xl shadow-2xl relative max-w-[550px] w-full flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[85vh]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex justify-between items-center p-4 sm:p-6 pb-3 border-b border-[#F1F5F9]">
+            <div className="flex justify-between items-center p-4 sm:p-6 pb-4 border-b border-[#F1F5F9] flex-shrink-0">
               <div>
                 <h5 className="text-xl font-black text-gray-900 font-[BasisGrotesquePro]">Edit Invoice</h5>
                 <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">Update invoice details and status</p>
@@ -577,7 +590,7 @@ export default function InvoiceDetails() {
               </button>
             </div>
 
-            <div className="p-4 sm:p-6 pb-3 space-y-6">
+            <div className="p-4 sm:p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest font-[BasisGrotesquePro]">Status</label>
@@ -633,7 +646,7 @@ export default function InvoiceDetails() {
             </div>
 
             {/* Modal Footer */}
-            <div className="flex flex-row justify-end gap-3 p-4 sm:p-6 border-t border-[#F1F5F9] bg-gray-50">
+            <div className="flex flex-row justify-end gap-3 p-4 sm:p-6 border-t border-[#F1F5F9] bg-gray-50 flex-shrink-0">
               <button
                 type="button"
                 onClick={() => setShowEditModal(false)}
@@ -660,15 +673,15 @@ export default function InvoiceDetails() {
       {/* Send Invoice Modal */}
       {showSendModal && createPortal(
         <div
-          className="fixed inset-0 bg-black/60 flex items-start justify-center z-[1100] p-2 sm:p-4 overflow-y-auto"
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-[99999] p-4"
           onClick={() => setShowSendModal(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl relative max-w-[480px] w-full my-auto flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200"
+            className="bg-white rounded-2xl shadow-2xl relative max-w-[480px] w-full flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[85vh]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex justify-between items-center p-4 sm:p-6 pb-3 border-b border-[#F1F5F9]">
+            <div className="flex justify-between items-center p-4 sm:p-6 pb-4 border-b border-[#F1F5F9] flex-shrink-0">
               <div>
                 <h5 className="text-xl font-black text-gray-900 font-[BasisGrotesquePro]">Send Invoice</h5>
                 <p className="text-xs text-gray-500 font-[BasisGrotesquePro]">Email this invoice to your client</p>
@@ -685,7 +698,7 @@ export default function InvoiceDetails() {
               </button>
             </div>
 
-            <div className="p-4 sm:p-6 pb-3 space-y-6">
+            <div className="p-4 sm:p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
               <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
@@ -714,7 +727,7 @@ export default function InvoiceDetails() {
             </div>
 
             {/* Modal Footer */}
-            <div className="flex flex-row justify-end gap-3 p-4 sm:p-6 border-t border-[#F1F5F9] bg-gray-50">
+            <div className="flex flex-row justify-end gap-3 p-4 sm:p-6 border-t border-[#F1F5F9] bg-gray-50 flex-shrink-0">
               <button
                 type="button"
                 onClick={() => setShowSendModal(false)}
@@ -737,6 +750,8 @@ export default function InvoiceDetails() {
         </div>,
         document.body
       )}
+
     </div>
   );
 }
+
