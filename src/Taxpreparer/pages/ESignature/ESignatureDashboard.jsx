@@ -1383,7 +1383,6 @@ export default function ESignatureDashboard() {
         show={showCreateModal}
         onHide={processing ? undefined : handleCloseCreateModal}
         size="lg"
-        centered
         backdrop={processing ? 'static' : true}
         keyboard={!processing}
         style={{ fontFamily: 'BasisGrotesquePro' }}
