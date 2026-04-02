@@ -1384,7 +1384,6 @@ export default function ESignatureDashboard() {
         onHide={processing ? undefined : handleCloseCreateModal}
         size="lg"
         centered
-        scrollable
         backdrop={processing ? 'static' : true}
         keyboard={!processing}
         style={{ fontFamily: 'BasisGrotesquePro' }}
@@ -1394,8 +1393,8 @@ export default function ESignatureDashboard() {
             Create E-Signature Request
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ padding: 0 }} className="p-0 custom-scrollbar">
-          <div style={{ padding: '24px', paddingBottom: '200px' }}>
+        <Modal.Body style={{ padding: 0 }} className="p-0">
+          <div className="custom-scrollbar" style={{ maxHeight: '100vh', overflowY: 'auto', padding: '24px' }}>
             <div className="d-flex flex-column gap-4">
               {/* Client Selection */}
               <div>
