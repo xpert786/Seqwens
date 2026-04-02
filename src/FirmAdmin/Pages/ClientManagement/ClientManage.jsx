@@ -1914,29 +1914,33 @@ export default function ClientManage() {
                             </div>
                           </div>
                           <div className="d-flex flex-column gap-2 flex-shrink-0" style={{ marginLeft: '12px', minWidth: '85px' }}>
-                            <button
-                              className="btn w-100"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const clientId = invite.client_id || invite.taxpayer_id || invite.id;
-                                if (clientId) {
-                                  setSelectedClientForReassign(clientId);
-                                  setIsAssignMode(true);
-                                  setShowReassignStaffModal(true);
-                                }
-                              }}
-                              style={{
-                                backgroundColor: '#F56D2D',
-                                color: 'white',
-                                border: 'none',
-                                fontSize: '11px',
-                                fontWeight: '600',
-                                padding: '6px 0',
-                                borderRadius: '6px'
-                              }}
-                            >
-                              Assign
-                            </button>
+                            {!invite.is_assigned && (
+                              <button
+                                className="btn w-100"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Use provided User ID or Vault ID if available to avoid ID confusion with StaffInvite IDs
+                                  const clientId = invite.user_id || invite.vault_id || invite.id;
+                                  if (clientId) {
+                                    setSelectedClientForReassign(clientId);
+                                    setIsAssignMode(true);
+                                    setShowReassignStaffModal(true);
+                                  }
+                                }}
+                                style={{
+                                  backgroundColor: '#F56D2D',
+                                  color: 'white',
+                                  border: 'none',
+                                  fontSize: '11px',
+                                  fontWeight: '600',
+                                  padding: '6px 0',
+                                  borderRadius: '6px'
+                                }}
+                              >
+                                Assign
+                              </button>
+                            )}
+                            
                             <button
                               className="btn w-100 d-flex align-items-center justify-content-center gap-1"
                               onClick={(e) => {
@@ -1956,6 +1960,8 @@ export default function ClientManage() {
                               <FaLink size={10} />
                               <span>Invite</span>
                             </button>
+
+
                             <button
                               className="btn w-100 d-flex align-items-center justify-content-center gap-1"
                               onClick={(e) => {
