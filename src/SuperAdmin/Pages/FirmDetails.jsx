@@ -1039,11 +1039,11 @@ export default function FirmDetails() {
                                             <h6 className="text-base font-semibold text-[#1E293B] dark:text-white mb-4">Developer Settings</h6>
                                             <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 !dark:bg-slate-800 border border-slate-200 !dark:border-gray-700 shadow-sm">
                                                 <div>
-                                                    <div className="flex items-center flex-row gap-2 mb-1">
-                                                        <div className="flex items-center justify-center flex-shrink-0">
+                                                    <div className="flex items-center gap-2.5 mb-1.5">
+                                                        <div className="flex-shrink-0 flex items-center">
                                                             <svg
-                                                                width="18"
-                                                                height="18"
+                                                                width="20"
+                                                                height="20"
                                                                 viewBox="0 0 24 24"
                                                                 fill="none"
                                                                 xmlns="http://www.w3.org/2000/svg"
@@ -1058,7 +1058,7 @@ export default function FirmDetails() {
                                                                 />
                                                             </svg>
                                                         </div>
-                                                        <span className="text-sm font-bold text-gray-900 !dark:text-white leading-none">
+                                                        <span className="text-[14px] font-bold text-gray-900 !dark:text-white leading-none inline-flex items-center whitespace-nowrap">
                                                             Developer Subscription (QA Mode)
                                                         </span>
                                                     </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { FaSearch, FaFilter, FaFolder, FaDownload, FaEdit, FaTrash, FaPlus, FaFileUpload, FaPenNib } from "react-icons/fa";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -723,76 +724,87 @@ export default function ClientDocuments() {
       </Modal>
 
       {/* Upload File Modal */}
-      <Modal show={showUploadModal} onHide={() => setShowUploadModal(false)} centered size="lg" dialogClassName="upload-modal">
-        <Modal.Header closeButton style={{ borderBottom: 'none', paddingBottom: 0 }}>
-          <Modal.Title className="upload-heading">Upload Documents</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="pt-2">
-          <p className="upload-subheading mb-4">Upload files to this client's folder.</p>
-
-          <div
-            className={`upload-dropzone mb-4 ${isDragging ? 'drag-active' : ''}`}
-            onClick={() => fileInputRef.current.click()}
-            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-            onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
-            onDrop={handleDrop}
+      {showUploadModal && createPortal(
+        <div style={{ position: 'relative', zIndex: 50000000 }}>
+          <Modal 
+            show={true} 
+            onHide={() => setShowUploadModal(false)} 
+            centered 
+            size="lg" 
+            dialogClassName="upload-modal"
+            style={{ zIndex: 50000001 }}
+            backdropClassName="custom-modal-backdrop"
           >
-            <div className="mb-3 d-flex justify-content-center">
-              <UploadsIcon />
-            </div>
-            <h5 className="texts">Drag & drop files or <span className="text-primary text-decoration-underline">Browse</span></h5>
-            <p className="upload-hint">Supported formats: PDF, JPEG, PNG, DOCX, XLSX</p>
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="d-none"
-              multiple
-              onChange={(e) => setUploadFiles(Array.from(e.target.files))}
-            />
-          </div>
+            <Modal.Header closeButton style={{ borderBottom: 'none', paddingBottom: 0 }}>
+              <Modal.Title className="upload-heading">Upload Documents</Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="pt-2">
+              <p className="upload-subheading mb-4">Upload files to this client's folder.</p>
 
-          {/* Selected Files List */}
-          {uploadFiles.length > 0 && (
-            <div className="mb-4">
-              <h6 className="upload-section-title">Selected Files ({uploadFiles.length})</h6>
-              <div className="doc-scroll" style={{ maxHeight: '200px', minHeight: 'auto', minWidth: '100%' }}>
-                {uploadFiles.map((f, i) => (
-                  <div key={i} className="doc-item d-flex justify-content-between align-items-center">
-                    <div className="d-flex align-items-center gap-3 overflow-hidden">
-                      <div className="file-icon-wrapper p-2 rounded bg-light">
-                        <IconsFileIcon />
-                      </div>
-                      <div className="text-truncate">
-                        <div className="text-truncate fw-medium" style={{ fontSize: '14px', color: '#3B4A66' }}>{f.name}</div>
-                        <div className="text-muted small" style={{ fontSize: '11px' }}>{formatFileSize(f.size)}</div>
-                      </div>
-                    </div>
-                    <button
-                      className="btn btn-link text-danger p-2"
-                      onClick={(e) => { e.stopPropagation(); removeFile(i); }}
-                      title="Remove file"
-                    >
-                      <FaTrash size={14} />
-                    </button>
-                  </div>
-                ))}
+              <div
+                className={`upload-dropzone mb-4 ${isDragging ? 'drag-active' : ''}`}
+                onClick={() => fileInputRef.current.click()}
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+                onDrop={handleDrop}
+              >
+                <div className="mb-3 d-flex justify-content-center">
+                  <UploadsIcon />
+                </div>
+                <h5 className="texts">Drag & drop files or <span className="text-primary text-decoration-underline">Browse</span></h5>
+                <p className="upload-hint">Supported formats: PDF, JPEG, PNG, DOCX, XLSX</p>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="d-none"
+                  multiple
+                  onChange={(e) => setUploadFiles(Array.from(e.target.files))}
+                />
               </div>
-            </div>
-          )}
 
-
-        </Modal.Body>
-        <Modal.Footer style={{ borderTop: 'none', paddingTop: 0, paddingBottom: '20px' }}>
-          <Button variant="outline-secondary" className="btn-cancel-custom px-4" onClick={() => setShowUploadModal(false)}>Cancel</Button>
-          <Button
-            className="btn-upload-custom px-4"
-            onClick={handleUploadFiles}
-            disabled={uploadFiles.length === 0 || isProcessing}
-          >
-            {isProcessing ? 'Uploading...' : 'Upload Files'}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+              {/* Selected Files List */}
+              {uploadFiles.length > 0 && (
+                <div className="mb-4">
+                  <h6 className="upload-section-title">Selected Files ({uploadFiles.length})</h6>
+                  <div className="doc-scroll" style={{ maxHeight: '200px', minHeight: 'auto', minWidth: '100%' }}>
+                    {uploadFiles.map((f, i) => (
+                      <div key={i} className="doc-item d-flex justify-content-between align-items-center">
+                        <div className="d-flex align-items-center gap-3 overflow-hidden">
+                          <div className="file-icon-wrapper p-2 rounded bg-light">
+                            <IconsFileIcon />
+                          </div>
+                          <div className="text-truncate">
+                            <div className="text-truncate fw-medium" style={{ fontSize: '14px', color: '#3B4A66' }}>{f.name}</div>
+                            <div className="text-muted small" style={{ fontSize: '11px' }}>{formatFileSize(f.size)}</div>
+                          </div>
+                        </div>
+                        <button
+                          className="btn btn-link text-danger p-2"
+                          onClick={(e) => { e.stopPropagation(); removeFile(i); }}
+                          title="Remove file"
+                        >
+                          <FaTrash size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Modal.Body>
+            <Modal.Footer style={{ borderTop: 'none', paddingTop: 0, paddingBottom: '20px' }}>
+              <Button variant="outline-secondary" className="btn-cancel-custom px-4" onClick={() => setShowUploadModal(false)}>Cancel</Button>
+              <Button
+                className="btn-upload-custom px-4"
+                onClick={handleUploadFiles}
+                disabled={uploadFiles.length === 0 || isProcessing}
+              >
+                {isProcessing ? 'Uploading...' : 'Upload Files'}
+              </Button>
+            </Modal.Footer>
+          </Modal>
+        </div>,
+        document.body
+      )}
 
       {/* Rename Modal */}
       <Modal show={showRenameModal} onHide={() => setShowRenameModal(false)} centered>
