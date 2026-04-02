@@ -947,7 +947,7 @@ export default function ClientManage() {
         closeInviteActionsModal();
 
         // Refresh pending invites list
-        if (activeTab === 'pending-invites') {
+        if (activeTab === 'pending-requests') {
           await fetchPendingInvites(pendingInvitesPagination.page);
         }
       } else {
@@ -1189,12 +1189,9 @@ export default function ClientManage() {
         setIsAssignMode(false);
         // Refresh clients list
         await refreshClientsList();
-        // Refresh unlinked taxpayers list if on that tab
-        if (activeTab === 'unlinked-taxpayers') {
+        // Refresh lists
+        if (activeTab === 'pending-requests') {
           await fetchUnlinkedTaxpayers(unlinkedTaxpayersPagination.page, unlinkedTaxpayersPagination.page_size);
-        }
-        // Refresh pending invites list if on that tab
-        if (activeTab === 'pending-invites') {
           await fetchPendingInvites(pendingInvitesPagination.page);
         }
       } else {
@@ -1723,45 +1720,37 @@ export default function ClientManage() {
                                   <span className="text-truncate">{taxpayer.phone_number}</span>
                                 </div>
                               )}
-                              <div className="d-flex flex-wrap gap-1 mt-2">
-                                {taxpayer.is_active ? (
-                                  <span className="badge bg-success-subtle text-success border border-success-subtle" style={{ fontSize: '9px', padding: '2px 6px' }}>
-                                    Active
-                                  </span>
-                                ) : (
-                                  <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style={{ fontSize: '9px', padding: '2px 6px' }}>
-                                    Inactive
-                                  </span>
-                                )}
-                                {taxpayer.is_email_verified && (
-                                  <span className="badge bg-info-subtle text-info border border-info-subtle" style={{ fontSize: '9px', padding: '2px 6px' }}>
-                                    Email Verified
-                                  </span>
-                                )}
-                              </div>
+                              {(taxpayer.assigned_staff && taxpayer.assigned_staff.length > 0) && (
+                                <div className="mt-2 text-xs flex items-center gap-1.5 text-blue-600 font-bold bg-blue-50 px-2 py-1.5 rounded-lg border border-blue-100">
+                                  <FaUserTie size={10} />
+                                  <span>Assigned to: {taxpayer.assigned_staff.map(s => s.name || s.full_name).join(', ')}</span>
+                                </div>
+                              )}
                             </div>
                           </div>
                           <div className="d-flex flex-column gap-2 flex-shrink-0" style={{ minWidth: '85px' }}>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedClientForReassign(taxpayer.id);
-                                setIsAssignMode(true);
-                                setShowReassignStaffModal(true);
-                              }}
-                              className="btn btn-sm w-100"
-                              style={{
-                                backgroundColor: '#F56D2D',
-                                color: 'white',
-                                fontSize: '11px',
-                                fontWeight: '600',
-                                padding: '6px 0',
-                                borderRadius: '6px',
-                                whiteSpace: 'nowrap'
-                              }}
-                            >
-                              Assign
-                            </button>
+                            {!(taxpayer.assigned_staff && taxpayer.assigned_staff.length > 0) && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedClientForReassign(taxpayer.id);
+                                  setIsAssignMode(true);
+                                  setShowReassignStaffModal(true);
+                                }}
+                                className="btn btn-sm w-100"
+                                style={{
+                                  backgroundColor: '#F56D2D',
+                                  color: 'white',
+                                  fontSize: '11px',
+                                  fontWeight: '600',
+                                  padding: '6px 0',
+                                  borderRadius: '6px',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                Assign
+                              </button>
+                            )}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1908,35 +1897,43 @@ export default function ClientManage() {
                                 <FaEnvelope className="text-info" size={12} />
                                 {invite.email}
                               </div>
-                              <div className="text-muted small italic">
+                              <div className="text-muted small italic mb-1">
                                 Invited: {invite.invited_at_formatted || (invite.invited_at ? new Date(invite.invited_at).toLocaleDateString() : 'N/A')}
                               </div>
+                              {(invite.assigned_staff && invite.assigned_staff.length > 0) && (
+                                <div className="mt-2 text-[10px] flex items-center gap-1.5 text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded border border-blue-100">
+                                  <FaUserTie size={10} />
+                                  <span>Assigned to: {invite.assigned_staff.map(s => s.name || s.full_name).join(', ')}</span>
+                                </div>
+                              )}
                             </div>
                           </div>
                           <div className="d-flex flex-column gap-2 flex-shrink-0" style={{ marginLeft: '12px', minWidth: '85px' }}>
-                            <button
-                              className="btn w-100"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const clientId = invite.client_id || invite.taxpayer_id || invite.id;
-                                if (clientId) {
-                                  setSelectedClientForReassign(clientId);
-                                  setIsAssignMode(true);
-                                  setShowReassignStaffModal(true);
-                                }
-                              }}
-                              style={{
-                                backgroundColor: '#F56D2D',
-                                color: 'white',
-                                border: 'none',
-                                fontSize: '11px',
-                                fontWeight: '600',
-                                padding: '6px 0',
-                                borderRadius: '6px'
-                              }}
-                            >
-                              Assign
-                            </button>
+                            {!(invite.assigned_staff && invite.assigned_staff.length > 0) && (
+                              <button
+                                className="btn w-100"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const clientId = invite.client_id || invite.taxpayer_id || invite.id;
+                                  if (clientId) {
+                                    setSelectedClientForReassign(clientId);
+                                    setIsAssignMode(true);
+                                    setShowReassignStaffModal(true);
+                                  }
+                                }}
+                                style={{
+                                  backgroundColor: '#F56D2D',
+                                  color: 'white',
+                                  border: 'none',
+                                  fontSize: '11px',
+                                  fontWeight: '600',
+                                  padding: '6px 0',
+                                  borderRadius: '6px'
+                                }}
+                              >
+                                Assign
+                              </button>
+                            )}
                             <button
                               className="btn w-100 d-flex align-items-center justify-content-center gap-1"
                               onClick={(e) => {
