@@ -1919,7 +1919,8 @@ export default function ClientManage() {
                                 className="btn w-100"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  const clientId = invite.client_id || invite.taxpayer_id || invite.id;
+                                  // Use provided User ID or Vault ID if available to avoid ID confusion with StaffInvite IDs
+                                  const clientId = invite.user_id || invite.vault_id || invite.id;
                                   if (clientId) {
                                     setSelectedClientForReassign(clientId);
                                     setIsAssignMode(true);
@@ -1940,27 +1941,26 @@ export default function ClientManage() {
                               </button>
                             )}
                             
-                            {!invite.invited_at && (
-                              <button
-                                className="btn w-100 d-flex align-items-center justify-content-center gap-1"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openInviteActionsModal(invite);
-                                }}
-                                style={{
-                                  backgroundColor: '#00C0C6',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '6px',
-                                  padding: '6px 0',
-                                  fontSize: '11px',
-                                  fontWeight: '600'
-                                }}
-                              >
-                                <FaLink size={10} />
-                                <span>Invite</span>
-                              </button>
-                            )}
+                            <button
+                              className="btn w-100 d-flex align-items-center justify-content-center gap-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openInviteActionsModal(invite);
+                              }}
+                              style={{
+                                backgroundColor: '#00C0C6',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                padding: '6px 0',
+                                fontSize: '11px',
+                                fontWeight: '600'
+                              }}
+                            >
+                              <FaLink size={10} />
+                              <span>Invite</span>
+                            </button>
+
 
                             <button
                               className="btn w-100 d-flex align-items-center justify-content-center gap-1"
