@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Modal } from 'react-bootstrap';
+import { createPortal } from 'react-dom';
+import { Modal, Spinner } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
 import { FiPenTool, FiTrash, FiImage, FiSave, FiX, FiRotateCw, FiDownload, FiTrash2, FiCornerUpLeft, FiCornerUpRight, FiMove, FiZoomIn, FiZoomOut, FiMonitor } from 'react-icons/fi';
@@ -151,12 +152,30 @@ export default function PdfAnnotationModal({
     try {
       setLoading(true);
 
-      let pdfBlobUrl = url;
+      let pdfUrlToFetch = url;
+      let pdfBlobUrl = null;
       let contentType = '';
+      
+      // CORS fix for S3 on localhost - Use live backend proxy from .env
+      if (typeof window !== 'undefined' && 
+          (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.port === '5177') && 
+          url.includes('s3.amazonaws.com')) {
+        
+        console.log('🔄 Detected S3 URL on localhost, applying LIVE proxy transformation...');
+        
+        // Get the live API URL from environment
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://168.231.121.7/seqwens/api';
+        // Construct the media base (replacing /api with /media)
+        const mediaBase = apiUrl.replace('/api', '/media');
+        
+        // Transform direct S3 link to use the live server's media proxy
+        pdfUrlToFetch = url.replace(/https?:\/\/seqwens-s3\.s3\.amazonaws\.com\//, mediaBase + '/');
+        console.log('✅ Transformed to LIVE URL for CORS safety:', pdfUrlToFetch);
+      }
 
       // Try to fetch PDF as blob to avoid CORS issues, with fallback to direct URL
       try {
-        const response = await fetch(url, {
+        const response = await fetch(pdfUrlToFetch, {
           method: 'GET',
           // Don't set custom headers that trigger preflight
           // Let the browser handle CORS naturally
@@ -207,11 +226,10 @@ export default function PdfAnnotationModal({
 
       // Load PDF document with error handling
       const loadingTask = getDocument({
-        url: pdfBlobUrl,
+        url: pdfBlobUrl || pdfUrlToFetch,
         cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
         cMapPacked: true,
         standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/',
-        // Increase timeout for slow connections
         timeout: 30000
       });
 
@@ -1217,274 +1235,332 @@ export default function PdfAnnotationModal({
     return () => window.removeEventListener('resize', checkRes);
   }, []);
 
-  return (
-    <Modal
-      show={isOpen}
-      onHide={handleClose}
-      centered
-      backdrop="static"
-      className="pdf-annotation-modal"
-      scrollable
-      size="xl"
+  return createPortal(
+    <div
+      className="manual-portal-wrapper"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 50000000,
+        pointerEvents: 'auto',
+      }}
+      onClick={(e) => e.stopPropagation()} // Prevent closing anything behind it
     >
-      <Modal.Header style={{ borderBottom: '2px solid #E5E7EB', padding: '16px 24px', position: 'sticky', top: 0, zIndex: 1000, backgroundColor: 'white' }}>
-        <div className="d-flex justify-content-between align-items-center w-100">
-          <div>
-            <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66', margin: 0, textAlign: 'center' }}>
-              PDF Signature Tool111
-            </Modal.Title>
-          </div>
-          <button
-            onClick={handleClose}
-            className="btn-close"
-            aria-label="Close"
-          />
-        </div>
-      </Modal.Header>
-
-      <Modal.Body className="custom-scrollbar" style={{ padding: 0, display: 'flex', flexDirection: 'column', height: '60vh', overflowY: 'auto' }}>
-
-        {isMobile ? (
-          /* --- Mobile Warning Message --- */
-          <div className="d-flex flex-column align-items-center justify-content-center text-center p-5" style={{ height: '100%', backgroundColor: '#F9FAFB' }}>
-            <div style={{ backgroundColor: '#FEF3C7', padding: '20px', borderRadius: '50%', marginBottom: '20px' }}>
-              <FiMonitor size={48} color="#D97706" />
+      <style>{`
+        /* Force modal backdrop and content to be visible and interactive */
+        .manual-portal-wrapper .modal {
+          display: block !important;
+          opacity: 1 !important;
+          pointer-events: auto !important;
+          background: rgba(0,0,0,0.6); /* Manual backdrop */
+        }
+        .manual-portal-wrapper .modal-dialog {
+          z-index: 20000001 !important;
+          pointer-events: auto !important;
+        }
+        .manual-portal-wrapper .modal-backdrop {
+          display: none !important; /* We use the wrapper for backdrop to avoid z-index hell */
+        }
+        /* Mobile fixes */
+        @media (max-width: 768px) {
+          .manual-portal-wrapper .modal-dialog {
+            margin: 0 !important;
+            max-width: 100% !important;
+            height: 100% !important;
+          }
+          .manual-portal-wrapper .modal-content {
+            height: 100% !important;
+            border-radius: 0 !important;
+          }
+        }
+      `}</style>
+      <Modal
+        show={true} // Controlled by the portal rendering itself
+        onHide={handleClose}
+        centered
+        size="xl"
+        className="pdf-annotation-modal"
+        animation={false} // Disable animation to prevent pointer-event 'fade' issues
+        backdrop={false} // We handle the backdrop via the portal wrapper
+        autoFocus={true}
+        enforceFocus={true}
+        style={{ pointerEvents: 'auto' }}
+      >
+        <Modal.Header style={{ 
+          borderBottom: '2px solid #E5E7EB', 
+          padding: '16px 24px', 
+          position: 'sticky', 
+          top: 0, 
+          zIndex: 60000000, // Even higher than modal content
+          backgroundColor: 'white',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div className="d-flex justify-content-between align-items-center w-100">
+            <div>
+              <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66', margin: 0 }}>
+                {documentName || 'PDF Signature Tool'}
+              </Modal.Title>
             </div>
-            <h3 style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '700', color: '#1F2937' }}>Bigger Screen Required</h3>
-            <p style={{ fontFamily: 'BasisGrotesquePro', color: '#4B5563', maxWidth: '300px', margin: '0 auto' }}>
-              For accurate signing and annotations, please open this document on a laptop or desktop computer.
-            </p>
             <button
-              onClick={handleClose}
-              className="btn btn-primary mt-4"
-              style={{ backgroundColor: '#3B4A66', border: 'none', padding: '10px 24px', borderRadius: '8px' }}
-            >
-              Got it, Close
-            </button>
+              onClick={onClose} // Direct onClose for emergency closing
+              className="btn-close"
+              aria-label="Close"
+              style={{ zIndex: 60000001, pointerEvents: 'auto', cursor: 'pointer', padding: '10px' }}
+            />
           </div>
-        ) : (
-          /* --- Full Desktop Experience --- */
-          <>
-            {/* Toolbox */}
-            <div className="annotation-toolbox" style={{
-              borderBottom: '2px solid #E5E7EB',
-              padding: '12px 24px',
-              backgroundColor: '#F9FAFB',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '16px',
-              flexWrap: 'wrap'
-            }}>
-              {/* Signer Toggle - Show only if spouse signature is required */}
-              {spouseSignRequired && (
-                <>
-                  <div className="d-flex align-items-center gap-2" style={{ padding: '4px 8px', borderRadius: '6px', backgroundColor: '#F3F4F6' }}>
-                    <button
-                      onClick={() => setActiveSigner('primary')}
-                      className={`btn  ${activeSigner === 'primary' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                      style={{ fontSize: '12px', padding: '4px 12px', minWidth: '80px' }}
-                    >
-                      Primary
-                    </button>
-                    <button
-                      onClick={() => setActiveSigner('spouse')}
-                      className={`btn  ${activeSigner === 'spouse' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                      style={{
-                        fontSize: '12px',
-                        padding: '4px 12px',
-                        minWidth: '80px',
-                        backgroundColor: activeSigner === 'spouse' ? '#F56D2D' : undefined,
-                        borderColor: activeSigner === 'spouse' ? '#F56D2D' : undefined
-                      }}
-                    >
-                      Spouse
-                    </button>
-                  </div>
-                  <div style={{ height: '32px', width: '1px', backgroundColor: '#D1D5DB' }} />
-                </>
-              )}
+        </Modal.Header>
 
-              {/* Tools */}
-              <div className="d-flex gap-2 align-items-center">
-                <button
-                  onClick={() => !isSaved && setActiveTool(TOOLS.PEN)}
-                  disabled={isSaved}
-                  className={`btn  ${activeTool === TOOLS.PEN ? 'btn-primary' : 'btn-outline-secondary'}`}
-                  style={{ opacity: isSaved ? 0.6 : 1 }}
-                  title="Pen Tool"
-                >
-                  <FiPenTool size={18} />
-                </button>
-                <button
-                  onClick={() => !isSaved && setActiveTool(TOOLS.TRASH)}
-                  disabled={isSaved}
-                  className={`btn  ${activeTool === TOOLS.TRASH ? 'btn-primary' : 'btn-outline-secondary'}`}
-                  style={{ opacity: isSaved ? 0.6 : 1 }}
-                  title="Eraser Tool"
-                >
-                  <FiTrash size={18} />
-                </button>
-                <button
-                  onClick={() => !isSaved && imageInputRef.current?.click()}
-                  disabled={isSaved}
-                  className={`btn  ${activeTool === TOOLS.IMAGE ? 'btn-primary' : 'btn-outline-secondary'}`}
-                  style={{ opacity: isSaved ? 0.6 : 1 }}
-                  title="Upload Image"
-                >
-                  <FiImage size={18} />
-                </button>
-                <button
-                  onClick={() => !isSaved && setActiveTool(TOOLS.SELECT)}
-                  disabled={isSaved}
-                  className={`btn  ${activeTool === TOOLS.SELECT ? 'btn-primary' : 'btn-outline-secondary'}`}
-                  style={{ opacity: isSaved ? 0.6 : 1 }}
-                  title="Select/Move Tool"
-                >
-                  <FiMove size={18} />
-                </button>
-                <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+        <Modal.Body className="custom-scrollbar" style={{ padding: 0, display: 'flex', flexDirection: 'column', height: '70vh', overflowY: 'auto', pointerEvents: 'auto' }}>
 
-                <div style={{ height: '32px', width: '1px', backgroundColor: '#D1D5DB' }} />
-
-                <button onClick={handleZoomOut} className="btn btn-outline-secondary" title="Zoom Out">
-                  <FiZoomOut size={18} />
-                </button>
-                <button onClick={handleZoomIn} className="btn btn-outline-secondary" title="Zoom In">
-                  <FiZoomIn size={18} />
-                </button>
-
-                <div style={{ height: '32px', width: '1px', backgroundColor: '#D1D5DB' }} />
-
-                <button
-                  onClick={handleClearAll}
-                  disabled={isSaved || (annotations.length === 0 && images.length === 0)}
-                  className="btn btn-outline-danger"
-                  title="Clear All"
-                >
-                  <FiTrash2 size={18} />
-                </button>
+          {isMobile ? (
+            /* --- Mobile Warning Message --- */
+            <div className="d-flex flex-column align-items-center justify-content-center text-center p-5" style={{ height: '100%', backgroundColor: '#F9FAFB' }}>
+              <div style={{ backgroundColor: '#FEF3C7', padding: '20px', borderRadius: '50%', marginBottom: '20px' }}>
+                <FiMonitor size={48} color="#D97706" />
               </div>
-
-              {/* Dynamic Tool Settings */}
-              {activeTool === TOOLS.PEN && !isSaved && (
-                <div className="d-flex align-items-center gap-3">
-                  <div className="d-flex align-items-center gap-2">
-                    <label className="mb-0 small">Color:</label>
-                    <input type="color" value={penColor} onChange={(e) => setPenColor(e.target.value)} style={{ width: '30px', height: '30px', border: 'none', padding: 0 }} />
-                  </div>
-                  <div className="d-flex align-items-center gap-2">
-                    <label className="mb-0 small">Width:</label>
-                    <input type="range" min="1" max="10" value={penWidth} onChange={(e) => setPenWidth(parseInt(e.target.value))} />
-                  </div>
-                </div>
-              )}
-
-              <div style={{ marginLeft: 'auto' }}>
-                <span className="badge bg-light text-dark border">{Math.round(scale * 100)}%</span>
-              </div>
+              <h3 style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '700', color: '#1F2937' }}>Bigger Screen Required</h3>
+              <p style={{ fontFamily: 'BasisGrotesquePro', color: '#4B5563', maxWidth: '300px', margin: '0 auto' }}>
+                For accurate signing and annotations, please open this document on a laptop or desktop computer.
+              </p>
+              <button
+                onClick={handleClose}
+                className="btn btn-primary mt-4"
+                style={{ backgroundColor: '#3B4A66', border: 'none', padding: '10px 24px', borderRadius: '8px' }}
+              >
+                Got it, Close
+              </button>
             </div>
-
-            {/* PDF Viewer Area */}
-            <div
-              ref={containerRef}
-              className="pdf-viewer-container"
-              style={{
-                flex: 1,
-                overflow: 'auto',
-                padding: '24px',
-                backgroundColor: '#F3F4F6',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center'
-              }}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-            >
-              {loading ? (
-                <div className="d-flex flex-column align-items-center justify-content-center py-5">
-                  <div className="spinner-border text-primary" role="status"></div>
-                  <p className="mt-3 text-muted">Loading PDF document...</p>
-                </div>
-              ) : pdfPages.length > 0 ? (
-                pdfPages.map((pageNum) => (
-                  <div key={pageNum} data-page={pageNum} className="pdf-page-wrapper shadow-sm mb-4" style={{ position: 'relative', backgroundColor: 'white' }}>
-                    {/* Canvas inserted by renderPage */}
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-5">
-                  <p className="text-muted">No PDF pages available</p>
-                </div>
-              )}
-            </div>
-
-            {/* Page Navigation */}
-            {pdfPages.length > 1 && (
-              <div className="page-navigation" style={{
-                borderTop: '2px solid #E5E7EB',
+          ) : (
+            /* --- Full Desktop Experience --- */
+            <>
+              {/* Toolbox */}
+              <div className="annotation-toolbox" style={{
+                borderBottom: '2px solid #E5E7EB',
                 padding: '12px 24px',
                 backgroundColor: '#F9FAFB',
                 display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
+                alignItems: 'center',
+                gap: '16px',
+                flexWrap: 'wrap',
+                pointerEvents: 'auto'
               }}>
-                <button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="btn btn-sm btn-outline-secondary">
-                  Previous
-                </button>
-                <span className="small fw-bold">Page {currentPage} of {pdfPages.length}</span>
-                <button onClick={() => setCurrentPage(prev => Math.min(pdfPages.length, prev + 1))} disabled={currentPage === pdfPages.length} className="btn btn-sm btn-outline-secondary">
-                  Next
-                </button>
+                {/* Signer Toggle - Show only if spouse signature is required */}
+                {spouseSignRequired && (
+                  <>
+                    <div className="d-flex align-items-center gap-2" style={{ padding: '4px 8px', borderRadius: '6px', backgroundColor: '#F3F4F6' }}>
+                      <button
+                        onClick={() => setActiveSigner('primary')}
+                        className={`btn  ${activeSigner === 'primary' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                        style={{ fontSize: '12px', padding: '4px 12px', minWidth: '80px' }}
+                      >
+                        Primary
+                      </button>
+                      <button
+                        onClick={() => setActiveSigner('spouse')}
+                        className={`btn  ${activeSigner === 'spouse' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                        style={{
+                          fontSize: '12px',
+                          padding: '4px 12px',
+                          minWidth: '80px',
+                          backgroundColor: activeSigner === 'spouse' ? '#F56D2D' : undefined,
+                          borderColor: activeSigner === 'spouse' ? '#F56D2D' : undefined
+                        }}
+                      >
+                        Spouse
+                      </button>
+                    </div>
+                    <div style={{ height: '32px', width: '1px', backgroundColor: '#D1D5DB' }} />
+                  </>
+                )}
+
+                {/* Tools */}
+                <div className="d-flex gap-2 align-items-center">
+                  <button
+                    onClick={() => !isSaved && setActiveTool(TOOLS.PEN)}
+                    disabled={isSaved}
+                    className={`btn  ${activeTool === TOOLS.PEN ? 'btn-primary' : 'btn-outline-secondary'}`}
+                    style={{ opacity: isSaved ? 0.6 : 1 }}
+                    title="Pen Tool"
+                  >
+                    <FiPenTool size={18} />
+                  </button>
+                  <button
+                    onClick={() => !isSaved && setActiveTool(TOOLS.TRASH)}
+                    disabled={isSaved}
+                    className={`btn  ${activeTool === TOOLS.TRASH ? 'btn-primary' : 'btn-outline-secondary'}`}
+                    style={{ opacity: isSaved ? 0.6 : 1 }}
+                    title="Eraser Tool"
+                  >
+                    <FiTrash size={18} />
+                  </button>
+                  <button
+                    onClick={() => !isSaved && imageInputRef.current?.click()}
+                    disabled={isSaved}
+                    className={`btn  ${activeTool === TOOLS.IMAGE ? 'btn-primary' : 'btn-outline-secondary'}`}
+                    style={{ opacity: isSaved ? 0.6 : 1 }}
+                    title="Upload Image"
+                  >
+                    <FiImage size={18} />
+                  </button>
+                  <button
+                    onClick={() => !isSaved && setActiveTool(TOOLS.SELECT)}
+                    disabled={isSaved}
+                    className={`btn  ${activeTool === TOOLS.SELECT ? 'btn-primary' : 'btn-outline-secondary'}`}
+                    style={{ opacity: isSaved ? 0.6 : 1 }}
+                    title="Select/Move Tool"
+                  >
+                    <FiMove size={18} />
+                  </button>
+                  <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+
+                  <div style={{ height: '32px', width: '1px', backgroundColor: '#D1D5DB' }} />
+
+                  <button onClick={handleZoomOut} className="btn btn-outline-secondary" title="Zoom Out">
+                    <FiZoomOut size={18} />
+                  </button>
+                  <button onClick={handleZoomIn} className="btn btn-outline-secondary" title="Zoom In">
+                    <FiZoomIn size={18} />
+                  </button>
+
+                  <div style={{ height: '32px', width: '1px', backgroundColor: '#D1D5DB' }} />
+
+                  <button
+                    onClick={handleClearAll}
+                    disabled={isSaved || (annotations.length === 0 && images.length === 0)}
+                    className="btn btn-outline-danger"
+                    title="Clear All"
+                  >
+                    <FiTrash2 size={18} />
+                  </button>
+                </div>
+
+                {/* Dynamic Tool Settings */}
+                {activeTool === TOOLS.PEN && !isSaved && (
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="d-flex align-items-center gap-2">
+                      <label className="mb-0 small">Color:</label>
+                      <input type="color" value={penColor} onChange={(e) => setPenColor(e.target.value)} style={{ width: '30px', height: '30px', border: 'none', padding: 0 }} />
+                    </div>
+                    <div className="d-flex align-items-center gap-2">
+                      <label className="mb-0 small">Width:</label>
+                      <input type="range" min="1" max="10" value={penWidth} onChange={(e) => setPenWidth(parseInt(e.target.value))} />
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ marginLeft: 'auto' }}>
+                  <span className="badge bg-light text-dark border">{Math.round(scale * 100)}%</span>
+                </div>
               </div>
-            )}
-          </>
-        )}
-      </Modal.Body>
-      <Modal.Footer style={{
-        borderTop: '2px solid #E5E7EB',
-        padding: '16px 24px',
-        position: 'sticky',
-        bottom: 0,
-        zIndex: 1000,
-        backgroundColor: 'white',
-        boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.1)'
-      }}>
-        <div className="d-flex justify-content-between w-100 align-items-center">
-          <div style={{ fontSize: '14px', color: '#6B7280' }}>
-            {annotations.length} annotation{annotations.length !== 1 ? 's' : ''} • {images.length} image{images.length !== 1 ? 's' : ''}
-          </div>
-          <div className="d-flex gap-2">
-            <button
-              onClick={handleClose}
-              className="btn btn-outline-secondary"
-              disabled={saving}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              className="btn btn-primary"
-              disabled={saving}
-              style={{ backgroundColor: '#00C0C6', borderColor: '#00C0C6' }}
-            >
-              {saving ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  Saving...
-                </>
-              ) : (
-                <div className="d-flex align-items-center">
-                  <FiSave className="me-2" />
-                  Save Annotations
+
+              {/* PDF Viewer Area */}
+              <div
+                ref={containerRef}
+                className="pdf-viewer-container"
+                style={{
+                  flex: 1,
+                  overflow: 'auto',
+                  padding: '24px',
+                  backgroundColor: '#F3F4F6',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  pointerEvents: 'auto'
+                }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+              >
+                {loading ? (
+                  <div className="d-flex flex-column align-items-center justify-content-center py-5">
+                    <div className="spinner-border text-primary" role="status"></div>
+                    <p className="mt-3 text-muted">Loading PDF document...</p>
+                  </div>
+                ) : pdfPages.length > 0 ? (
+                  pdfPages.map((pageNum) => (
+                    <div key={pageNum} data-page={pageNum} className="pdf-page-wrapper shadow-sm mb-4" style={{ position: 'relative', backgroundColor: 'white' }}>
+                      {/* Canvas inserted by renderPage */}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-5">
+                    <p className="text-muted">No PDF pages available</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Page Navigation */}
+              {pdfPages.length > 1 && (
+                <div className="page-navigation" style={{
+                  borderTop: '2px solid #E5E7EB',
+                  padding: '12px 24px',
+                  backgroundColor: '#F9FAFB',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  pointerEvents: 'auto'
+                }}>
+                  <button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="btn btn-sm btn-outline-secondary">
+                    Previous
+                  </button>
+                  <span className="small fw-bold">Page {currentPage} of {pdfPages.length}</span>
+                  <button onClick={() => setCurrentPage(prev => Math.min(pdfPages.length, prev + 1))} disabled={currentPage === pdfPages.length} className="btn btn-sm btn-outline-secondary">
+                    Next
+                  </button>
                 </div>
               )}
-            </button>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer style={{
+          borderTop: '2px solid #E5E7EB',
+          padding: '16px 24px',
+          position: 'sticky',
+          bottom: 0,
+          zIndex: 1000,
+          backgroundColor: 'white',
+          boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.1)',
+          pointerEvents: 'auto'
+        }}>
+          <div className="d-flex justify-content-between w-100 align-items-center">
+            <div style={{ fontSize: '14px', color: '#6B7280' }}>
+              {annotations.length} annotation{annotations.length !== 1 ? 's' : ''} • {images.length} image{images.length !== 1 ? 's' : ''}
+            </div>
+            <div className="d-flex gap-2">
+              <button
+                onClick={handleClose}
+                className="btn btn-outline-secondary"
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="btn btn-primary"
+                disabled={saving}
+                style={{ backgroundColor: '#00C0C6', borderColor: '#00C0C6' }}
+              >
+                {saving ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Saving...
+                  </>
+                ) : (
+                  <div className="d-flex align-items-center">
+                    <FiSave className="me-2" />
+                    Save Annotations
+                  </div>
+                )}
+              </button>
+            </div>
           </div>
-        </div>
-      </Modal.Footer>
-    </Modal>
+        </Modal.Footer>
+      </Modal>
+    </div>,
+    document.body
   );
 }
 

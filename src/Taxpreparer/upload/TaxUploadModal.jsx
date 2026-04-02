@@ -410,8 +410,19 @@ export default function TaxUploadModal({ show, handleClose, clientId = null, onU
     if (!show) return null;
 
     return createPortal(
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-[9999] p-4 lg:p-8 animate-in fade-in duration-200">
-            <div className={`w-full ${step === 1 ? 'max-w-3xl' : 'max-w-6xl'} bg-white rounded-2xl shadow-2xl relative max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300`}>
+        <div 
+            className="fixed inset-0 flex items-center justify-center bg-black/70 p-4 lg:p-8 animate-in fade-in duration-200"
+            style={{ zIndex: 50000000, pointerEvents: 'auto' }}
+            onClick={(e) => {
+                // If they click the backdrop, trigger handleClose (optional, but good for UX)
+                if (e.target === e.currentTarget) handleClose();
+            }}
+        >
+            <div 
+                className={`w-full ${step === 1 ? 'max-w-3xl' : 'max-w-6xl'} bg-white rounded-2xl shadow-2xl relative max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300`}
+                style={{ zIndex: 50000001, pointerEvents: 'auto' }}
+                onClick={(e) => e.stopPropagation()} // Stop click from hitting backdrop
+            >
                 {/* Header Section */}
                 <div className="p-6 border-b border-[#E8F0FF] flex justify-between items-center bg-white z-20 shrink-0">
                     <div>

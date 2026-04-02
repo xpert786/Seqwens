@@ -294,7 +294,7 @@ export default function UploadModal({ show, handleClose, onUploadSuccess }) {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                zIndex: 20000000,
+                zIndex: 50000000,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
