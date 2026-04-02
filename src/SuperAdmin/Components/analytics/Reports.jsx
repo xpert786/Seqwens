@@ -1064,94 +1064,114 @@ export default function Reports() {
         ) : generatedReportsHistory.length === 0 ? (
           <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">No generated reports found</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[#E8F0FF] dark:border-gray-700">
-                  <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Report Type</th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Period</th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Format</th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Status</th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Created</th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">S3 Folder</th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Details</th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {generatedReportsHistory.slice(0, 10).map((report) => (
-                  <tr key={report.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                    <td className="py-2 px-3 text-gray-700 dark:text-gray-300">
-                      {report.report_type?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                    </td>
-                    <td className="py-2 px-3 text-gray-600 dark:text-gray-400">
-                      {report.time_period?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                    </td>
-                    <td className="py-2 px-3">
-                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-medium text-gray-700 dark:text-gray-300">
-                        {report.format?.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="py-2 px-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${report.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        report.status === 'failed' ? 'bg-red-100 text-red-800' :
-                          report.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                            'bg-gray-100 text-gray-800'
-                        }`}>
-                        {report.status === 'completed' && (
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                        {report.status === 'failed' && (
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                        {report.status === 'processing' && (
-                          <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                        )}
-                        {report.status_display || report.status}
-                      </span>
-                    </td>
-                    <td className="py-2 px-3 text-gray-600 dark:text-gray-400 text-xs">
-                      {new Date(report.created_at).toLocaleString()}
-                    </td>
-                    <td className="py-2 px-3 text-xs text-gray-500 dark:text-gray-400">
-                      {report.file_path ? (
-                        <div className="font-mono bg-gray-50 dark:bg-gray-700 px-1 py-0.5 rounded text-xs">
-                          {report.file_path.split('/').slice(-2).join('/')}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 dark:text-gray-500">—</span>
-                      )}
-                    </td>
-                    <td className="py-2 px-3 text-xs text-gray-500 dark:text-gray-400">
-                      {report.rows_count && <div>{report.rows_count.toLocaleString()} rows</div>}
-                      {report.generation_time_seconds && <div>{report.generation_time_seconds}s</div>}
-                      {report.file_size && <div>{(report.file_size / 1024).toFixed(0)} KB</div>}
-                    </td>
-                    <td className="py-2 px-3">
-                      {report.file_url && (
-                        <a
-                          href={report.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          download
-                          className="text-[#F56D2D] hover:underline text-sm"
-                        >
-                          Download
-                        </a>
-                      )}
-                    </td>
+            <div className="overflow-x-auto analytics-history-table">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[#E8F0FF] dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+                    <th className="text-left py-2.5 px-3 font-semibold text-[#3B4A66] dark:text-gray-300">Report Type</th>
+                    <th className="text-left py-2.5 px-3 font-semibold text-[#3B4A66] dark:text-gray-300">Period</th>
+                    <th className="text-left py-2.5 px-3 font-semibold text-[#3B4A66] dark:text-gray-300">Format</th>
+                    <th className="text-left py-2.5 px-3 font-semibold text-[#3B4A66] dark:text-gray-300">Status</th>
+                    <th className="text-left py-2.5 px-3 font-semibold text-[#3B4A66] dark:text-gray-300 whitespace-nowrap">Created At</th>
+                    <th className="text-left py-2.5 px-3 font-semibold text-[#3B4A66] dark:text-gray-300">File Reference</th>
+                    <th className="text-left py-2.5 px-3 font-semibold text-[#3B4A66] dark:text-gray-300">Details</th>
+                    <th className="text-right py-2.5 px-3 font-semibold text-[#3B4A66] dark:text-gray-300">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {generatedReportsHistory.slice(0, 10).map((report) => (
+                    <tr key={report.id} className="hover:bg-blue-50/30 dark:hover:bg-gray-700/30 transition-colors">
+                      <td className="py-2.5 px-3 text-[#3B4A66] dark:text-gray-300 font-medium whitespace-nowrap">
+                        {report.report_type?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                      </td>
+                      <td className="py-2.5 px-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                        {report.time_period?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <span className="px-2.5 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-[10px] font-bold text-gray-700 dark:text-gray-300">
+                          {report.format?.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${report.status === 'completed' ? 'bg-green-100 text-green-700 border border-green-200' :
+                          report.status === 'failed' ? 'bg-red-100 text-red-700 border border-red-200' :
+                            report.status === 'processing' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
+                              'bg-gray-100 text-gray-600 border border-gray-200'
+                          }`}>
+                          {report.status === 'completed' && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                          )}
+                          {report.status === 'failed' && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                          )}
+                          {report.status === 'processing' && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
+                          )}
+                          {(report.status_display || report.status || 'Unknown').toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-gray-500 dark:text-gray-400 text-xs whitespace-nowrap">
+                        {new Date(report.created_at).toLocaleString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </td>
+                      <td className="py-2.5 px-3">
+                        {report.file_path ? (
+                          <div className="group relative flex items-center gap-2">
+                             <div className="max-w-[150px] truncate font-mono text-[10px] text-gray-500 bg-gray-50 dark:bg-gray-700/50 px-2 py-1 rounded border border-gray-100 dark:border-gray-600" title={report.file_path}>
+                              {report.file_path.split('/').pop()}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-gray-300 dark:text-gray-600">—</span>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <div className="flex flex-col gap-0.5 text-[10px]">
+                          {report.rows_count && (
+                             <span className="text-gray-600 dark:text-gray-400 font-medium">
+                               <span className="text-gray-400">Rows:</span> {report.rows_count.toLocaleString()}
+                             </span>
+                          )}
+                          {report.generation_time_seconds && (
+                            <span className="text-gray-600 dark:text-gray-400">
+                              <span className="text-gray-400">Time:</span> {Number(report.generation_time_seconds).toFixed(2)}s
+                            </span>
+                          )}
+                          {report.file_size && (
+                            <span className="text-gray-600 dark:text-gray-400">
+                              <span className="text-gray-400">Size:</span> {(report.file_size / 1024).toFixed(1)} KB
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3 text-right">
+                        {report.file_url ? (
+                          <a
+                            href={report.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download
+                            className="inline-flex items-center gap-1.5 text-[#F56D2D] hover:text-[#E4561F] font-bold text-xs bg-[#F56D2D]/5 hover:bg-[#F56D2D]/10 px-3 py-1.5 rounded-lg transition-all"
+                          >
+                            <FaDownload className="text-[10px]" />
+                            Download
+                          </a>
+                        ) : (
+                          <button disabled className="text-gray-300 text-xs font-semibold cursor-not-allowed">
+                            Unavailable
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
         )}
       </div>
 
