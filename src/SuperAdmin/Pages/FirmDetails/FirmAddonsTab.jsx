@@ -207,8 +207,8 @@ export default function FirmAddonsTab({ firmId, firmName }) {
       {totalAddonCost > 0 && (
         <div className="mb-4 bg-[#F6F8FE] border border-[#E8F0FF] rounded-lg p-3">
           <div className="flex justify-between items-center">
-            <span className="text-xs font-bold text-gray-700 uppercase tracking-tight">Total Addon Cost</span>
-            <span className="text-xl font-bold text-[#3B4A66]">
+            <span className="text-xs font-bold uppercase tracking-tight !text-black">Total Addon Cost</span>
+            <span className="text-xl font-bold !text-black">
               {formatCurrency(totalAddonCost)}/month
             </span>
           </div>
