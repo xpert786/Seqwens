@@ -1483,15 +1483,18 @@ export default function Subscriptions() {
               )}
 
               {/* Table Body */}
-              <div className="space-y-1.5 subscriptions-table-list">
-                {tableLoading ? (
-                  <div className="flex justify-center items-center py-8">
-                    <div className="flex items-center gap-2 text-sm text-[var(--sa-text-secondary)]">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
-                      Loading subscriptions...
+              <div className="space-y-1.5 subscriptions-table-list relative min-h-[400px]">
+                {/* Subtle loading overlay */}
+                {tableLoading && (
+                  <div className="absolute inset-0 z-10 bg-white/40 backdrop-blur-[1px] flex justify-center items-center rounded-lg transition-opacity duration-300">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-white/80 border border-[var(--sa-border-color)] rounded-full shadow-sm">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+                      <span className="text-xs font-semibold text-[var(--sa-text-primary)]">Syncing...</span>
                     </div>
                   </div>
-                ) : subscriptions.length > 0 ? (
+                )}
+
+                {subscriptions.length > 0 ? (
                   <>
                     {/* Header for list view */}
                     <div className="px-6 py-2 mb-1 subscriptions-table-header">
