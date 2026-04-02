@@ -871,7 +871,7 @@ export default function Reports() {
             return (
               <div className="space-y-3">
                 {/* Report Description */}
-                <div className="text-xs text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-2 rounded">
+                <div className="text-xs font-medium text-blue-800 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/40 p-2 rounded w-fit max-w-full border-l-2 border-blue-400">
                   {config.description}
                 </div>
 
