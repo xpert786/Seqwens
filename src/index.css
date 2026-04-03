@@ -640,12 +640,12 @@ body.is-impersonating .Toastify__toast-container--top-left {
 /* Bootstrap Modal Overrides - Massive boost for reliability */
 .modal {
   z-index: 50000000 !important;
-  pointer-events: none; /* Base is non-interactive to allow clicking backdrop */
+  pointer-events: auto !important; /* Fix: Allow scrolling and interaction with the modal wrapper */
 }
 
-/* Ensure the open modal is interactive */
-.modal.show {
+.modal-dialog {
   pointer-events: auto !important;
+  z-index: 50000002 !important;
 }
 
 .modal-backdrop {
@@ -653,9 +653,10 @@ body.is-impersonating .Toastify__toast-container--top-left {
   pointer-events: auto !important;
 }
 
-.modal-dialog {
-  z-index: 50000001 !important;
-  pointer-events: auto !important;
+/* Ensure fade transitions don't get stuck blocking the UI */
+.modal.fade:not(.show) {
+  pointer-events: none !important;
+  display: none !important;
 }
 
 .modal-content {

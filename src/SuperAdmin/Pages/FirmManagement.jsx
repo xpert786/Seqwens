@@ -846,7 +846,7 @@ export default function FirmManagement() {
 
                 {/* ── FIRM DETAILS MODAL ─────────────────────────────────────────────── */}
                 {showFirmDetailsModal && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4 py-6">
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                         <div className="absolute inset-0 bg-black bg-opacity-40" onClick={closeFirmDetailsModal}></div>
                         <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-5xl mx-auto overflow-hidden transition-all" style={{ borderRadius: '14px' }}>
                             <div className="flex justify-between items-start p-6 border-b border-gray-200 dark:border-gray-700 bg-[#F9FBFF] dark:bg-gray-900">
@@ -966,9 +966,9 @@ export default function FirmManagement() {
 
                 {/* ── ADD FIRM MODAL ─────────────────────────────────────────────────── */}
                 {showAddFirmModal && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center py-8">
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                         <div className="absolute inset-0" style={{ backgroundColor: 'var(--Color-overlay, #00000099)' }} onClick={handleCloseModal}></div>
-                        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg mx-4 my-12 transition-all" style={{ borderRadius: '12px' }} onClick={(e) => e.stopPropagation()}>
+                        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-xl mx-auto transition-all flex flex-col max-h-[90vh] overflow-hidden" style={{ borderRadius: '12px' }} onClick={(e) => e.stopPropagation()}>
                             <div className="flex justify-between items-start p-6 border-b border-gray-200 dark:border-gray-700">
                                 <div>
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Add New Firm</h3>
@@ -977,7 +977,7 @@ export default function FirmManagement() {
                                 <button onClick={handleCloseModal} className="text-gray-400 transition-colors flex-shrink-0"><CloseIcon /></button>
                             </div>
 
-                            <div className="p-6 space-y-4">
+                            <div className="p-6 space-y-4 overflow-y-auto max-h-[min(65vh,500px)]">
                                 {createError && <div className="bg-red-50 border border-red-200 rounded-lg p-3"><div className="text-sm text-red-700">{createError}</div></div>}
                                 {createSuccess && <div className="bg-green-50 border border-green-200 rounded-lg p-3"><div className="text-sm text-green-700">Firm created successfully!</div></div>}
 
@@ -1026,9 +1026,9 @@ export default function FirmManagement() {
 
                 {/* ── SUSPEND MODAL ─────────────────────────────────────────────────── */}
                 {showSuspendModal && firmToSuspend && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center py-8">
-                        <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
-                        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 transition-all" style={{ borderRadius: '12px', height: '75vh' }}>
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+                        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-xl mx-auto transition-all flex flex-col max-h-[90vh] overflow-hidden" style={{ borderRadius: '12px' }}>
                             <div className="flex justify-between items-start p-4 border-b border-gray-200 dark:border-gray-700">
                                 <div>
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Suspend Firm</h3>
@@ -1038,7 +1038,7 @@ export default function FirmManagement() {
                                     className="cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"><CloseIcon /></button>
                             </div>
 
-                            <div className="p-4 space-y-4">
+                            <div className="p-4 space-y-4 overflow-y-auto max-h-[min(60vh,400px)]">
                                 {suspendError && <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-lg p-3"><div className="text-sm text-red-700 dark:text-red-400">{suspendError}</div></div>}
                                 {suspendSuccess && <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-900/30 rounded-lg p-3"><div className="text-sm text-green-700 dark:text-green-400">Firm suspended successfully!</div></div>}
 
@@ -1094,9 +1094,9 @@ export default function FirmManagement() {
 
                 {/* ── UNSUSPEND MODAL ────────────────────────────────────────────────── */}
                 {showUnsuspendModal && firmToUnsuspend && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center py-8">
-                        <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
-                        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 transition-all" style={{ borderRadius: '12px' }}>
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+                        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-xl mx-auto transition-all flex flex-col max-h-[90vh] overflow-hidden" style={{ borderRadius: '12px' }}>
                             <div className="flex justify-between items-start p-4 border-b border-gray-200 dark:border-gray-700">
                                 <div>
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -1110,7 +1110,7 @@ export default function FirmManagement() {
                                     style={{ borderRadius: '8px' }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"><CloseIcon /></button>
                             </div>
 
-                            <div className="p-4 space-y-4">
+                            <div className="p-4 space-y-4 overflow-y-auto max-h-[min(60vh,400px)]">
                                 {unsuspendError && <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-lg p-3"><div className="text-sm text-red-700 dark:text-red-400">{unsuspendError}</div></div>}
                                 {unsuspendSuccess && (
                                     <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-900/30 rounded-lg p-3">
@@ -1162,9 +1162,9 @@ export default function FirmManagement() {
 
                 {/* ── DELETE MODAL ───────────────────────────────────────────────────── */}
                 {showDeleteModal && firmToDelete && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center py-8">
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-                        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 transition-all" style={{ borderRadius: '12px' }}>
+                        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl mx-auto transition-all flex flex-col max-h-[90vh] overflow-hidden" style={{ borderRadius: '12px' }}>
                             <div className="flex justify-between items-start p-4 border-b border-gray-200 dark:border-gray-700">
                                 <div>
                                     <h3 className="text-lg font-semibold text-red-600 dark:text-red-500">Delete Firm</h3>
@@ -1175,7 +1175,7 @@ export default function FirmManagement() {
                                     disabled={deletingFirm}><CloseIcon /></button>
                             </div>
 
-                            <div className="p-4 space-y-4 max-h-[calc(100vh-12rem)] overflow-y-auto">
+                            <div className="p-4 space-y-4 max-h-[min(60vh,400px)] overflow-y-auto">
                                 {deleteError && <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-lg p-3"><div className="text-sm text-red-700 dark:text-red-400">{deleteError}</div></div>}
 
                                 <div className="bg-red-50 dark:bg-gray-900 border border-red-200 dark:border-red-700 rounded-lg p-4">
@@ -1224,8 +1224,8 @@ export default function FirmManagement() {
 
                 {/* ── ASSIGN CLIENTS MODAL ───────────────────────────────────────────── */}
                 {showAssignClientsModal && assignClientsFirm && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center py-8">
-                        <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg mx-auto transition-all" style={{ borderRadius: '12px' }}>
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                        <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-xl mx-auto transition-all flex flex-col max-h-[90vh] overflow-hidden" style={{ borderRadius: '12px' }}>
                             <div className="flex justify-between items-start p-4 border-b border-gray-200 dark:border-gray-700">
                                 <div>
                                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Assign Clients</h3>
@@ -1234,7 +1234,7 @@ export default function FirmManagement() {
                                 <button onClick={closeAssignClientsModal} className="text-gray-400 dark:transition-colors"><CloseIcon /></button>
                             </div>
 
-                            <div className="p-4 space-y-3">
+                            <div className="p-4 space-y-3 overflow-y-auto max-h-[min(60vh,400px)]">
                                 {assignClientError && <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-lg p-3 text-sm text-red-700 dark:text-red-400">{assignClientError}</div>}
                                 {assignClientSuccess && <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-900/30 rounded-lg p-3 text-sm text-green-700 dark:text-green-400">Taxpayer assigned successfully!</div>}
 

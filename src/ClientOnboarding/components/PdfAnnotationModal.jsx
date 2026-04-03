@@ -1,13 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Modal, Spinner } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
-import { FiPenTool, FiTrash, FiImage, FiSave, FiX, FiRotateCw, FiDownload, FiTrash2, FiCornerUpLeft, FiCornerUpRight, FiMove, FiZoomIn, FiZoomOut, FiMonitor } from 'react-icons/fi';
+import { FiPenTool, FiTrash, FiImage, FiSave, FiX, FiZoomIn, FiZoomOut, FiMonitor, FiEdit2, FiCheck } from 'react-icons/fi';
 import { handleAPIError } from '../utils/apiUtils';
-import '../styles/PdfAnnotationModal.css';
 
-// Configure PDF.js worker - use CDN for production builds
+// Configure PDF.js worker
 if (typeof window !== 'undefined') {
   GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
@@ -31,42 +29,34 @@ export default function PdfAnnotationModal({
 }) {
   const [pdfDoc, setPdfDoc] = useState(null);
   const [pdfPages, setPdfPages] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [scale, setScale] = useState(1.0); // Fixed at 100% zoom
+  const [scale, setScale] = useState(1.0);
   const [loading, setLoading] = useState(true);
   const [activeTool, setActiveTool] = useState(TOOLS.PEN);
   const [penColor, setPenColor] = useState('#000000');
   const [penWidth, setPenWidth] = useState(2);
   const [eraserWidth, setEraserWidth] = useState(20);
-  const [annotations, setAnnotations] = useState([]); // [{type, page, data, id}]
-  const [images, setImages] = useState([]); // [{id, page, x, y, width, height, src}]
+  const [annotations, setAnnotations] = useState([]);
+  const [images, setImages] = useState([]);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [selectedAnnotation, setSelectedAnnotation] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [history, setHistory] = useState([]); // History of annotation states for undo
-  const [historyIndex, setHistoryIndex] = useState(-1); // Current position in history
-  const [draggingImage, setDraggingImage] = useState(null); // Currently dragging image
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 }); // Offset for smooth dragging
-  const [activeSigner, setActiveSigner] = useState('primary'); // 'primary' or 'spouse'
-  const [isSaved, setIsSaved] = useState(false); // Track if annotations have been saved
+  const [isSaved, setIsSaved] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const canvasRefs = useRef({});
   const containerRef = useRef(null);
   const imageInputRef = useRef(null);
   const startPosRef = useRef(null);
   const annotationIdCounter = useRef(0);
-  const eraserRemovedIdsRef = useRef(new Set()); // Track IDs removed in current erase session
-  const lastEraseTimeRef = useRef(0); // Throttle eraser re-renders
-  const annotationsRef = useRef([]); // Store current annotations to avoid stale closures
-  const pdfRenderCache = useRef({}); // Cache for rendered PDF pages: { [pageScaleKey]: { canvas: OffscreenCanvas, width, height } }
+  const annotationsRef = useRef([]);
+  const pdfRenderCache = useRef({});
 
-  // Initialize history when modal opens
+  // Mobile check
   useEffect(() => {
-    if (isOpen) {
-      setHistory([{ annotations: [], images: [] }]);
-      setHistoryIndex(0);
-    }
-  }, [isOpen]);
+    const checkRes = () => setIsMobile(window.innerWidth < 768);
+    checkRes();
+    window.addEventListener('resize', checkRes);
+    return () => window.removeEventListener('resize', checkRes);
+  }, []);
 
   // Load PDF
   useEffect(() => {
@@ -75,75 +65,7 @@ export default function PdfAnnotationModal({
     }
   }, [isOpen, documentUrl]);
 
-  // Keyboard shortcuts for undo/redo
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Ctrl+Z or Cmd+Z for Undo
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
-        e.preventDefault();
-        handleUndo();
-      }
-      // Ctrl+Shift+Z or Cmd+Shift+Z or Ctrl+Y for Redo
-      if (((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') ||
-        (e.ctrlKey && e.key === 'y')) {
-        e.preventDefault();
-        handleRedo();
-      }
-    };
-
-    if (isOpen) {
-      window.addEventListener('keydown', handleKeyDown);
-      return () => window.removeEventListener('keydown', handleKeyDown);
-    }
-  }, [isOpen, historyIndex, history]);
-
-  // Debug: Log when draggingImage changes
-  useEffect(() => {
-    console.log('draggingImage state changed:', draggingImage ? draggingImage.id : 'null');
-  }, [draggingImage]);
-
-  // Update cursor for all page wrappers and canvases when tool changes
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const wrappers = container.querySelectorAll('.pdf-page-wrapper');
-    const canvases = container.querySelectorAll('canvas');
-
-    wrappers.forEach(wrapper => {
-      if (activeTool === TOOLS.PEN) {
-        wrapper.style.cursor = 'crosshair';
-      } else if (activeTool === TOOLS.TRASH) {
-        wrapper.style.cursor = 'not-allowed';
-      } else if (activeTool === TOOLS.IMAGE) {
-        wrapper.style.cursor = 'copy';
-      } else if (activeTool === TOOLS.SELECT) {
-        wrapper.style.cursor = draggingImage ? 'grabbing' : 'grab';
-      } else {
-        wrapper.style.cursor = 'default';
-      }
-    });
-
-    // Also update canvas cursors
-    // For SELECT mode, we don't set it here because it's dynamic based on hover
-    canvases.forEach(canvas => {
-      if (activeTool === TOOLS.PEN) {
-        canvas.style.cursor = 'crosshair';
-      } else if (activeTool === TOOLS.TRASH) {
-        canvas.style.cursor = 'not-allowed';
-      } else if (activeTool === TOOLS.IMAGE) {
-        canvas.style.cursor = 'copy';
-      } else if (activeTool === TOOLS.SELECT) {
-        // Don't set cursor here - it's handled dynamically in handleMouseMove
-        canvas.style.cursor = draggingImage ? 'grabbing' : 'pointer';
-      } else {
-        canvas.style.cursor = 'default';
-      }
-    });
-  }, [activeTool, draggingImage]);
-
-  // Keep annotationsRef in sync with annotations state
-  // This allows renderPage to access latest annotations without them being in dependency array
+  // Sync annotationsRef
   useEffect(() => {
     annotationsRef.current = annotations;
   }, [annotations]);
@@ -151,1416 +73,233 @@ export default function PdfAnnotationModal({
   const loadPdf = async (url) => {
     try {
       setLoading(true);
-
       let pdfUrlToFetch = url;
-      let pdfBlobUrl = null;
-      let contentType = '';
-      
-      // CORS fix for S3 on localhost - Use live backend proxy from .env
+
+      // Localhost CORS proxy fix
       if (typeof window !== 'undefined' && 
-          (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.port === '5177') && 
+          (window.location.hostname === 'localhost' || window.location.port === '5177') && 
           url.includes('s3.amazonaws.com')) {
-        
-        console.log('🔄 Detected S3 URL on localhost, applying LIVE proxy transformation...');
-        
-        // Get the live API URL from environment
         const apiUrl = import.meta.env.VITE_API_URL || 'http://168.231.121.7/seqwens/api';
-        // Construct the media base (replacing /api with /media)
         const mediaBase = apiUrl.replace('/api', '/media');
-        
-        // Transform direct S3 link to use the live server's media proxy
         pdfUrlToFetch = url.replace(/https?:\/\/seqwens-s3\.s3\.amazonaws\.com\//, mediaBase + '/');
-        console.log('✅ Transformed to LIVE URL for CORS safety:', pdfUrlToFetch);
       }
 
-      // Try to fetch PDF as blob to avoid CORS issues, with fallback to direct URL
-      try {
-        const response = await fetch(pdfUrlToFetch, {
-          method: 'GET',
-          // Don't set custom headers that trigger preflight
-          // Let the browser handle CORS naturally
-        });
-
-        if (response.ok) {
-          contentType = response.headers.get('content-type') || '';
-          console.log('Response content-type:', contentType);
-          
-          // Check if the response is actually a PDF
-          if (!contentType.includes('pdf') && !contentType.includes('application/octet-stream')) {
-            // Try to get a sample of the response to check if it's HTML
-            const textPreview = await response.clone().text().then(t => t.substring(0, 100));
-            console.log('Response preview:', textPreview);
-            
-            if (textPreview.trim().toLowerCase().startsWith('<!doctype') || 
-                textPreview.trim().toLowerCase().startsWith('<html')) {
-              throw new Error('The URL returned HTML instead of a PDF file. The document may not be accessible.');
-            }
-          }
-          
-          const blob = await response.blob();
-          pdfBlobUrl = URL.createObjectURL(blob);
-          console.log('PDF loaded as blob successfully, blob URL:', pdfBlobUrl, 'size:', blob.size);
-          
-          if (blob.size === 0) {
-            throw new Error('The PDF file is empty (0 bytes).');
-          }
-        } else {
-          console.warn('Failed to fetch PDF as blob, using direct URL. Status:', response.status);
-          if (response.status === 404) {
-            throw new Error('PDF file not found (404). The document may have been deleted.');
-          } else if (response.status === 403) {
-            throw new Error('Access denied (403). You may not have permission to view this document.');
-          }
-        }
-      } catch (fetchError) {
-        if (fetchError.message.includes('HTML instead of a PDF') || 
-            fetchError.message.includes('empty') ||
-            fetchError.message.includes('not found') ||
-            fetchError.message.includes('Access denied')) {
-          // Re-throw our custom errors
-          throw fetchError;
-        }
-        console.warn('Could not fetch PDF as blob, using direct URL:', fetchError.message);
-        // Fall back to direct URL - blob conversion failed but we can still try direct URL
-      }
-
-      // Load PDF document with error handling
       const loadingTask = getDocument({
-        url: pdfBlobUrl || pdfUrlToFetch,
+        url: pdfUrlToFetch,
         cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
         cMapPacked: true,
         standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/',
-        timeout: 30000
       });
-
-      loadingTask.onProgress = (progress) => {
-        console.log('PDF loading progress:', progress);
-      };
 
       const pdf = await loadingTask.promise;
-
       setPdfDoc(pdf);
-
-      // Get page count
-      const numPages = pdf.numPages;
+      
       const pages = [];
-      for (let i = 1; i <= numPages; i++) {
-        pages.push(i);
-      }
+      for (let i = 1; i <= pdf.numPages; i++) pages.push(i);
       setPdfPages(pages);
-
-      // Clear cache when new PDF loads
-      pdfRenderCache.current = {};
-
       setLoading(false);
     } catch (error) {
-      console.error('Error loading PDF:', error);
-
-      // Provide more specific error messages
-      let errorMessage = 'Failed to load PDF document';
-
-      if (error.name === 'UnexpectedResponseException') {
-        errorMessage = 'PDF file not found or access denied';
-      } else if (error.name === 'InvalidPDFException') {
-        errorMessage = 'The file is not a valid PDF. Please check if the document URL is correct and accessible.';
-      } else if (error.name === 'MissingPDFException') {
-        errorMessage = 'PDF file is missing or corrupted';
-      } else if (error.message && error.message.includes('fetch')) {
-        errorMessage = 'Network error: Could not download PDF. Please check your internet connection.';
-      } else if (error.message && error.message.includes('CORS')) {
-        errorMessage = 'CORS error: Cannot access PDF from this domain. Please try again or contact support.';
-      } else if (error.message) {
-        // Use the custom error message we threw
-        errorMessage = error.message;
-      }
-
-      toast.error(errorMessage, {
-        position: 'top-right',
-        autoClose: 5000
-      });
+      console.error('PDF Load Error:', error);
+      toast.error('Failed to load document');
       setLoading(false);
     }
   };
 
   const renderPage = useCallback(async (pdf, pageNum) => {
-    if (!pdf || !pageNum || isNaN(pageNum)) return;
-
-    const canvasId = `page-${pageNum}`;
+    if (!pdf || !containerRef.current) return;
     const container = containerRef.current;
-    if (!container) return;
 
     try {
       const page = await pdf.getPage(pageNum);
-      if (!page) return;
-
-      // Use page.rotate to respect native PDF rotation (handles landscape pages correctly)
-      const viewport = page.getViewport({
-        scale: scale,
-        rotation: page.rotate, // Use native rotation
-        offsetX: 0,
-        offsetY: 0
-      });
+      const viewport = page.getViewport({ scale, rotation: page.rotate });
 
       // Find or create wrapper
       let wrapper = container.querySelector(`[data-page="${pageNum}"]`);
-      if (!wrapper) {
-        wrapper = document.createElement('div');
-        wrapper.className = 'pdf-page-wrapper';
-        wrapper.setAttribute('data-page', pageNum);
-        container.appendChild(wrapper);
-      }
-
-      // Base styles for wrapper
-      wrapper.style.position = 'relative';
-      wrapper.style.marginBottom = '20px';
-      wrapper.style.display = 'flex';
-      wrapper.style.justifyContent = 'center';
-
-      // Update cursor based on active tool
-      const getCursorStyle = () => {
-        if (activeTool === TOOLS.PEN) return 'crosshair';
-        if (activeTool === TOOLS.TRASH) return 'not-allowed';
-        if (activeTool === TOOLS.IMAGE) return 'copy';
-        if (activeTool === TOOLS.SELECT) return draggingImage ? 'grabbing' : 'grab';
-        return 'default';
-      };
-
-      wrapper.style.cursor = getCursorStyle();
+      if (!wrapper) return; // Should exist from React map
 
       // Find or create canvas
       let canvas = wrapper.querySelector('canvas');
       if (!canvas) {
         canvas = document.createElement('canvas');
-        canvas.id = canvasId;
-        canvasRefs.current[canvasId] = canvas;
         wrapper.appendChild(canvas);
       }
 
-      // Set canvas internal dimensions
-      // Use standard rounding to avoid subpixel blurring
       canvas.width = Math.floor(viewport.width);
       canvas.height = Math.floor(viewport.height);
-
-      // Set canvas display size
       canvas.style.width = `${viewport.width}px`;
       canvas.style.height = `${viewport.height}px`;
 
       const context = canvas.getContext('2d');
-      if (!context) return;
+      await page.render({ canvasContext: context, viewport }).promise;
 
-      // Clear canvas (synchronous)
-      context.clearRect(0, 0, canvas.width, canvas.height);
-
-      // --- Render PDF Content (Cached vs Fresh) ---
-
-      // Create a cache key based on page number, scale, and rotation
-      // limiting scale precision to avoid cache misses on tiny float diffs
-      const cacheKey = `${pageNum}-${scale.toFixed(3)}-${page.rotate}`;
-
-      if (pdfRenderCache.current[cacheKey]) {
-        // HIT: Draw cached offscreen canvas synchronously
-        const cached = pdfRenderCache.current[cacheKey];
-        context.drawImage(cached.canvas, 0, 0);
-      } else {
-        // MISS: Render to offscreen canvas and cache it
-        const offscreenCanvas = document.createElement('canvas');
-        offscreenCanvas.width = canvas.width;
-        offscreenCanvas.height = canvas.height;
-        const offscreenContext = offscreenCanvas.getContext('2d');
-
-        const renderContext = {
-          canvasContext: offscreenContext,
-          viewport: viewport
-        };
-
-        // This is the async part - we wait for it
-        await page.render(renderContext).promise;
-
-        // Save to cache
-        pdfRenderCache.current[cacheKey] = {
-          canvas: offscreenCanvas,
-          width: canvas.width,
-          height: canvas.height
-        };
-
-        // Draw to visible canvas
-        context.drawImage(offscreenCanvas, 0, 0);
-      }
-
-      // --- Match Context Transform to PDF Rotation ---
-      // This ensures subsequent draws (lines, images) align with the rotated coordinate system
-      // For 90/270 degree rotations, we need to swap coordinates or rotate context
-      // However, since we're drawing on a canvas that is already sized to the rotated viewport,
-      // and our annotations are stored in viewport coordinates (0..width, 0..height relative to the VIEWPORT),
-      // we usually don't need to rotate the context itself if line coordinates match visual coordinates.
-
-      // Reset context transform to identity for drawing annotations
-      context.setTransform(1, 0, 0, 1, 0, 0);
-
-      // Draw annotations for this page (Synchronous)
-      drawAnnotations(context, pageNum, viewport, annotationsRef.current);
-
-      // Draw images for this page (Synchronous if loaded)
-      drawImages(context, pageNum, viewport);
-
-    } catch (error) {
-      console.error('Error rendering page:', error);
+      // Draw annotations
+      allDraw(context, pageNum);
+    } catch (e) {
+      console.error(e);
     }
-  }, [scale, activeTool, images, draggingImage]); // Removed 'annotations' to prevent re-renders during drawing
+  }, [scale]);
 
-  // Render all pages when PDF loads or scale changes (but NOT during active drawing)
-  useEffect(() => {
-    if (pdfDoc && pdfPages.length > 0 && !isDrawing) {
-      // Render all pages, not just current page
-      const renderAllPages = async () => {
-        for (const pageNum of pdfPages) {
-          await renderPage(pdfDoc, pageNum);
-        }
-      };
-      renderAllPages();
-    }
-  }, [pdfDoc, pdfPages, scale, activeTool, renderPage, isDrawing]);
-
-  // Re-render all pages when images change (but NOT during active drawing)
-  useEffect(() => {
-    if (pdfDoc && pdfPages.length > 0 && !isDrawing) {
-      const renderAllPages = async () => {
-        for (const pageNum of pdfPages) {
-          await renderPage(pdfDoc, pageNum);
-        }
-      };
-      renderAllPages();
-    }
-  }, [images, pdfDoc, pdfPages, renderPage, isDrawing]);
-
-  const drawAnnotations = (context, pageNum, viewport, annotationsToDraw = null) => {
-    // Use provided annotations, or ref (latest), or fall back to state
-    const allAnnotations = annotationsToDraw !== null
-      ? annotationsToDraw
-      : (annotationsRef.current.length > 0 ? annotationsRef.current : annotations);
-    const pageAnnotations = allAnnotations.filter(a => a.page === pageNum);
-
+  const allDraw = (context, pageNum) => {
+    const pageAnns = annotationsRef.current.filter(a => a.page === pageNum);
     context.save();
     context.scale(scale, scale);
-
-    pageAnnotations.forEach(annotation => {
-      if (annotation.type === 'drawing') {
-        context.strokeStyle = annotation.color || penColor;
-        context.lineWidth = annotation.width || penWidth;
+    pageAnns.forEach(ann => {
+      if (ann.path && ann.path.length > 0) {
+        context.strokeStyle = ann.color || '#000';
+        context.lineWidth = ann.width || 2;
         context.lineCap = 'round';
-        context.lineJoin = 'round';
-
-        if (annotation.path && annotation.path.length > 0) {
-          context.beginPath();
-          annotation.path.forEach((point, index) => {
-            if (index === 0) {
-              context.moveTo(point.x, point.y);
-            } else {
-              context.lineTo(point.x, point.y);
-            }
-          });
-          context.stroke();
-        }
+        context.beginPath();
+        ann.path.forEach((p, i) => i === 0 ? context.moveTo(p.x, p.y) : context.lineTo(p.x, p.y));
+        context.stroke();
       }
     });
-
+    
+    const pageImgs = images.filter(img => img.page === pageNum);
+    pageImgs.forEach(img => {
+      const iObj = new Image();
+      iObj.src = img.src;
+      iObj.onload = () => {
+        context.drawImage(iObj, img.x, img.y, img.width, img.height);
+      };
+    });
     context.restore();
   };
 
-  const drawImages = (context, pageNum, viewport) => {
-    const pageImages = images.filter(img => img.page === pageNum);
-
-    pageImages.forEach(img => {
-      const imageObj = new Image();
-      imageObj.src = img.src;
-      imageObj.onload = () => {
-        context.save();
-        context.scale(scale, scale);
-
-        context.drawImage(
-          imageObj,
-          img.x,
-          img.y,
-          img.width,
-          img.height
-        );
-
-        // Draw border if this image is being dragged
-        if (draggingImage && draggingImage.id === img.id) {
-          context.strokeStyle = '#00C0C6';
-          context.lineWidth = 2; // Scaled line width
-          context.strokeRect(img.x, img.y, img.width, img.height);
-        }
-
-        context.restore();
-      };
-    });
-  };
-
-  // Helper to check if click is on an image
-  const getImageAtPosition = useCallback((x, y, pageNum) => {
-    const pageImages = images.filter(img => img.page === pageNum);
-    console.log(`Checking position (${x.toFixed(0)}, ${y.toFixed(0)}) on page ${pageNum}`);
-    console.log('Page images:', pageImages.map(img => ({
-      id: img.id,
-      x: img.x.toFixed(0),
-      y: img.y.toFixed(0),
-      width: img.width,
-      height: img.height
-    })));
-
-    // Check from top to bottom (last drawn = on top)
-    for (let i = pageImages.length - 1; i >= 0; i--) {
-      const img = pageImages[i];
-      const inBounds = x >= img.x && x <= img.x + img.width &&
-        y >= img.y && y <= img.y + img.height;
-      console.log(`Image ${img.id}: inBounds=${inBounds}`);
-      if (inBounds) {
-        console.log('Found image at position!', img.id);
-        return img;
-      }
+  useEffect(() => {
+    if (pdfDoc && pdfPages.length > 0) {
+      pdfPages.forEach(p => renderPage(pdfDoc, p));
     }
-    return null;
-  }, [images]);
-
-  // Helper function to check if point is near eraser
-  const isPointNearEraser = useCallback((point, eraserX, eraserY, eraserRadius) => {
-    if (!point || typeof point.x !== 'number' || typeof point.y !== 'number') return false;
-    const dx = point.x - eraserX;
-    const dy = point.y - eraserY;
-    return (dx * dx + dy * dy) <= (eraserRadius * eraserRadius);
-  }, []);
-
-  // Optimized function to find annotations to erase
-  const findAnnotationsToErase = useCallback((x, y, pageNum, currentAnnotations) => {
-    if (!Array.isArray(currentAnnotations) || currentAnnotations.length === 0) return [];
-
-    const annotationsToRemove = new Set();
-    // Adjust eraser radius based on scale to keep physical size roughly consistent on document
-    const eraserRadius = eraserWidth / scale;
-    const eraserRadiusSquared = eraserRadius * eraserRadius;
-
-    for (const ann of currentAnnotations) {
-      // Skip invalid annotations
-      if (!ann || ann.page !== pageNum || !ann.path || !Array.isArray(ann.path) || ann.path.length === 0) {
-        continue;
-      }
-
-      // Check if eraser intersects with any point in the annotation path
-      for (const point of ann.path) {
-        if (point && typeof point.x === 'number' && typeof point.y === 'number') {
-          const dx = point.x - x;
-          const dy = point.y - y;
-          if ((dx * dx + dy * dy) <= eraserRadiusSquared) {
-            annotationsToRemove.add(ann.id);
-            break; // Found a hit, no need to check other points
-          }
-        }
-      }
-    }
-
-    return Array.from(annotationsToRemove);
-  }, [eraserWidth, scale]);
+  }, [pdfDoc, pdfPages, scale, annotations, images, renderPage]);
 
   const handleMouseDown = (e) => {
-    // Disable editing if annotations have been saved
-    if (isSaved) return;
-
-    const target = e.target;
-    if (!target || target.tagName !== 'CANVAS') return;
-
-    const wrapper = target.closest('[data-page]');
-    if (!wrapper) return;
-
-    const pageNum = parseInt(wrapper.getAttribute('data-page'));
-    if (isNaN(pageNum)) return;
-
-    const canvas = target;
+    if (isSaved || e.target.tagName !== 'CANVAS') return;
+    const canvas = e.target;
     const rect = canvas.getBoundingClientRect();
+    const pageNum = parseInt(canvas.parentElement.getAttribute('data-page'));
+    
+    const x = (e.clientX - rect.left) / scale;
+    const y = (e.clientY - rect.top) / scale;
 
-    // Validate rect dimensions
-    if (rect.width <= 0 || rect.height <= 0 || canvas.width <= 0 || canvas.height <= 0) return;
+    setIsDrawing(true);
+    startPosRef.current = { x, y, page: pageNum };
 
-    // Calculate coordinates accounting for actual canvas display size
-    // Use the ratio of canvas internal dimensions to displayed dimensions
-    // This handles cases where canvas is scaled via CSS or browser zoom
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-
-    // Normalize coordinates by scale
-    const x = ((e.clientX - rect.left) * scaleX) / scale;
-    const y = ((e.clientY - rect.top) * scaleY) / scale;
-
-    // Validate coordinates
-    if (isNaN(x) || isNaN(y) || !isFinite(x) || !isFinite(y)) return;
-
-    // Check if clicking on an existing image (for dragging)
-    const clickedImage = getImageAtPosition(x, y, pageNum);
-    console.log('Mouse down - Active tool:', activeTool, 'Clicked image:', clickedImage ? clickedImage.id : 'none');
-    console.log('Images on this page:', images.filter(img => img.page === pageNum).length);
-
-    if (clickedImage && activeTool === TOOLS.SELECT) {
-      console.log('Starting drag for image:', clickedImage.id);
-      canvas.style.cursor = 'grabbing';
-      setDraggingImage(clickedImage);
-      // Store offset in unscaled coordinates
-      setDragOffset({
-        x: x - clickedImage.x,
-        y: y - clickedImage.y
-      });
-      return;
-    }
-
-    if (activeTool === TOOLS.PEN || activeTool === TOOLS.TRASH) {
-      setIsDrawing(true);
-      startPosRef.current = { x, y, page: pageNum };
-
-      if (activeTool === TOOLS.PEN) {
-        const newAnnotation = {
-          id: `annotation-${annotationIdCounter.current++}`,
-          type: 'drawing',
-          page: pageNum,
-          color: penColor,
-          width: penWidth,
-          path: [{ x, y }],
-          signer: activeSigner
-        };
-        setAnnotations(prev => [...prev, newAnnotation]);
-        setSelectedAnnotation(newAnnotation.id);
-      } else if (activeTool === TOOLS.TRASH) {
-        // Reset eraser session tracking
-        eraserRemovedIdsRef.current = new Set();
-
-        console.log('Eraser clicked at:', { x, y, pageNum, eraserWidth });
-        console.log('Current annotations count:', annotations.length);
-        console.log('Current images count:', images.length);
-
-        // Erase on click - check both annotations and images
-        const annotationsToRemove = findAnnotationsToErase(x, y, pageNum, annotations);
-        console.log('Annotations to remove:', annotationsToRemove);
-
-        // Also check if eraser is over any image
-        const eraserRadius = eraserWidth / scale;
-        const eraserRadiusSquared = eraserRadius * eraserRadius;
-
-        const imagesToRemove = images.filter(img => {
-          if (img.page !== pageNum) return false;
-          // Check if eraser center is within image bounds OR close enough to center
-          // Simple check: distance from eraser to image center
-          const imgCenterX = img.x + img.width / 2;
-          const imgCenterY = img.y + img.height / 2;
-          const dx = imgCenterX - x;
-          const dy = imgCenterY - y;
-
-          // Also check simple bounds intersection for better feel
-          const inBounds = x >= img.x && x <= img.x + img.width &&
-            y >= img.y && y <= img.y + img.height;
-
-          return inBounds || ((dx * dx + dy * dy) <= eraserRadiusSquared);
-        }).map(img => img.id);
-        console.log('Images to remove:', imagesToRemove);
-
-        if (annotationsToRemove.length > 0 || imagesToRemove.length > 0) {
-          annotationsToRemove.forEach(id => eraserRemovedIdsRef.current.add(id));
-          const removedAnnotationSet = new Set(annotationsToRemove);
-          const removedImageSet = new Set(imagesToRemove);
-
-          setAnnotations(prev => {
-            const updated = prev.filter(ann => !removedAnnotationSet.has(ann.id));
-            console.log('Updated annotations count:', updated.length);
-            return updated;
-          });
-          setImages(prev => {
-            const updated = prev.filter(img => !removedImageSet.has(img.id));
-            console.log('Updated images count:', updated.length);
-            return updated;
-          });
-
-          // Re-render after state update - use a slightly longer delay
-          setTimeout(() => {
-            if (pdfDoc) {
-              console.log('Re-rendering page:', pageNum);
-              renderPage(pdfDoc, pageNum);
-            }
-          }, 50);
-        } else {
-          console.log('No annotations or images found to erase');
-        }
-      }
-    } else if (activeTool === TOOLS.IMAGE && selectedAnnotation) {
-      // Place image at clicked position (center the image on the click point)
-      const imageAnnotation = annotations.find(a => a.id === selectedAnnotation);
-      if (imageAnnotation && imageAnnotation.type === 'image') {
-        const imageWidth = imageAnnotation.width || 200;
-        const imageHeight = imageAnnotation.height || 200;
-
-        // Center the image on the click point
-        const centerX = x - (imageWidth / 2);
-        const centerY = y - (imageHeight / 2);
-
-        const newImage = {
-          id: `image-${Date.now()}`,
-          page: pageNum,
-          x: centerX,
-          y: centerY,
-          width: imageWidth,
-          height: imageHeight,
-          src: imageAnnotation.src,
-          signer: activeSigner
-        };
-        const newImages = [...images, newImage];
-        const newAnnotations = annotations.filter(a => a.id !== selectedAnnotation);
-
-        setImages(newImages);
-        setAnnotations(newAnnotations);
-        setSelectedAnnotation(null);
-        setActiveTool(TOOLS.PEN);
-
-        // Save to history
-        saveToHistory(newAnnotations, newImages);
-
-        toast.success('Image placed successfully');
-      }
+    if (activeTool === TOOLS.PEN) {
+      const newAnn = {
+        id: Date.now(),
+        type: 'drawing',
+        page: pageNum,
+        color: penColor,
+        width: penWidth,
+        path: [{x, y}]
+      };
+      setAnnotations(prev => [...prev, newAnn]);
     }
   };
 
   const handleMouseMove = (e) => {
-    // Disable editing if annotations have been saved
-    if (isSaved) return;
-
-    const target = e.target;
-    if (!target || target.tagName !== 'CANVAS') return;
-
-    const wrapper = target.closest('[data-page]');
-    if (!wrapper) return;
-
-    const pageNum = parseInt(wrapper.getAttribute('data-page'));
-    if (isNaN(pageNum)) return;
-
-    const canvas = target;
+    if (!isDrawing || isSaved || !startPosRef.current) return;
+    const canvas = e.target;
+    if (canvas.tagName !== 'CANVAS') return;
     const rect = canvas.getBoundingClientRect();
+    
+    const x = (e.clientX - rect.left) / scale;
+    const y = (e.clientY - rect.top) / scale;
+    const pageNum = startPosRef.current.page;
 
-    // Validate rect dimensions
-    if (rect.width <= 0 || rect.height <= 0 || canvas.width <= 0 || canvas.height <= 0) return;
-
-    // Calculate coordinates accounting for actual canvas display size
-    // Use the ratio of canvas internal dimensions to displayed dimensions
-    // This handles cases where canvas is scaled via CSS or browser zoom
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-
-    // Normalize coordinates by scale
-    const x = ((e.clientX - rect.left) * scaleX) / scale;
-    const y = ((e.clientY - rect.top) * scaleY) / scale;
-
-    // Validate coordinates
-    if (isNaN(x) || isNaN(y) || !isFinite(x) || !isFinite(y)) return;
-
-    // Handle image dragging
-    if (draggingImage) {
-      console.log('Dragging image:', draggingImage.id, 'to position:', x.toFixed(0), y.toFixed(0));
-      const newX = x - dragOffset.x;
-      const newY = y - dragOffset.y;
-
-      setImages(prev => prev.map(img => {
-        if (img.id === draggingImage.id) {
-          console.log('Updating image position to:', newX.toFixed(0), newY.toFixed(0));
-          return { ...img, x: newX, y: newY };
-        }
-        return img;
-      }));
-
-      // Re-render for smooth dragging
-      requestAnimationFrame(() => {
-        if (pdfDoc) {
-          renderPage(pdfDoc, pageNum);
-        }
-      });
-      return;
-    } else if (activeTool === TOOLS.SELECT) {
-      console.log('In SELECT mode but draggingImage is null');
-    }
-
-    // Change cursor when hovering over images in SELECT mode
-    if (activeTool === TOOLS.SELECT && !isDrawing && !draggingImage) {
-      const hoveredImage = getImageAtPosition(x, y, pageNum);
-      if (hoveredImage) {
-        console.log('Hovering over image:', hoveredImage.id);
-        canvas.style.cursor = 'grab';
-      } else {
-        canvas.style.cursor = 'pointer';
+    setAnnotations(prev => prev.map(ann => {
+      if (ann.id === annotations[annotations.length - 1].id) {
+        return { ...ann, path: [...ann.path, {x, y}] };
       }
-    }
-
-    if (!isDrawing || !startPosRef.current) return;
-
-    if (activeTool === TOOLS.PEN && selectedAnnotation) {
-      // Draw directly on canvas without re-rendering
-      const context = canvas.getContext('2d');
-      if (!context) return;
-
-      context.save();
-      context.scale(scale, scale);
-
-      context.strokeStyle = penColor;
-      context.lineWidth = penWidth;
-      context.lineCap = 'round';
-      context.lineJoin = 'round';
-
-      const lastPoint = startPosRef.current;
-      if (lastPoint && typeof lastPoint.x === 'number' && typeof lastPoint.y === 'number') {
-        context.beginPath();
-        context.moveTo(lastPoint.x, lastPoint.y);
-        context.lineTo(x, y);
-        context.stroke();
-      }
-
-      context.restore();
-
-      startPosRef.current = { x, y, page: pageNum };
-
-      // Update annotation data in state - batch updates for performance
-      setAnnotations(prev => {
-        return prev.map(ann => {
-          if (ann.id === selectedAnnotation && ann.page === pageNum) {
-            return {
-              ...ann,
-              path: [...ann.path, { x, y }]
-            };
-          }
-          return ann;
-        });
-      });
-    } else if (activeTool === TOOLS.TRASH) {
-      // Erase entire annotations when the eraser crosses any part of them
-      const annotationsToRemove = findAnnotationsToErase(x, y, pageNum, annotations);
-
-      // Filter out already removed annotations in this session
-      const newRemovalsOnly = annotationsToRemove.filter(id => !eraserRemovedIdsRef.current.has(id));
-
-      // Remove annotations and trigger re-render (throttled)
-      if (newRemovalsOnly.length > 0) {
-        console.log('Erasing during drag:', newRemovalsOnly);
-        // Track removed IDs
-        newRemovalsOnly.forEach(id => eraserRemovedIdsRef.current.add(id));
-
-        const allRemovedSet = eraserRemovedIdsRef.current;
-        setAnnotations(prev => prev.filter(ann => !allRemovedSet.has(ann.id)));
-
-        // Throttle re-renders to max 60fps (16ms)
-        const now = Date.now();
-        if (now - lastEraseTimeRef.current >= 50) { // Increased from 16ms to 50ms
-          lastEraseTimeRef.current = now;
-          setTimeout(() => {
-            if (pdfDoc) {
-              console.log('Re-rendering during drag, page:', pageNum);
-              renderPage(pdfDoc, pageNum);
-            }
-          }, 10);
-        }
-      }
-
-      startPosRef.current = { x, y, page: pageNum };
-    }
+      return ann;
+    }));
   };
 
-  const handleMouseUp = () => {
-    // Disable editing if annotations have been saved
-    if (isSaved) return;
-    // Handle end of image dragging
-    if (draggingImage) {
-      setDraggingImage(null);
-      setDragOffset({ x: 0, y: 0 });
-      // Save to history after drag
-      saveToHistory(annotations, images);
-      return;
-    }
-
-    if (isDrawing) {
-      const pageNum = startPosRef.current?.page;
-
-      // If erasing, ensure final re-render happens
-      if (activeTool === TOOLS.TRASH && startPosRef.current && eraserRemovedIdsRef.current.size > 0) {
-        if (pdfDoc && pageNum) {
-          // Final re-render to clean up
-          console.log('Final eraser re-render for page:', pageNum);
-          setTimeout(() => {
-            renderPage(pdfDoc, pageNum);
-          }, 100); // Longer delay for final render
-        }
-        // Clear eraser session tracking
-        eraserRemovedIdsRef.current.clear();
-      } else if (activeTool === TOOLS.PEN && pdfDoc && pageNum) {
-        // Re-render the page when pen drawing completes to finalize the annotation
-        setTimeout(() => {
-          renderPage(pdfDoc, pageNum);
-        }, 50);
-      }
-
-      // Save to history when drawing/erasing is complete
-      setTimeout(() => {
-        saveToHistory(annotations, images);
-      }, 150); // Save after final render
-    }
-    setIsDrawing(false);
-    startPosRef.current = null;
-  };
-
-  const handleImageUpload = (e) => {
-    // Disable editing if annotations have been saved
-    if (isSaved) return;
-
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const aspectRatio = img.width / img.height;
-        const defaultWidth = 200;
-        const defaultHeight = defaultWidth / aspectRatio;
-
-        const newAnnotation = {
-          id: `image-annotation-${Date.now()}`,
-          type: 'image',
-          src: event.target.result,
-          width: defaultWidth,
-          height: defaultHeight,
-          signer: activeSigner
-        };
-
-        setAnnotations(prev => [...prev, newAnnotation]);
-        setSelectedAnnotation(newAnnotation.id);
-        setActiveTool(TOOLS.IMAGE);
-        toast.info('Click on the PDF where you want to place this image');
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-
-    // Reset input
-    if (imageInputRef.current) {
-      imageInputRef.current.value = '';
-    }
-  };
-
-  // History management helper
-  const saveToHistory = useCallback((newAnnotations, newImages) => {
-    // Don't save if nothing changed
-    if (history.length > 0 && historyIndex >= 0) {
-      const currentState = history[historyIndex];
-      if (JSON.stringify(currentState.annotations) === JSON.stringify(newAnnotations) &&
-        JSON.stringify(currentState.images) === JSON.stringify(newImages)) {
-        console.log('No changes detected, skipping history save');
-        return;
-      }
-    }
-
-    const newState = {
-      annotations: JSON.parse(JSON.stringify(newAnnotations)),
-      images: JSON.parse(JSON.stringify(newImages)),
-      timestamp: Date.now()
-    };
-
-    console.log('Saving to history:', {
-      annotationsCount: newAnnotations.length,
-      imagesCount: newImages.length,
-      currentIndex: historyIndex
-    });
-
-    setHistory(prev => {
-      // Remove any future states if we're not at the end
-      const newHistory = prev.slice(0, historyIndex + 1);
-      // Add new state
-      newHistory.push(newState);
-      // Limit history to last 50 states
-      const trimmedHistory = newHistory.slice(-50);
-      console.log('New history length:', trimmedHistory.length);
-      return trimmedHistory;
-    });
-
-    setHistoryIndex(prev => {
-      const newIndex = Math.min(prev + 1, 49);
-      console.log('New history index:', newIndex);
-      return newIndex;
-    });
-  }, [historyIndex, history]);
-
-  // Undo function
-  const handleUndo = () => {
-    if (historyIndex <= 0) {
-      toast.info('Nothing to undo');
-      return;
-    }
-
-    const newIndex = historyIndex - 1;
-    const previousState = history[newIndex];
-
-    console.log('Undo - Going from index', historyIndex, 'to', newIndex);
-    console.log('Previous state:', {
-      annotations: previousState.annotations.length,
-      images: previousState.images.length
-    });
-
-    setAnnotations(JSON.parse(JSON.stringify(previousState.annotations)));
-    setImages(JSON.parse(JSON.stringify(previousState.images)));
-    setHistoryIndex(newIndex);
-
-    // Re-render all pages to ensure consistency
-    if (pdfDoc) {
-      setTimeout(() => {
-        pdfPages.forEach(pageNum => {
-          renderPage(pdfDoc, pageNum);
-        });
-      }, 50);
-    }
-
-    toast.success(`Undone (${history.length - newIndex - 1} more available)`);
-  };
-
-  // Redo function
-  const handleRedo = () => {
-    if (historyIndex >= history.length - 1) {
-      toast.info('Nothing to redo');
-      return;
-    }
-
-    const newIndex = historyIndex + 1;
-    const nextState = history[newIndex];
-
-    console.log('Redo - Going from index', historyIndex, 'to', newIndex);
-    console.log('Next state:', {
-      annotations: nextState.annotations.length,
-      images: nextState.images.length
-    });
-
-    setAnnotations(JSON.parse(JSON.stringify(nextState.annotations)));
-    setImages(JSON.parse(JSON.stringify(nextState.images)));
-    setHistoryIndex(newIndex);
-
-    // Re-render all pages to ensure consistency
-    if (pdfDoc) {
-      setTimeout(() => {
-        pdfPages.forEach(pageNum => {
-          renderPage(pdfDoc, pageNum);
-        });
-      }, 50);
-    }
-
-    toast.success(`Redone (${newIndex} of ${history.length - 1})`);
-  };
-
-  // Clear all annotations
-  const handleClearAll = () => {
-    // Disable editing if annotations have been saved
-    if (isSaved) return;
-    if (annotations.length === 0 && images.length === 0) {
-      toast.info('Nothing to clear');
-      return;
-    }
-
-    // Save current state before clearing
-    saveToHistory([], []);
-    setAnnotations([]);
-    setImages([]);
-
-    // Re-render all pages
-    if (pdfDoc) {
-      pdfPages.forEach(pageNum => {
-        renderPage(pdfDoc, pageNum);
-      });
-    }
-
-    toast.success('All annotations cleared');
-  };
+  const handleMouseUp = () => setIsDrawing(false);
 
   const handleSave = async () => {
     try {
       setSaving(true);
-
-      // Separate primary and spouse annotations
-      const primaryAnnotations = annotations.filter(ann => !ann.signer || ann.signer === 'primary');
-      const spouseAnnotations = annotations.filter(ann => ann.signer === 'spouse');
-      const primaryImages = images.filter(img => !img.signer || img.signer === 'primary');
-      const spouseImages = images.filter(img => img.signer === 'spouse');
-
-      // Validate spouse signature requirement
-      if (spouseSignRequired && !spouseSigned) {
-        const spouseHasAnnotations = spouseAnnotations.length > 0 || spouseImages.length > 0;
-        if (!spouseHasAnnotations) {
-          toast.error('Spouse signature is required. Please switch to "Spouse" mode and add a signature using the pen or image tool.', {
-            position: 'top-right',
-            autoClose: 5000
-          });
-          setSaving(false);
-          return;
-        }
-      }
-
-      // Get canvas dimensions from the first page (assuming all pages have same dimensions)
-      let canvasWidth = 0;
-      let canvasHeight = 0;
-      if (pdfPages.length > 0) {
-        const firstCanvasId = `page-${pdfPages[0]}`;
-        const firstCanvas = canvasRefs.current[firstCanvasId];
-        if (firstCanvas) {
-          canvasWidth = firstCanvas.width;
-          canvasHeight = firstCanvas.height;
-        }
-      }
-
-      // Prepare annotation data for backend
-      const annotationData = {
-        request_id: requestId,
-        document_url: documentUrl,
-        annotations: primaryAnnotations.map(ann => ({
-          id: ann.id,
-          type: ann.type,
-          page: ann.page,
-          signer: 'primary',
-          data: ann.type === 'drawing'
-            ? { path: ann.path, color: ann.color, width: ann.width }
-            : { src: ann.src, width: ann.width, height: ann.height }
-        })),
-        images: primaryImages.map(img => ({
-          id: img.id,
-          page: img.page,
-          x: img.x,
-          y: img.y,
-          width: img.width,
-          height: img.height,
-          src: img.src,
-          signer: 'primary'
-        })),
-        // Include spouse annotations and images if they exist
-        spouse_annotations: spouseAnnotations.length > 0 ? spouseAnnotations.map(ann => ({
-          id: ann.id,
-          type: ann.type,
-          page: ann.page,
-          signer: 'spouse',
-          data: ann.type === 'drawing'
-            ? { path: ann.path, color: ann.color, width: ann.width }
-            : { src: ann.src, width: ann.width, height: ann.height }
-        })) : [],
-        spouse_images: spouseImages.length > 0 ? spouseImages.map(img => ({
-          id: img.id,
-          page: img.page,
-          x: img.x,
-          y: img.y,
-          width: img.width,
-          height: img.height,
-          src: img.src,
-          signer: 'spouse'
-        })) : [],
-        // Send normalized scale (1.0) since all coordinates are already normalized
-        pdf_scale: 1.0,
-        zoom_percentage: 100,
-        canvas_info: {
-          width: canvasWidth / scale,
-          height: canvasHeight / scale
-        }
-      };
-
-      // Call onSave callback if provided
-      if (onSave) {
-        await onSave(annotationData);
-      } else {
-        // Default: log the data (backend integration point)
-        console.log('Annotation data to send to backend:', JSON.stringify(annotationData, null, 2));
-        toast.success('Annotations saved successfully!');
-      }
-
-      // Disable editing after successful save
+      if (onSave) await onSave({ annotations, images });
       setIsSaved(true);
-    } catch (error) {
-      console.error('Error saving annotations:', error);
-      const errorMsg = handleAPIError(error);
-      toast.error(errorMsg || 'Failed to save annotations');
+      toast.success('Saved successfully');
+    } catch (e) {
+      toast.error('Save failed');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleClose = () => {
-    setAnnotations([]);
-    setImages([]);
-    setSelectedAnnotation(null);
-    setActiveTool(TOOLS.PEN);
-    setCurrentPage(1);
-    setScale(1.0); // Fixed at 100% zoom
-    setHistory([]);
-    setHistoryIndex(-1);
-    setIsSaved(false); // Reset saved state
-
-    // Clear refs
-    eraserRemovedIdsRef.current.clear();
-    lastEraseTimeRef.current = 0;
-
-    // Clear canvas refs
-    Object.keys(canvasRefs.current).forEach(key => {
-      const canvas = canvasRefs.current[key];
-      if (canvas && canvas.parentNode) {
-        canvas.parentNode.remove();
-      }
-    });
-    canvasRefs.current = {};
-    onClose();
-  };
-
-  const handleZoomIn = () => {
-    setScale(prev => Math.min(prev + 0.25, 3.0));
-  };
-
-  const handleZoomOut = () => {
-    setScale(prev => Math.max(prev - 0.25, 0.5));
-  };
-
   if (!isOpen) return null;
 
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkRes = () => {
-      setIsMobile(window.innerWidth < 768); // 768px is the standard tablet/mobile breakpoint
-    };
-
-    checkRes(); // Check on mount
-    window.addEventListener('resize', checkRes);
-    return () => window.removeEventListener('resize', checkRes);
-  }, []);
-
   return createPortal(
-    <div
-      className="manual-portal-wrapper"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 50000000,
-        pointerEvents: 'auto',
-      }}
-      onClick={(e) => e.stopPropagation()} // Prevent closing anything behind it
-    >
-      <style>{`
-        /* Force modal backdrop and content to be visible and interactive */
-        .manual-portal-wrapper .modal {
-          display: block !important;
-          opacity: 1 !important;
-          pointer-events: auto !important;
-          background: rgba(0,0,0,0.6); /* Manual backdrop */
-        }
-        .manual-portal-wrapper .modal-dialog {
-          z-index: 20000001 !important;
-          pointer-events: auto !important;
-        }
-        .manual-portal-wrapper .modal-backdrop {
-          display: none !important; /* We use the wrapper for backdrop to avoid z-index hell */
-        }
-        /* Mobile fixes */
-        @media (max-width: 768px) {
-          .manual-portal-wrapper .modal-dialog {
-            margin: 0 !important;
-            max-width: 100% !important;
-            height: 100% !important;
-          }
-          .manual-portal-wrapper .modal-content {
-            height: 100% !important;
-            border-radius: 0 !important;
-          }
-        }
-      `}</style>
-      <Modal
-        show={true} // Controlled by the portal rendering itself
-        onHide={handleClose}
-        centered
-        size="xl"
-        className="pdf-annotation-modal"
-        animation={false} // Disable animation to prevent pointer-event 'fade' issues
-        backdrop={false} // We handle the backdrop via the portal wrapper
-        autoFocus={true}
-        enforceFocus={true}
-        style={{ pointerEvents: 'auto' }}
-      >
-        <Modal.Header style={{ 
-          borderBottom: '2px solid #E5E7EB', 
-          padding: '16px 24px', 
-          position: 'sticky', 
-          top: 0, 
-          zIndex: 60000000, // Even higher than modal content
-          backgroundColor: 'white',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <div className="d-flex justify-content-between align-items-center w-100">
-            <div>
-              <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66', margin: 0 }}>
-                {documentName || 'PDF Signature Tool'}
-              </Modal.Title>
-            </div>
-            <button
-              onClick={onClose} // Direct onClose for emergency closing
-              className="btn-close"
-              aria-label="Close"
-              style={{ zIndex: 60000001, pointerEvents: 'auto', cursor: 'pointer', padding: '10px' }}
-            />
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 60000000, 
+      backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex',
+      alignItems: 'center', justifyContent: 'center', padding: '20px',
+      backdropFilter: 'blur(8px)', pointerEvents: 'auto'
+    }}>
+      <div style={{
+        width: '98vw', height: '98vh', backgroundColor: 'white',
+        borderRadius: '16px', display: 'flex', flexDirection: 'column',
+        overflow: 'hidden', position: 'relative'
+      }} onClick={e => e.stopPropagation()}>
+        
+        {/* Header */}
+        <div style={{ padding: '16px 24px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h5 style={{ margin: 0, fontWeight: 700 }}>{documentName || 'Sign Document'}</h5>
           </div>
-        </Modal.Header>
+          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: '24px', cursor: 'pointer' }}>×</button>
+        </div>
 
-        <Modal.Body className="custom-scrollbar" style={{ padding: 0, display: 'flex', flexDirection: 'column', height: '70vh', overflowY: 'auto', pointerEvents: 'auto' }}>
+        {/* Toolbar */}
+        <div style={{ padding: '12px 24px', borderBottom: '1px solid #eee', display: 'flex', gap: '12px', alignItems: 'center', backgroundColor: '#fff' }}>
+          <button 
+            onClick={() => setActiveTool(TOOLS.PEN)}
+            className={`btn btn-sm ${activeTool === TOOLS.PEN ? 'btn-dark' : 'btn-outline-secondary'}`}
+          >
+            <FiEdit2 /> Pen
+          </button>
+          <button 
+            onClick={() => setActiveTool(TOOLS.TRASH)}
+            className={`btn btn-sm ${activeTool === TOOLS.TRASH ? 'btn-danger' : 'btn-outline-secondary'}`}
+          >
+            <FiTrash /> Eraser
+          </button>
+          <div style={{ width: '1px', height: '24px', backgroundColor: '#eee' }} />
+          <button onClick={() => setScale(s => Math.max(0.5, s - 0.1))} className="btn btn-sm btn-light border"><FiZoomOut /></button>
+          <span style={{ fontSize: '12px', fontWeight: 700 }}>{Math.round(scale * 100)}%</span>
+          <button onClick={() => setScale(s => Math.min(2, s + 0.1))} className="btn btn-sm btn-light border"><FiZoomIn /></button>
+          <div style={{ flex: 1 }} />
+          <button onClick={handleSave} disabled={saving || isSaved} className="btn btn-primary px-4">
+            {saving ? 'Saving...' : isSaved ? 'Saved' : 'Complete & Save'}
+          </button>
+        </div>
 
-          {isMobile ? (
-            /* --- Mobile Warning Message --- */
-            <div className="d-flex flex-column align-items-center justify-content-center text-center p-5" style={{ height: '100%', backgroundColor: '#F9FAFB' }}>
-              <div style={{ backgroundColor: '#FEF3C7', padding: '20px', borderRadius: '50%', marginBottom: '20px' }}>
-                <FiMonitor size={48} color="#D97706" />
-              </div>
-              <h3 style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '700', color: '#1F2937' }}>Bigger Screen Required</h3>
-              <p style={{ fontFamily: 'BasisGrotesquePro', color: '#4B5563', maxWidth: '300px', margin: '0 auto' }}>
-                For accurate signing and annotations, please open this document on a laptop or desktop computer.
-              </p>
-              <button
-                onClick={handleClose}
-                className="btn btn-primary mt-4"
-                style={{ backgroundColor: '#3B4A66', border: 'none', padding: '10px 24px', borderRadius: '8px' }}
-              >
-                Got it, Close
-              </button>
-            </div>
+        {/* Viewer */}
+        <div 
+          ref={containerRef}
+          style={{ 
+            flex: 1, overflowY: 'auto', padding: '40px', backgroundColor: '#525659',
+            display: 'flex', flexDirection: 'column', alignItems: 'center'
+          }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
+          {loading ? (
+            <div style={{ color: 'white', marginTop: '100px' }}>Loading document...</div>
           ) : (
-            /* --- Full Desktop Experience --- */
-            <>
-              {/* Toolbox */}
-              <div className="annotation-toolbox" style={{
-                borderBottom: '2px solid #E5E7EB',
-                padding: '12px 24px',
-                backgroundColor: '#F9FAFB',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '16px',
-                flexWrap: 'wrap',
-                pointerEvents: 'auto'
-              }}>
-                {/* Signer Toggle - Show only if spouse signature is required */}
-                {spouseSignRequired && (
-                  <>
-                    <div className="d-flex align-items-center gap-2" style={{ padding: '4px 8px', borderRadius: '6px', backgroundColor: '#F3F4F6' }}>
-                      <button
-                        onClick={() => setActiveSigner('primary')}
-                        className={`btn  ${activeSigner === 'primary' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                        style={{ fontSize: '12px', padding: '4px 12px', minWidth: '80px' }}
-                      >
-                        Primary
-                      </button>
-                      <button
-                        onClick={() => setActiveSigner('spouse')}
-                        className={`btn  ${activeSigner === 'spouse' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                        style={{
-                          fontSize: '12px',
-                          padding: '4px 12px',
-                          minWidth: '80px',
-                          backgroundColor: activeSigner === 'spouse' ? '#F56D2D' : undefined,
-                          borderColor: activeSigner === 'spouse' ? '#F56D2D' : undefined
-                        }}
-                      >
-                        Spouse
-                      </button>
-                    </div>
-                    <div style={{ height: '32px', width: '1px', backgroundColor: '#D1D5DB' }} />
-                  </>
-                )}
-
-                {/* Tools */}
-                <div className="d-flex gap-2 align-items-center">
-                  <button
-                    onClick={() => !isSaved && setActiveTool(TOOLS.PEN)}
-                    disabled={isSaved}
-                    className={`btn  ${activeTool === TOOLS.PEN ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    style={{ opacity: isSaved ? 0.6 : 1 }}
-                    title="Pen Tool"
-                  >
-                    <FiPenTool size={18} />
-                  </button>
-                  <button
-                    onClick={() => !isSaved && setActiveTool(TOOLS.TRASH)}
-                    disabled={isSaved}
-                    className={`btn  ${activeTool === TOOLS.TRASH ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    style={{ opacity: isSaved ? 0.6 : 1 }}
-                    title="Eraser Tool"
-                  >
-                    <FiTrash size={18} />
-                  </button>
-                  <button
-                    onClick={() => !isSaved && imageInputRef.current?.click()}
-                    disabled={isSaved}
-                    className={`btn  ${activeTool === TOOLS.IMAGE ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    style={{ opacity: isSaved ? 0.6 : 1 }}
-                    title="Upload Image"
-                  >
-                    <FiImage size={18} />
-                  </button>
-                  <button
-                    onClick={() => !isSaved && setActiveTool(TOOLS.SELECT)}
-                    disabled={isSaved}
-                    className={`btn  ${activeTool === TOOLS.SELECT ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    style={{ opacity: isSaved ? 0.6 : 1 }}
-                    title="Select/Move Tool"
-                  >
-                    <FiMove size={18} />
-                  </button>
-                  <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
-
-                  <div style={{ height: '32px', width: '1px', backgroundColor: '#D1D5DB' }} />
-
-                  <button onClick={handleZoomOut} className="btn btn-outline-secondary" title="Zoom Out">
-                    <FiZoomOut size={18} />
-                  </button>
-                  <button onClick={handleZoomIn} className="btn btn-outline-secondary" title="Zoom In">
-                    <FiZoomIn size={18} />
-                  </button>
-
-                  <div style={{ height: '32px', width: '1px', backgroundColor: '#D1D5DB' }} />
-
-                  <button
-                    onClick={handleClearAll}
-                    disabled={isSaved || (annotations.length === 0 && images.length === 0)}
-                    className="btn btn-outline-danger"
-                    title="Clear All"
-                  >
-                    <FiTrash2 size={18} />
-                  </button>
-                </div>
-
-                {/* Dynamic Tool Settings */}
-                {activeTool === TOOLS.PEN && !isSaved && (
-                  <div className="d-flex align-items-center gap-3">
-                    <div className="d-flex align-items-center gap-2">
-                      <label className="mb-0 small">Color:</label>
-                      <input type="color" value={penColor} onChange={(e) => setPenColor(e.target.value)} style={{ width: '30px', height: '30px', border: 'none', padding: 0 }} />
-                    </div>
-                    <div className="d-flex align-items-center gap-2">
-                      <label className="mb-0 small">Width:</label>
-                      <input type="range" min="1" max="10" value={penWidth} onChange={(e) => setPenWidth(parseInt(e.target.value))} />
-                    </div>
-                  </div>
-                )}
-
-                <div style={{ marginLeft: 'auto' }}>
-                  <span className="badge bg-light text-dark border">{Math.round(scale * 100)}%</span>
-                </div>
+            pdfPages.map(p => (
+              <div key={p} data-page={p} className="shadow-lg mb-4" style={{ backgroundColor: 'white', position: 'relative' }}>
+                {/* Canvas inserted by renderPage */}
               </div>
-
-              {/* PDF Viewer Area */}
-              <div
-                ref={containerRef}
-                className="pdf-viewer-container"
-                style={{
-                  flex: 1,
-                  overflow: 'auto',
-                  padding: '24px',
-                  backgroundColor: '#F3F4F6',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  pointerEvents: 'auto'
-                }}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-              >
-                {loading ? (
-                  <div className="d-flex flex-column align-items-center justify-content-center py-5">
-                    <div className="spinner-border text-primary" role="status"></div>
-                    <p className="mt-3 text-muted">Loading PDF document...</p>
-                  </div>
-                ) : pdfPages.length > 0 ? (
-                  pdfPages.map((pageNum) => (
-                    <div key={pageNum} data-page={pageNum} className="pdf-page-wrapper shadow-sm mb-4" style={{ position: 'relative', backgroundColor: 'white' }}>
-                      {/* Canvas inserted by renderPage */}
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-5">
-                    <p className="text-muted">No PDF pages available</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Page Navigation */}
-              {pdfPages.length > 1 && (
-                <div className="page-navigation" style={{
-                  borderTop: '2px solid #E5E7EB',
-                  padding: '12px 24px',
-                  backgroundColor: '#F9FAFB',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  pointerEvents: 'auto'
-                }}>
-                  <button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="btn btn-sm btn-outline-secondary">
-                    Previous
-                  </button>
-                  <span className="small fw-bold">Page {currentPage} of {pdfPages.length}</span>
-                  <button onClick={() => setCurrentPage(prev => Math.min(pdfPages.length, prev + 1))} disabled={currentPage === pdfPages.length} className="btn btn-sm btn-outline-secondary">
-                    Next
-                  </button>
-                </div>
-              )}
-            </>
+            ))
           )}
-        </Modal.Body>
-        <Modal.Footer style={{
-          borderTop: '2px solid #E5E7EB',
-          padding: '16px 24px',
-          position: 'sticky',
-          bottom: 0,
-          zIndex: 1000,
-          backgroundColor: 'white',
-          boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.1)',
-          pointerEvents: 'auto'
-        }}>
-          <div className="d-flex justify-content-between w-100 align-items-center">
-            <div style={{ fontSize: '14px', color: '#6B7280' }}>
-              {annotations.length} annotation{annotations.length !== 1 ? 's' : ''} • {images.length} image{images.length !== 1 ? 's' : ''}
-            </div>
-            <div className="d-flex gap-2">
-              <button
-                onClick={handleClose}
-                className="btn btn-outline-secondary"
-                disabled={saving}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                className="btn btn-primary"
-                disabled={saving}
-                style={{ backgroundColor: '#00C0C6', borderColor: '#00C0C6' }}
-              >
-                {saving ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    Saving...
-                  </>
-                ) : (
-                  <div className="d-flex align-items-center">
-                    <FiSave className="me-2" />
-                    Save Annotations
-                  </div>
-                )}
-              </button>
-            </div>
-          </div>
-        </Modal.Footer>
-      </Modal>
+        </div>
+      </div>
     </div>,
     document.body
   );
 }
-
