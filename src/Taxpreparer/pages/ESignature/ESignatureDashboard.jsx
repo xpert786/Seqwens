@@ -1382,11 +1382,12 @@ export default function ESignatureDashboard() {
       <Modal
         show={showCreateModal}
         onHide={processing ? undefined : handleCloseCreateModal}
-        size="md"
+        size="lg"
+        centered
+        scrollable={true}
         backdrop={processing ? 'static' : true}
         keyboard={!processing}
         style={{ fontFamily: 'BasisGrotesquePro' }}
-        className="custom-modal-width-md"
       >
         <Modal.Header closeButton>
           <Modal.Title style={{ fontFamily: 'BasisGrotesquePro', fontWeight: '600', color: '#3B4A66' }}>
@@ -1394,7 +1395,7 @@ export default function ESignatureDashboard() {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ padding: 0 }} className="p-0">
-          <div className="custom-scrollbar" style={{ maxHeight: '65vh', overflowY: 'auto', padding: '24px' }}>
+          <div className="custom-scrollbar" style={{ padding: '24px' }}>
             <div className="d-flex flex-column gap-4">
               {/* Client Selection */}
               <div>

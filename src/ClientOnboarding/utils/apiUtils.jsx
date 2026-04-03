@@ -5367,7 +5367,7 @@ export const taxPreparerClientAPI = {
     if (page) queryParams.append('page', page.toString());
     if (page_size) queryParams.append('page_size', page_size.toString());
     const queryString = queryParams.toString();
-    return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/invoices/paid/${queryString ? `?${queryString}` : ''}`, 'GET');
+    return await apiRequest(`/taxpayer/tax-preparer/clients/${clientId}/invoices/${queryString ? `?${queryString}` : ''}`, 'GET');
   },
 
   // Check if client has a spouse

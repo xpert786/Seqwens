@@ -53,7 +53,7 @@ export default function InvoicesPage() {
       }
 
       const queryString = params.toString();
-      const url = `${API_BASE_URL}/taxpayer/tax-preparer/clients/${clientId}/invoices/paid/${queryString ? `?${queryString}` : ''}`;
+      const url = `${API_BASE_URL}/taxpayer/tax-preparer/clients/${clientId}/invoices/${queryString ? `?${queryString}` : ''}`;
 
       const config = {
         method: 'GET',
@@ -76,7 +76,7 @@ export default function InvoicesPage() {
       console.log('Paid invoices API response:', result);
 
       if (result.success && result.data) {
-        setPaidInvoices(result.data.paid_invoices || []);
+        setPaidInvoices(result.data.invoices || result.data.paid_invoices || []);
         setSummary(result.data.summary || {
           total_invoices: 0,
           paid_invoices_count: 0,
@@ -268,15 +268,15 @@ export default function InvoicesPage() {
               {isScheduleView
                 ? "Upcoming Appointments"
                 : clientId
-                  ? (clientInfo?.name ? `${clientInfo.name}'s Paid Invoices` : "Paid Invoices")
-                  : "Paid Invoices"}
+                  ? (clientInfo?.name ? `${clientInfo.name}'s Invoices` : "Invoices")
+                  : "Invoices"}
             </div>
             <div className="text-xs text-gray-500">
               {isScheduleView
                 ? "Your scheduled meetings"
                 : clientId
                   ? `${filteredInvoices.length} ${filteredInvoices.length === 1 ? 'invoice' : 'invoices'} found`
-                  : "Your payment history"}
+                  : "Your invoice history"}
             </div>
           </div>
           {!isScheduleView && clientId && (
@@ -402,15 +402,47 @@ export default function InvoicesPage() {
                         <span className="font-semibold" style={{ color: "var(--Palette2-Dark-blue-900, #3B4A66)" }}>
                           {invoice.invoice_number}
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-xs bg-emerald-100 text-emerald-600">
-                          {invoice.status || 'paid'}
-                        </span>
+                        {invoice.status === 'paid' && (
+                          <span className="px-2 py-0.5 rounded-full text-xs bg-emerald-100 text-emerald-600">
+                            {invoice.status}
+                          </span>
+                        )}
+                        {invoice.status === 'pending' && (
+                          <span className="px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700">
+                            {invoice.status}
+                          </span>
+                        )}
+                        {invoice.status === 'overdue' && (
+                          <span className="px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-600">
+                            {invoice.status}
+                          </span>
+                        )}
+                        {invoice.status === 'draft' && (
+                          <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600">
+                            {invoice.status}
+                          </span>
+                        )}
+                        {invoice.status === 'partial' && (
+                          <span className="px-2 py-0.5 rounded-full text-xs bg-orange-100 text-orange-600">
+                            {invoice.status}
+                          </span>
+                        )}
+                        {invoice.status === 'cancelled' && (
+                          <span className="px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-700">
+                            {invoice.status}
+                          </span>
+                        )}
+                        {!['paid', 'pending', 'overdue', 'draft', 'partial', 'cancelled'].includes(invoice.status) && (
+                          <span className="px-2 py-0.5 rounded-full text-xs bg-emerald-100 text-emerald-600">
+                            {invoice.status || 'paid'}
+                          </span>
+                        )}
                       </div>
                       <div className="text-sm mt-1" style={{ color: "var(--Palette2-Dark-blue-900, #3B4A66)" }}>
                         {invoice.description || 'Tax preparation services'}
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
-                        Paid {formatDate(invoice.paid_date)}
+                        {invoice.status === 'paid' ? `Paid ${formatDate(invoice.paid_date)}` : `Issued ${formatDate(invoice.issue_date || invoice.created_at)}`}
                         {invoice.payment_method && (
                           <span> • Method: {invoice.payment_method}</span>
                         )}
@@ -419,7 +451,7 @@ export default function InvoicesPage() {
 
                     <div className="flex flex-row md:flex-row items-center justify-between md:justify-end gap-4 border-t md:border-t-0 pt-3 md:pt-0 mt-3 md:mt-0">
                       <div className="text-left md:text-right">
-                        <div className="text-xs text-gray-500">Paid Invoice:</div>
+                        <div className="text-xs text-gray-500">Invoice Total:</div>
                         <div className="text-orange-500 font-semibold text-lg">
                           {formatCurrency(invoice.amount)}
                         </div>
@@ -439,7 +471,7 @@ export default function InvoicesPage() {
             ) : clientId ? (
               <div className="text-center py-5 mt-4">
                 <p className="text-muted">
-                  {searchQuery ? 'No invoices found matching your search' : 'No paid invoices found'}
+                  {searchQuery ? 'No invoices found matching your search' : 'No invoices found'}
                 </p>
                 {searchQuery && (
                   <button

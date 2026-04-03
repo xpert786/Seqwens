@@ -879,7 +879,6 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, prefillData }) => {
                       });
                     }
                   }}
-                  min={new Date().toISOString().split('T')[0]}
                   style={{ fontFamily: 'BasisGrotesquePro' }}
                 />
                 {errors.due_date && <p className="text-[10px] text-red-500 mt-1">{errors.due_date}</p>}
